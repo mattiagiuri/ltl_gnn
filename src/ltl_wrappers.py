@@ -13,13 +13,15 @@ Notes about LTLEnv:
     - If the LTL goal becomes False, then an extra -1 reward is given to the agent.
     - Otherwise, the agent gets the same reward given by the original environment.
 """
+from typing import Any, SupportsFloat
 
-
+import gymnasium as gym
 import numpy as np
-import gym
-from gym import spaces
-import ltl_progression, random
-from ltl_samplers import getLTLSampler, SequenceSampler
+from gymnasium import spaces
+from gymnasium.core import WrapperObsType, WrapperActType
+
+# import ltl_progression
+
 
 class LTLEnv(gym.Wrapper):
     def __init__(self, env, progression_mode="full", ltl_sampler=None, intrinsic=0.0):
@@ -39,94 +41,94 @@ class LTLEnv(gym.Wrapper):
             - "none": the agent gets the full, original LTL formula as part of the observation
         """
         super().__init__(env)
-        self.progression_mode   = progression_mode
+        self.progression_mode = progression_mode
         self.propositions = self.env.get_propositions()
-        self.sampler = getLTLSampler(ltl_sampler, self.propositions)
+        # self.sampler = getLTLSampler(ltl_sampler, self.propositions)
+        self.sampler = None
 
         self.observation_space = spaces.Dict({'features': env.observation_space})
         self.known_progressions = {}
         self.intrinsic = intrinsic
 
+    # def sample_ltl_goal(self):
+    #     # This function must return an LTL formula for the task
+    #     # Format:
+    #     # (
+    #     #    'and',
+    #     #    ('until','True', ('and', 'd', ('until','True',('not','c')))),
+    #     #    ('until','True', ('and', 'a', ('until','True', ('and', 'b', ('until','True','c')))))
+    #     # )
+    #     # NOTE: The propositions must be represented by a char
+    #     raise NotImplementedError
 
-    def sample_ltl_goal(self):
-        # This function must return an LTL formula for the task
-        # Format:
-        #(
-        #    'and',
-        #    ('until','True', ('and', 'd', ('until','True',('not','c')))),
-        #    ('until','True', ('and', 'a', ('until','True', ('and', 'b', ('until','True','c')))))
-        #)
-        # NOTE: The propositions must be represented by a char
-        raise NotImplementedError
-
-    def get_events(self, obs, act, next_obs):
-        # This function must return the events that currently hold on the environment
-        # NOTE: The events are represented by a string containing the propositions with positive values only (e.g., "ac" means that only propositions 'a' and 'b' hold)
-        raise NotImplementedError
-
-    def reset(self):
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
+        WrapperObsType, dict[str, Any]]:
         self.known_progressions = {}
-        self.obs = self.env.reset()
+        self.obs, info = self.env.reset()
 
         # Defining an LTL goal
-        self.ltl_goal     = self.sample_ltl_goal()
+        self.ltl_goal = self.sample_ltl_goal()
         self.ltl_original = self.ltl_goal
 
         # Adding the ltl goal to the observation
         if self.progression_mode == "partial":
-            ltl_obs = {'features': self.obs,'progress_info': self.progress_info(self.ltl_goal)}
+            ltl_obs = {'features': self.obs, 'progress_info': self.progress_info(self.ltl_goal)}
         else:
-            ltl_obs = {'features': self.obs,'text': self.ltl_goal}
-        return ltl_obs
+            ltl_obs = {'features': self.obs, 'text': self.ltl_goal}
+        return ltl_obs, info
 
-
-    def step(self, action):
+    def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         int_reward = 0
         # executing the action in the environment
-        next_obs, original_reward, env_done, info = self.env.step(action)
+        next_obs, original_reward, env_term, env_trunc, info = super().step(action)
 
         # progressing the ltl formula
-        truth_assignment = self.get_events(self.obs, action, next_obs)
+        truth_assignment = self.get_events(info)
         self.ltl_goal = self.progression(self.ltl_goal, truth_assignment)
-        self.obs      = next_obs
+        self.obs = next_obs
 
         # Computing the LTL reward and done signal
         ltl_reward = 0.0
-        ltl_done   = False
+        ltl_done = False
         if self.ltl_goal == 'True':
             ltl_reward = 1.0
-            ltl_done   = True
+            ltl_done = True
         elif self.ltl_goal == 'False':
             ltl_reward = -1.0
-            ltl_done   = True
+            ltl_done = True
         else:
             ltl_reward = int_reward
 
         # Computing the new observation and returning the outcome of this action
         if self.progression_mode == "full":
-            ltl_obs = {'features': self.obs,'text': self.ltl_goal}
+            ltl_obs = {'features': self.obs, 'text': self.ltl_goal}
         elif self.progression_mode == "none":
-            ltl_obs = {'features': self.obs,'text': self.ltl_original}
+            ltl_obs = {'features': self.obs, 'text': self.ltl_original}
         elif self.progression_mode == "partial":
             ltl_obs = {'features': self.obs, 'progress_info': self.progress_info(self.ltl_goal)}
         else:
             raise NotImplementedError
 
-        reward  = original_reward + ltl_reward
-        done    = env_done or ltl_done
-        return ltl_obs, reward, done, info
+        reward = original_reward + ltl_reward
+        term = env_term or ltl_done
+        return ltl_obs, reward, term, env_trunc, info
 
     def progression(self, ltl_formula, truth_assignment):
 
-        if (ltl_formula, truth_assignment) not in self.known_progressions:
-            result_ltl = ltl_progression.progress_and_clean(ltl_formula, truth_assignment)
-            self.known_progressions[(ltl_formula, truth_assignment)] = result_ltl
-
-        return self.known_progressions[(ltl_formula, truth_assignment)]
-
+        # if (ltl_formula, truth_assignment) not in self.known_progressions:
+        #     result_ltl = ltl_progression.progress_and_clean(ltl_formula, truth_assignment)
+        #     self.known_progressions[(ltl_formula, truth_assignment)] = result_ltl
+        #
+        # return self.known_progressions[(ltl_formula, truth_assignment)]
+        assert ltl_formula[0] == 'eventually'
+        target = ltl_formula[1]
+        if target in truth_assignment:
+            return 'True'
+        return ltl_formula
 
     # # X is a vector where index i is 1 if prop i progresses the formula, -1 if it falsifies it, 0 otherwise.
     def progress_info(self, ltl_formula):
+        assert False
         propositions = self.env.get_propositions()
         X = np.zeros(len(self.propositions))
 
@@ -139,27 +141,27 @@ class LTLEnv(gym.Wrapper):
         return X
 
     def sample_ltl_goal(self):
-        # NOTE: The propositions must be represented by a char
-        # This function must return an LTL formula for the task
-        formula = self.sampler.sample()
+        # # NOTE: The propositions must be represented by a char
+        # # This function must return an LTL formula for the task
+        # formula = self.sampler.sample()
+        #
+        # if isinstance(self.sampler, SequenceSampler):
+        #     def flatten(bla):
+        #         output = []
+        #         for item in bla:
+        #             output += flatten(item) if isinstance(item, tuple) else [item]
+        #         return output
+        #
+        #     length = flatten(formula).count("and") + 1
+        #     self.env.timeout = 25  # 10 * length
+        #
+        # return formula
+        return self.env.sample_ltl_goal()
 
-        if isinstance(self.sampler, SequenceSampler):
-            def flatten(bla):
-                output = []
-                for item in bla:
-                    output += flatten(item) if isinstance(item, tuple) else [item]
-                return output
-
-            length = flatten(formula).count("and") + 1
-            self.env.timeout = 25 # 10 * length
-
-        return formula
-
-
-    def get_events(self, obs, act, next_obs):
+    def get_events(self, info):
         # This function must return the events that currently hold on the environment
         # NOTE: The events are represented by a string containing the propositions with positive values only (e.g., "ac" means that only propositions 'a' and 'b' hold)
-        return self.env.get_events()
+        return self.env.get_events(info)
 
 
 class NoLTLWrapper(gym.Wrapper):
