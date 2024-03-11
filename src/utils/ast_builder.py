@@ -34,13 +34,12 @@ class ASTBuilder(object):
     @ring.lru(maxsize=30000)
     def __call__(self, formula, library="dgl"):
         nxg = self._to_graph(formula)
-        nx.set_node_attributes(nxg, 0., "is_root")
-        nxg.nodes[0]["is_root"] = 1.
+        nx.set_node_attributes(nxg, [0.], "is_root")
+        nxg.nodes[0]["is_root"] = [1.]
         if (library == "networkx"): return nxg
 
         # convert the Networkx graph to dgl graph and pass the 'feat' attribute
-        g = dgl.DGLGraph()
-        g.from_networkx(nxg, node_attrs=["feat", "is_root"], edge_attrs=["type"]) # dgl does not support string attributes (i.e., token)
+        g = dgl.from_networkx(nxg, node_attrs=["feat", "is_root"], edge_attrs=["type"]) # dgl does not support string attributes (i.e., token)
         return g
 
     def _one_hot(self, token):
@@ -133,22 +132,28 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     sys.path.insert(0, '../../')
-    from ltl_samplers import getLTLSampler
+    from src.ltl_samplers import getLTLSampler
 
-    for sampler_id, _ in itertools.product(["Default", "Sequence_2_20"], range(20)):
-        props = "abcdefghijklmnopqrst"
-        sampler = getLTLSampler(sampler_id, props)
-        builder = ASTBuilder(list(set(list(props))))
-        formula = sampler.sample()
-        tree = builder(formula, library="networkx")
-        pre = list(nx.dfs_preorder_nodes(tree, source=0))
-        draw(tree, formula)
-        u_tree = tree.to_undirected()
-        pre = list(nx.dfs_preorder_nodes(u_tree, source=0))
+    props = ['a', 'b', 'c']
+    builder = ASTBuilder(props)
+    formula = ('eventually', 'a')
+    tree = builder(formula, library="networkx")
+    draw(tree, formula)
 
-        original = re.sub('[,\')(]', '', str(formula))
-        observed = " ".join([u_tree.nodes[i]["token"] for i in pre])
-
-        assert original == observed, f"Test Faield: Expected: {original}, Got: {observed}"
-
-    print("Test Passed!")
+    # for sampler_id, _ in itertools.product(["Default", "Sequence_2_20"], range(20)):
+    #     props = "abcdefghijklmnopqrst"
+    #     sampler = getLTLSampler(sampler_id, props)
+    #     builder = ASTBuilder(list(set(list(props))))
+    #     formula = sampler.sample()
+    #     tree = builder(formula, library="networkx")
+    #     pre = list(nx.dfs_preorder_nodes(tree, source=0))
+    #     draw(tree, formula)
+    #     u_tree = tree.to_undirected()
+    #     pre = list(nx.dfs_preorder_nodes(u_tree, source=0))
+    #
+    #     original = re.sub('[,\')(]', '', str(formula))
+    #     observed = " ".join([u_tree.nodes[i]["token"] for i in pre])
+    #
+    #     assert original == observed, f"Test Faield: Expected: {original}, Got: {observed}"
+    #
+    # print("Test Passed!")

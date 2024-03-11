@@ -217,6 +217,19 @@ if __name__ == '__main__':
     #ltl = ('and',('eventually','a'),('eventually',('and','b',('eventually','c'))))
     #ltl = ('until',('not','a'),('and', 'b', ('eventually','d')))
     ltl = ('until',('not','a'),('and', 'b', ('until',('not','c'),'d')))
+    #ltl = ('and', ('eventually', ('and', 'a', ('eventually', ('and', 'b', ('eventually', 'c'))))), ('until',('not', 'c'),'b'))
+    # ltl = ('until', ('not', 'a'), ('eventually', 'b'))
+
+    def clean(ltl):
+        ltl_spot = _get_spot_format(ltl)
+        f = spot.formula(ltl_spot)
+        f = spot.simplify(f)
+        ltl_spot = f.__format__("l")
+        ltl_std, r = _get_std_format(ltl_spot.split(' '))
+        assert len(r) == 0, "Format error" + str(ltl_std) + " " + str(r)
+        return ltl_std
+
+    ltl = clean(ltl)
 
     while True:
         print(ltl)

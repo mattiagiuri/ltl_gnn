@@ -1,12 +1,11 @@
 import time
 import torch
-from torch_ac.utils.penv import ParallelEnv
-#import tensorboardX
+from src.torch_ac.utils.penv import ParallelEnv
 
-import utils
+import src.utils as utils
 import argparse
 import datetime
-from envs.gym_letters.letter_env import LetterEnv
+from src.envs.gym_letters.letter_env import LetterEnv
 
 """
 This class evaluates a model on a validation dataset generated online

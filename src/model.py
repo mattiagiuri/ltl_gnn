@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from torch.distributions import Categorical, Normal
 import torch_ac
 
-from gym.spaces import Box, Discrete
+from gymnasium.spaces import Box, Discrete
 
 from gnns.graphs.GCN import *
 from gnns.graphs.GNN import GNNMaker
@@ -27,9 +27,10 @@ from policy_network import PolicyNetwork
 def init_params(m):
     classname = m.__class__.__name__
     if classname.find("Linear") != -1:
-        m.weight.data.normal_(0, 1)
-        m.weight.data *= 1 / torch.sqrt(m.weight.data.pow(2).sum(1, keepdim=True))
-        if m.bias is not None:
+        param_name = 'weight' if hasattr(m, 'weight') else 'W'
+        getattr(m, param_name).data.normal_(0, 1)
+        getattr(m, param_name).data *= 1 / torch.sqrt(getattr(m, param_name).data.pow(2).sum(1, keepdim=True))
+        if hasattr(m, 'bias'):
             m.bias.data.fill_(0)
 
 

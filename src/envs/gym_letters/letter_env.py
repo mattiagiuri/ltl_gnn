@@ -5,8 +5,8 @@ if __name__ == '__main__':
 
 import random, math, os
 import numpy as np
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 
 class LetterEnv(gym.Env):
     """

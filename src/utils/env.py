@@ -4,17 +4,19 @@ Note that this is the place to include the right LTL-Wrapper for each environmen
 """
 
 
-import gym
-import gym_minigrid
-import envs.gym_letters
-import ltl_wrappers
+import safety_gymnasium
+
+from envs.ltl2action_wrapper import Ltl2ActionWrapper
+from envs.ltl_wrapper import LtlWrapper
+from envs.zones.safety_gym_wrapper.safety_gym_wrapper import SafetyGymWrapper
+from src.ltl_wrappers import LTLEnv
 
 def make_env(env_key, progression_mode, ltl_sampler, seed=None, intrinsic=0, noLTL=False):
-    env = gym.make(env_key)
-    env.seed(seed)
+    assert not noLTL
 
-    # Adding LTL wrappers
-    if (noLTL):
-        return ltl_wrappers.NoLTLWrapper(env)
-    else:
-        return ltl_wrappers.LTLEnv(env, progression_mode, ltl_sampler, intrinsic)
+    env = safety_gymnasium.make(env_key)
+    env = SafetyGymWrapper(env)
+    env = LtlWrapper(env)
+    env = Ltl2ActionWrapper(env)
+    env = LTLEnv(env, progression_mode, ltl_sampler, intrinsic)
+    return env

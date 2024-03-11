@@ -1,21 +1,19 @@
-import torch
 import torch.nn as nn
+import safety_gymnasium
 
-from envs import *
-from gym.envs.classic_control import PendulumEnv
+# from envs.gym_letters.letter_env import LetterEnv
+# from envs.minigrid.minigrid_env import MinigridEnv
 
 
 def getEnvModel(env, obs_space):
     env = env.unwrapped
 
-    if isinstance(env, LetterEnv):
-        return LetterEnvModel(obs_space)
-    if isinstance(env, MinigridEnv):
-        return MinigridEnvModel(obs_space)
-    if isinstance(env, ZonesEnv):
+    # if isinstance(env, LetterEnv):
+    #    return LetterEnvModel(obs_space)
+    # if isinstance(env, MinigridEnv):
+    #    return MinigridEnvModel(obs_space)
+    if isinstance(env, safety_gymnasium.builder.Builder):
         return ZonesEnvModel(obs_space)
-    if isinstance(env, PendulumEnv):
-        return PendulumEnvModel(obs_space)
     # Add your EnvModel here...
 
 

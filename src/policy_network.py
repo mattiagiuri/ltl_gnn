@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical, Normal
 
-from gym.spaces import Box, Discrete
+from gymnasium.spaces import Box, Discrete
 
 
 class PolicyNetwork(nn.Module):

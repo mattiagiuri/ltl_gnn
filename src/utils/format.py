@@ -7,75 +7,68 @@ import os
 import json
 import re
 import torch
-import torch_ac
-import gym
+import src.torch_ac as torch_ac
+import gymnasium as gym
 import numpy as np
-import utils
+import src.utils as utils
+from src.envs.gym_letters.letter_env import LetterEnv
+# from src.envs.gym_letters.simple_ltl_env import SimpleLTLEnv
+# from src.envs.minigrid.minigrid_env import MinigridEnv
+import safety_gymnasium
 
-from envs import *
-from ltl_wrappers import LTLEnv
+from src.ltl_wrappers import LTLEnv
 
 def get_obss_preprocessor(env, gnn, progression_mode):
     obs_space = env.observation_space
     vocab_space = env.get_propositions()
     vocab = None
 
-    if isinstance(env, LTLEnv): #LTLEnv Wrapped env
-        env = env.unwrapped
-        if isinstance(env, LetterEnv) or isinstance(env, MinigridEnv) or isinstance(env, ZonesEnv):
-            if progression_mode == "partial":
-                obs_space = {"image": obs_space.spaces["features"].shape, "progress_info": len(vocab_space)}
-                def preprocess_obss(obss, device=None):
-                    return torch_ac.DictList({
-                        "image": preprocess_images([obs["features"] for obs in obss], device=device),
-                        "progress_info":  torch.stack([torch.tensor(obs["progress_info"], dtype=torch.float) for obs in obss], dim=0).to(device)
-                    })
-
-            else:
-                obs_space = {"image": obs_space.spaces["features"].shape, "text": max(22, len(vocab_space) + 10)}
-                vocab_space = {"max_size": obs_space["text"], "tokens": vocab_space}
-
-                vocab = Vocabulary(vocab_space)
-                tree_builder = utils.ASTBuilder(vocab_space["tokens"])
-                def preprocess_obss(obss, device=None):
-                    return torch_ac.DictList({
-                        "image": preprocess_images([obs["features"] for obs in obss], device=device),
-                        "text":  preprocess_texts([obs["text"] for obs in obss], vocab, vocab_space, gnn=gnn, device=device, ast=tree_builder)
-                    })
-
-            preprocess_obss.vocab = vocab
-
-        elif isinstance(env, SimpleLTLEnv):
-            if progression_mode == "partial":
-                obs_space = {"progress_info": len(vocab_space)}
-                def preprocess_obss(obss, device=None):
-                    return torch_ac.DictList({
-                        "progress_info":  torch.stack([torch.tensor(obs["progress_info"], dtype=torch.float) for obs in obss], dim=0).to(device)
-                    })
-            else:
-                obs_space = {"text": max(22, len(vocab_space) + 10)}
-                vocab_space = {"max_size": obs_space["text"], "tokens": vocab_space}
-
-                vocab = Vocabulary(vocab_space)
-                tree_builder = utils.ASTBuilder(vocab_space["tokens"])
-
-                def preprocess_obss(obss, device=None):
-                    return torch_ac.DictList({
-                        "text":  preprocess_texts([obs["text"] for obs in obss], vocab, vocab_space, gnn=gnn, device=device, ast=tree_builder)
-                    })
-
-            preprocess_obss.vocab = vocab
+    assert isinstance(env, LTLEnv)
+    env = env.unwrapped
+    if isinstance(env, safety_gymnasium.builder.Builder):  # isinstance(env, LetterEnv) or isinstance(env, MinigridEnv) or
+        if progression_mode == "partial":
+            obs_space = {"image": obs_space.spaces["features"].shape, "progress_info": len(vocab_space)}
+            def preprocess_obss(obss, device=None):
+                return torch_ac.DictList({
+                    "image": preprocess_images([obs["features"] for obs in obss], device=device),
+                    "progress_info":  torch.stack([torch.tensor(obs["progress_info"], dtype=torch.float) for obs in obss], dim=0).to(device)
+                })
 
         else:
-            raise ValueError("Unknown observation space: " + str(obs_space))
-    # Check if obs_space is an image space
-    elif isinstance(obs_space, gym.spaces.Box):
-        obs_space = {"image": obs_space.shape}
+            obs_space = {"image": obs_space.spaces["features"].shape, "text": max(22, len(vocab_space) + 10)}
+            vocab_space = {"max_size": obs_space["text"], "tokens": vocab_space}
 
-        def preprocess_obss(obss, device=None):
-            return torch_ac.DictList({
-                "image": preprocess_images(obss, device=device)
-            })
+            vocab = Vocabulary(vocab_space)
+            tree_builder = utils.ASTBuilder(vocab_space["tokens"])
+            def preprocess_obss(obss, device=None):
+                return torch_ac.DictList({
+                    "image": preprocess_images([obs["features"] for obs in obss], device=device),
+                    "text":  preprocess_texts([obs["text"] for obs in obss], vocab, vocab_space, gnn=gnn, device=device, ast=tree_builder)
+                })
+
+        preprocess_obss.vocab = vocab
+
+    elif isinstance(env, SimpleLTLEnv):
+        if progression_mode == "partial":
+            obs_space = {"progress_info": len(vocab_space)}
+            def preprocess_obss(obss, device=None):
+                return torch_ac.DictList({
+                    "progress_info":  torch.stack([torch.tensor(obs["progress_info"], dtype=torch.float) for obs in obss], dim=0).to(device)
+                })
+        else:
+            obs_space = {"text": max(22, len(vocab_space) + 10)}
+            vocab_space = {"max_size": obs_space["text"], "tokens": vocab_space}
+
+            vocab = Vocabulary(vocab_space)
+            tree_builder = utils.ASTBuilder(vocab_space["tokens"])
+
+            def preprocess_obss(obss, device=None):
+                return torch_ac.DictList({
+                    "text":  preprocess_texts([obs["text"] for obs in obss], vocab, vocab_space, gnn=gnn, device=device, ast=tree_builder)
+                })
+
+        preprocess_obss.vocab = vocab
+
     else:
         raise ValueError("Unknown observation space: " + str(obs_space))
 

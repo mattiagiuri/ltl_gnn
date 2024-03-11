@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
 import torch_ac
 
-from gym.spaces import Box, Discrete
+from gymnasium.spaces import Box, Discrete
 
 from gnns.graphs.GCN import *
 from gnns.graphs.GNN import GNNMaker

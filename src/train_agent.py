@@ -31,7 +31,6 @@ import time
 import datetime
 import torch
 import torch_ac
-import tensorboardX
 import sys
 import glob
 from math import floor
@@ -60,7 +59,7 @@ parser.add_argument("--log-interval", type=int, default=10,
                     help="number of updates between two logs (default: 10)")
 parser.add_argument("--save-interval", type=int, default=100,
                     help="number of updates between two saves (default: 10, 0 means no saving)")
-parser.add_argument("--procs", type=int, default=16,
+parser.add_argument("--procs", type=int, default=1,
                     help="number of processes (default: 16)")
 parser.add_argument("--frames", type=int, default=2*10**8,
                     help="number of frames of training (default: 2*10e8)")
@@ -160,7 +159,6 @@ if args.pretrained_gnn:
 
 txt_logger = utils.get_txt_logger(model_dir + "/train")
 csv_file, csv_logger = utils.get_csv_logger(model_dir + "/train")
-tb_writer = tensorboardX.SummaryWriter(model_dir + "/train")
 utils.save_config(model_dir + "/train", args)
 
 # Log command and all script arguments
@@ -314,8 +312,8 @@ while num_frames < args.frames:
         csv_logger.writerow(data)
         csv_file.flush()
 
-        for field, value in zip(header, data):
-            tb_writer.add_scalar(field, value, num_frames)
+        # for field, value in zip(header, data):
+        #    tb_writer.add_scalar(field, value, num_frames)
 
     # Save status
 

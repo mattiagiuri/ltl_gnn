@@ -61,10 +61,9 @@ class LTLEnv(gym.Wrapper):
     #     # NOTE: The propositions must be represented by a char
     #     raise NotImplementedError
 
-    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
-        WrapperObsType, dict[str, Any]]:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> WrapperObsType:
         self.known_progressions = {}
-        self.obs, info = self.env.reset()
+        self.obs = self.env.reset()
 
         # Defining an LTL goal
         self.ltl_goal = self.sample_ltl_goal()
@@ -75,12 +74,12 @@ class LTLEnv(gym.Wrapper):
             ltl_obs = {'features': self.obs, 'progress_info': self.progress_info(self.ltl_goal)}
         else:
             ltl_obs = {'features': self.obs, 'text': self.ltl_goal}
-        return ltl_obs, info
+        return ltl_obs
 
-    def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+    def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, dict[str, Any]]:
         int_reward = 0
         # executing the action in the environment
-        next_obs, original_reward, env_term, env_trunc, info = super().step(action)
+        next_obs, original_reward, env_done, info = super().step(action)
 
         # progressing the ltl formula
         truth_assignment = self.get_events(info)
@@ -109,9 +108,8 @@ class LTLEnv(gym.Wrapper):
         else:
             raise NotImplementedError
 
-        reward = original_reward + ltl_reward
-        term = env_term or ltl_done
-        return ltl_obs, reward, term, env_trunc, info
+        reward = ltl_reward
+        return ltl_obs, reward, env_done, info
 
     def progression(self, ltl_formula, truth_assignment):
 
