@@ -75,10 +75,10 @@ class ACModel(nn.Module, torch_ac.ACModel):
             print("RNN Number of parameters:", sum(p.numel() for p in self.text_rnn.parameters() if p.requires_grad))
         
         elif self.use_ast:
-            hidden_dim = 32
             self.text_embedding_size = 32
-            self.gnn = GNNMaker(self.gnn_type, obs_space["text"], self.text_embedding_size).to(self.device)
-            print("GNN Number of parameters:", sum(p.numel() for p in self.gnn.parameters() if p.requires_grad))
+            # self.gnn = GNNMaker(self.gnn_type, obs_space["text"], self.text_embedding_size).to(self.device)
+            # print("GNN Number of parameters:", sum(p.numel() for p in self.gnn.parameters() if p.requires_grad))
+            self.embedding = nn.Linear(obs_space['text'], self.text_embedding_size).to(self.device)
 
        # Resize image embedding
         self.embedding_size = self.env_model.size()
@@ -124,7 +124,8 @@ class ACModel(nn.Module, torch_ac.ACModel):
 
         # Adding GNN
         elif self.use_ast:
-            embed_gnn = self.gnn(obs.text)
+            # embed_gnn = self.gnn(obs.text)
+            embed_gnn = self.embedding(obs.text)
             embedding = torch.cat((embedding, embed_gnn), dim=1) if embedding is not None else embed_gnn
 
         # Actor

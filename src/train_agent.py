@@ -261,6 +261,9 @@ if args.eval:
 
 # Train model
 
+print(f'Num parameters: {sum([p.numel() for p in acmodel.parameters()])}')
+# sys.exit(0)
+
 num_frames = status["num_frames"]
 update = status["update"]
 start_time = time.time()

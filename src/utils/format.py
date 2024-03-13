@@ -7,6 +7,8 @@ import os
 import json
 import re
 import torch
+from sklearn.preprocessing import OneHotEncoder
+
 import src.torch_ac as torch_ac
 import gymnasium as gym
 import numpy as np
@@ -35,15 +37,18 @@ def get_obss_preprocessor(env, gnn, progression_mode):
                 })
 
         else:
-            obs_space = {"image": obs_space.spaces["features"].shape, "text": max(22, len(vocab_space) + 10)}
+            obs_space = {"image": obs_space.spaces["features"].shape, "text": 5}
             vocab_space = {"max_size": obs_space["text"], "tokens": vocab_space}
 
             vocab = Vocabulary(vocab_space)
-            tree_builder = utils.ASTBuilder(vocab_space["tokens"])
+            # tree_builder = utils.ASTBuilder(vocab_space["tokens"])
+            ohc = OneHotEncoder(handle_unknown='ignore', dtype=np.int)
+            ohc.fit([['True']] + np.array(vocab_space['tokens']).reshape((-1, 1)).tolist())
             def preprocess_obss(obss, device=None):
                 return torch_ac.DictList({
                     "image": preprocess_images([obs["features"] for obs in obss], device=device),
-                    "text":  preprocess_texts([obs["text"] for obs in obss], vocab, vocab_space, gnn=gnn, device=device, ast=tree_builder)
+                    # "text":  preprocess_texts([obs["text"] for obs in obss], vocab, vocab_space, gnn=gnn, device=device, ast=tree_builder)
+                    "text": preprocess_encoding([obs["text"] for obs in obss], ohc, device=device)
                 })
 
         preprocess_obss.vocab = vocab
@@ -115,6 +120,10 @@ def preprocess4gnn(texts, ast, device=None):
     """
     return np.array([[ast(text).to(device)] for text in texts])
 
+def preprocess_encoding(texts, ohc, device=None):
+    texts = [[t] if t == 'True' else [t[1]] for t in texts]
+    return torch.FloatTensor(ohc.transform(texts).toarray())
+
 
 class Vocabulary:
     """A mapping from tokens to ids with a capacity of `max_size` words.
@@ -125,8 +134,8 @@ class Vocabulary:
         self.vocab = {}
 
         # populate the vocab with the LTL operators
-        for item in ['next', 'until', 'and', 'or', 'eventually', 'always', 'not', 'True', 'False']:
-            self.__getitem__(item)
+        # for item in ['next', 'until', 'and', 'or', 'eventually', 'always', 'not', 'True', 'False']:
+        #    self.__getitem__(item)
 
         for item in vocab_space["tokens"]:
             self.__getitem__(item)
