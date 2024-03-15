@@ -31,6 +31,7 @@ class PolicyNetwork(nn.Module):
                 fc(layer_dims[-1], action_dim)
             )
             self.softplus = nn.Softplus()
+            # self.logstd = nn.Parameter(torch.zeros(1, action_dim))
             # self.scales = [1] * action_dim if scales==None else scales
         else:
             print("Unsupported action_space type: ", self.action_space)
@@ -44,6 +45,8 @@ class PolicyNetwork(nn.Module):
         elif (isinstance(self.action_space, Box)):
             x = self.enc_(obs)
             mu  = 2 * self.mu_(x)# * self.scales
+            # logstd = self.logstd.expand_as(mu)
+            # std = torch.exp(logstd)
             std = self.softplus(self.std_(x)) + 1e-3
             return Normal(mu, std)
         else:

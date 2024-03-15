@@ -109,9 +109,9 @@ class ZonesEnvModel(EnvModel):
             self.embedding_size = 64 #(n-12)//lidar_num_bins + 4
             self.net_ = nn.Sequential(
                 nn.Linear(n, 128),
-                nn.ReLU(),
+                nn.Tanh(),
                 nn.Linear(128, self.embedding_size),
-                nn.ReLU()
+                nn.Tanh()
             )
 
             # embedding_size = number of propositional lidars + 4 normal sensors
