@@ -28,9 +28,9 @@ def get_status_path(model_dir):
     return os.path.join(model_dir, "status.pt")
 
 
-def get_status(model_dir):
+def get_status(model_dir, device):
     path = get_status_path(model_dir)
-    return torch.load(path, map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    return torch.load(path, map_location=torch.device(device))
 
 
 def save_status(status, model_dir):
