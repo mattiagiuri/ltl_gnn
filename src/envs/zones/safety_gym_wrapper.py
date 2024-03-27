@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 from math import prod
 from typing import Any
 
+import gymnasium
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
@@ -10,7 +9,7 @@ from gymnasium.core import ActType, WrapperObsType
 from gymnasium.spaces import Box
 
 
-class SafetyGymWrapper(gym.Wrapper):
+class SafetyGymWrapper(gymnasium.Wrapper):
     """
     A wrapper from safety gymnasium LTL environments to the gymnasium API.
     """
@@ -56,3 +55,7 @@ class SafetyGymWrapper(gym.Wrapper):
         info['label'] = []
         obs['wall_sensor'] = np.array([0, 0, 0, 0])
         return obs, info
+
+    @staticmethod
+    def get_propositions():
+        return ['magenta', 'green', 'yellow', 'blue']

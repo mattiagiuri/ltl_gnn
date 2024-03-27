@@ -21,3 +21,6 @@ class DictWrapper(gymnasium.Wrapper):
         WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
         return {self.obs_key: obs}, info
+
+
+# TODO: compare to old code and see what is different about the environment...

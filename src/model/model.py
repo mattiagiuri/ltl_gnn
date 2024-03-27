@@ -20,7 +20,7 @@ class Model(nn.Module):
 
     def forward(self, obs):
         env_embedding = self.env_net(obs.features)
-        ltl_embedding = self.ltl_net(obs.ltl)
+        ltl_embedding = self.ltl_net(obs.goal)
         embedding = torch.cat([env_embedding, ltl_embedding], dim=1)
 
         dist = self.actor(embedding)

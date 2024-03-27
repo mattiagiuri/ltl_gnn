@@ -11,11 +11,13 @@ import glob
 from math import floor
 
 import utils
+from ltl import EventuallySampler
 from model.ltl.ltl_embedding import LtlEmbedding
 from model.model import Model
 from envs.gym_letters.letter_env import LetterEnv
 from model.policy.continuous_actor import ContinuousActor
 from utils import torch_utils
+from envs import make_env
 
 # Parse arguments
 
@@ -129,7 +131,8 @@ txt_logger.info(f"Device: {device}\n")
 
 envs = []
 for i in range(args.procs):
-    envs.append(utils.make_env(args.env, args.ltl_sampler, args.seed, args.int_reward))
+    assert args.ltl_sampler == 'eventually_sampler'
+    envs.append(make_env(args.env, EventuallySampler))
 
 # Sync environments
 envs[0].reset(seed=args.seed)
