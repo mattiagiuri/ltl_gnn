@@ -12,15 +12,6 @@ def seed(seed):
         torch.cuda.manual_seed_all(seed)
 
 
-def synthesize(array):
-    d = collections.OrderedDict()
-    d["mean"] = numpy.mean(array)
-    d["std"] = numpy.std(array)
-    d["min"] = numpy.amin(array)
-    d["max"] = numpy.amax(array)
-    return d
-
-
 def average_reward_per_step(returns, num_frames):
     avgs = []
     assert(len(returns) == len(num_frames))

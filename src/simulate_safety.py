@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 
-
 from envs import make_env
 from ltl import EventuallySampler
 from model.ltl.ltl_embedding import LtlEmbedding
@@ -11,6 +10,7 @@ from model.agent import Agent
 from utils import torch_utils
 
 env = make_env('PointLtl2-v0', EventuallySampler, render_mode='human')
+
 
 def build_model():
     obs_dim = env.observation_space['features'].shape[0]
@@ -29,7 +29,7 @@ def build_model():
     return Model(env_net, ltl_net, actor, critic)
 
 
-model_dir = '../storage/big_refactor_no_penalty/train/status.pt'
+model_dir = 'logs/ppo/PointLtl2-v0/logging_test/1/status.pth'
 model = build_model()
 model.load_state_dict(torch.load(model_dir)['model_state'])
 agent = Agent(model)
@@ -40,12 +40,8 @@ for i in range(5000):
     action = agent.get_action(obs, deterministic=False)
     obs, reward, done, info = env.step(action)
     print(obs['goal'])
-    print(obs['goal_index'])
 
     if done:
         obs = env.reset()
-        print(obs['goal'])
-        print(obs['goal_index'])
-
 
 env.close()

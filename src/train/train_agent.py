@@ -18,6 +18,12 @@ from envs.gym_letters.letter_env import LetterEnv
 from model.policy.continuous_actor import ContinuousActor
 from utils import torch_utils
 from envs import make_env
+from utils.logging.file_logger import FileLogger
+from train.experiment_metadata import ExperimentMetadata
+from utils.logging.multi_logger import MultiLogger
+from utils.logging.text_logger import TextLogger
+from utils.logging.wandb_logger import WandbLogger
+from utils.model_store import ModelStore
 
 # Parse arguments
 
@@ -107,11 +113,18 @@ date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%S")
 
 model_name = args.model
 storage_dir = "storage" if args.checkpoint_dir is None else args.checkpoint_dir
-model_dir = utils.get_model_dir(model_name, storage_dir)
 
-txt_logger = utils.get_txt_logger(model_dir + "/train")
-csv_file, csv_logger = utils.get_csv_logger(model_dir + "/train")
-utils.save_config(model_dir + "/train", args)
+experiment = ExperimentMetadata(
+    algorithm=args.algo,
+    env=args.env,
+    name=model_name,
+    seed=args.seed,
+    config={
+        'test': 'test'
+    }
+)
+
+txt_logger = TextLogger(experiment)
 
 # Log command and all script arguments
 
@@ -140,12 +153,14 @@ envs[0].reset(seed=args.seed)
 txt_logger.info("Environments loaded\n")
 
 # Load training status
-
+model_store = ModelStore(experiment)
+resuming = False
 try:
-    status = utils.get_status(model_dir + "/train", device='cpu')
-except OSError:
+    status = model_store.load_training_status()
+    txt_logger.info("Resuming training from existing run.\n")
+    resuming = True
+except FileNotFoundError:
     status = {"num_frames": 0, "update": 0}
-txt_logger.info("Training status loaded.\n")
 
 
 def build_model():
@@ -168,11 +183,10 @@ def build_model():
 model = build_model()
 if "model_state" in status:
     model.load_state_dict(status["model_state"])
-    txt_logger.info("Loading model from existing run.\n")
+    txt_logger.info("Loaded model from existing run.\n")
 
 model.to(device)
-txt_logger.info("Model loaded.\n")
-txt_logger.info("{}\n".format(model))
+# txt_logger.info("{}\n".format(model))
 
 # Load algo
 algo = torch_ac.PPO(envs, model, device, args.frames_per_proc, args.discount, args.lr, args.gae_lambda,
@@ -181,8 +195,7 @@ algo = torch_ac.PPO(envs, model, device, args.frames_per_proc, args.discount, ar
 
 if "optimizer_state" in status:
     algo.optimizer.load_state_dict(status["optimizer_state"])
-    txt_logger.info("Loading optimizer from existing run.\n")
-txt_logger.info("Optimizer loaded.\n")
+    txt_logger.info("Loaded optimizer from existing run.\n")
 
 # init the evaluator
 if args.eval:
@@ -206,6 +219,14 @@ num_frames = status["num_frames"]
 update = status["update"]
 start_time = time.time()
 
+file_logger = FileLogger(experiment, resuming=resuming)
+loggers = [txt_logger, file_logger]
+use_wandb = False
+if use_wandb:
+    wandb_logger = WandbLogger(experiment, project_name='deep-ltl', resuming=resuming)
+    loggers.append(wandb_logger)
+logger = MultiLogger(*loggers)
+
 while num_frames < args.frames:
     # Update model parameters
 
@@ -223,48 +244,32 @@ while num_frames < args.frames:
     if update % args.log_interval == 0:
         fps = logs["num_frames"] / (update_end_time - update_start_time)
         duration = int(time.time() - start_time)
+        remaining_duration = int((args.frames - num_frames) / fps)
+        remaining_time = str(datetime.timedelta(seconds=remaining_duration))
 
-        return_per_episode = utils.synthesize(logs["return_per_episode"])
-        rreturn_per_episode = utils.synthesize(logs["reshaped_return_per_episode"])
         average_reward_per_step = utils.average_reward_per_step(logs["return_per_episode"],
                                                                 logs["num_frames_per_episode"])
         average_discounted_return = utils.average_discounted_return(logs["return_per_episode"],
                                                                     logs["num_frames_per_episode"], args.discount)
-        num_frames_per_episode = utils.synthesize(logs["num_frames_per_episode"])
+        logs.update({
+            "arps": average_reward_per_step,
+            "adr": average_discounted_return,
+            'frames': num_frames,
+            'fps': fps,
+            'remaining': remaining_time,
+        })
+        del logs['num_frames']
+        logger.log(logs)
 
-        header = ["update", "frames", "FPS", "duration"]
-        data = [update, num_frames, fps, duration]
-        header += ["rreturn_" + key for key in rreturn_per_episode.keys()]
-        data += rreturn_per_episode.values()
-        header += ["average_reward_per_step", "average_discounted_return"]
-        data += [average_reward_per_step, average_discounted_return]
-        header += ["num_frames_" + key for key in num_frames_per_episode.keys()]
-        data += num_frames_per_episode.values()
-        header += ["entropy", "value", "policy_loss", "value_loss", "grad_norm"]
-        data += [logs["entropy"], logs["value"], logs["policy_loss"], logs["value_loss"], logs["grad_norm"]]
-
-        txt_logger.info(
-            "U {} | F {:06} | FPS {:04.0f} | D {} | rR:μσmM {:.2f} {:.2f} {:.2f} {:.2f} | ARPS: {:.3f} | ADR: {:.3f} | F:μσmM {:.1f} {:.1f} {} {} | H {:.3f} | V {:.3f} | pL {:.3f} | vL {:.3f} | ∇ {:.3f}"
-            .format(*data))
-
-        header += ["return_" + key for key in return_per_episode.keys()]
-        data += return_per_episode.values()
-
-        if status["num_frames"] == 0:
-            csv_logger.writerow(header)
         status["num_frames"] = num_frames
-        csv_logger.writerow(data)
-        csv_file.flush()
-
-        # for field, value in zip(header, data):
-        #    tb_writer.add_scalar(field, value, num_frames)
 
     # Save status
 
     if args.save_interval > 0 and update % args.save_interval == 0:
         status = {"num_frames": num_frames, "update": update,
                   "model_state": algo.model.state_dict(), "optimizer_state": algo.optimizer.state_dict()}
-        utils.save_status(status, model_dir + "/train")
+        # utils.save_status(status, model_dir + "/train")
+        model_store.save_training_status(status)
         txt_logger.info("Status saved")
 
         if args.eval:
