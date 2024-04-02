@@ -421,7 +421,14 @@ class World:  # pylint: disable=too-many-instance-attributes
 
         if config:
             self.parse(config)
-        self.build()
+        self.model.body('agent').pos = np.r_[self.agent_xy, self._agent.z_height]
+        self.model.body('agent').quat = rot2quat(self.agent_rot)
+        for name, geom in self.geoms.items():
+            self.model.body(name).pos = geom['pos']
+            self.model.body(name).quat = rot2quat(geom['rot'])
+        self.data.qpos = np.zeros(3,)
+        self.data.qvel = np.zeros(3,)
+        mujoco.mj_setConst(self.model, self.data)
         if state:
             self.set_state(old_state)
         mujoco.mj_forward(self.model, self.data)  # pylint: disable=no-member

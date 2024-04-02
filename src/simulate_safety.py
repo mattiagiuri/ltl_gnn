@@ -29,15 +29,15 @@ def build_model():
     return Model(env_net, ltl_net, actor, critic)
 
 
-model_dir = 'logs/ppo/PointLtl2-v0/logging_test/1/status.pth'
+status = 'experiments/ppo/PointLtl2-v0/fixed_random_neg_1/1/status.pth'
 model = build_model()
-model.load_state_dict(torch.load(model_dir)['model_state'])
+model.load_state_dict(torch.load(status)['model_state'])
 agent = Agent(model)
 
 obs = env.reset()
 
 for i in range(5000):
-    action = agent.get_action(obs, deterministic=False)
+    action = agent.get_action(obs, deterministic=True)
     obs, reward, done, info = env.step(action)
     print(obs['goal'])
 

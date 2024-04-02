@@ -1,20 +1,16 @@
 import argparse
 import time
 import datetime
-import torch
 from torch import nn
 
 import preprocessing
 import torch_ac
 import sys
-import glob
-from math import floor
 
 import utils
 from ltl import EventuallySampler
 from model.ltl.ltl_embedding import LtlEmbedding
 from model.model import Model
-from envs.gym_letters.letter_env import LetterEnv
 from model.policy.continuous_actor import ContinuousActor
 from utils import torch_utils
 from envs import make_env

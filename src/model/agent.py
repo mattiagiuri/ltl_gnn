@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 import preprocessing
 from model.model import Model

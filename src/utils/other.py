@@ -30,3 +30,11 @@ def average_discounted_return(returns, num_frames, disc):
         discounted_returns.append(returns[i] * (disc ** (num_frames[i]-1)))
 
     return numpy.mean(discounted_returns)
+
+
+def timeit(func, *args, **kwargs):
+    import time
+    start = time.time()
+    result = func(*args, **kwargs)
+    print(f'Function {func.__name__} takes {time.time() - start:.2f} seconds')
+    return result
