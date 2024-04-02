@@ -23,14 +23,6 @@ class MultiLogger(Logger):
         for logger in self.loggers:
             logger.log(data)
 
-    def save_training_status(self, status: dict[str, any]):
-        for logger in self.loggers:
-            logger.save_training_status(status)
-
-    def save_best_model(self, status: dict[str, any]):
-        for logger in self.loggers:
-            logger.save_best_model(status)
-
     def finish(self):
         for logger in self.loggers:
             logger.finish()

@@ -129,7 +129,7 @@ txt_logger.info("{}\n".format(args))
 
 # Set seed for all randomness sources
 
-utils.seed(args.seed)
+utils.set_seed(args.seed)
 
 # Set device
 
