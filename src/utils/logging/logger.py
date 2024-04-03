@@ -1,20 +1,18 @@
+import argparse
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
 import numpy as np
 
-from train.experiment_metadata import ExperimentMetadata
-
 
 class Logger(ABC):
-    def __init__(self, experiment: ExperimentMetadata):
-        self.metadata = experiment
+    def __init__(self, config: argparse.Namespace):
+        self.config = config
         self.keys = None
 
     @abstractmethod
-    def log_metadata(self):
+    def log_config(self):
         """
-        Saves the metadata of the logger. Should be called from the logger's constructor.
+        Logs the given config.
         """
         pass
 

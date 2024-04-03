@@ -7,17 +7,16 @@ class MultiLogger(Logger):
     """
 
     def __init__(self, *loggers: Logger):
-        metadata = loggers[0].metadata if len(loggers) > 0 else {}
-        super().__init__(metadata)
+        config = loggers[0].config if len(loggers) > 0 else {}
+        super().__init__(config)
         for logger in loggers:
-            if logger.metadata != metadata:
-                raise ValueError("All loggers must have the same metadata.")
+            if logger.config != config:
+                raise ValueError("All loggers must have the same config.")
         self.loggers = loggers
-        self.log_metadata()
 
-    def log_metadata(self):
+    def log_config(self):
         for logger in self.loggers:
-            logger.log_metadata()
+            logger.log_config()
 
     def log(self, data: dict[str, float | list[float]]):
         for logger in self.loggers:

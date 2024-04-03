@@ -1,3 +1,5 @@
+import sys
+
 import torch
 from torch import nn
 
@@ -29,9 +31,9 @@ def build_model():
     return Model(env_net, ltl_net, actor, critic)
 
 
-status = 'experiments/ppo/PointLtl2-v0/fixed_random_neg_1/1/status.pth'
+training_status = torch.load('experiments/ppo/PointLtl2-v0/parserefactor/1/status.pth')
 model = build_model()
-model.load_state_dict(torch.load(status)['model_state'])
+model.load_state_dict(training_status['model_state'])
 agent = Agent(model)
 
 obs = env.reset()

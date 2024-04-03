@@ -5,11 +5,12 @@ from torch_ac.utils import DictList, ParallelEnv
 
 import numpy as np
 
+
 class BaseAlgo(ABC):
     """The base class for RL algorithms."""
 
-    def __init__(self, envs, model, device, num_frames_per_proc, discount, lr, gae_lambda, entropy_coef,
-                 value_loss_coef, max_grad_norm, recurrence, preprocess_obss):
+    def __init__(self, envs, model, device, num_steps_per_proc, discount, lr, gae_lambda, entropy_coef,
+                 value_loss_coef, max_grad_norm, preprocess_obss, recurrence=1):
         """
         Initializes a `BaseAlgo` instance.
 
@@ -19,8 +20,8 @@ class BaseAlgo(ABC):
             a list of environments that will be run in parallel
         acmodel : torch.Module
             the model
-        num_frames_per_proc : int
-            the number of frames collected by every process for an update
+        num_steps_per_proc : int
+            the number of steps collected by every process for an update
         discount : float
             the discount for future rewards
         lr : float
@@ -49,7 +50,7 @@ class BaseAlgo(ABC):
         self.env = ParallelEnv(envs)
         self.model = model
         self.device = device
-        self.num_frames_per_proc = num_frames_per_proc
+        self.num_steps_per_proc = num_steps_per_proc
         self.discount = discount
         self.lr = lr
         self.gae_lambda = gae_lambda
@@ -63,7 +64,7 @@ class BaseAlgo(ABC):
         # Control parameters
 
         assert self.model.recurrent or self.recurrence == 1
-        assert self.num_frames_per_proc % self.recurrence == 0
+        assert self.num_steps_per_proc % self.recurrence == 0
 
         # Configure model
 
@@ -73,21 +74,21 @@ class BaseAlgo(ABC):
         # Store helpers values
 
         self.num_procs = len(envs)
-        self.num_frames = self.num_frames_per_proc * self.num_procs
+        self.num_steps = self.num_steps_per_proc * self.num_procs
 
         # Initialize experience values
 
-        shape = (self.num_frames_per_proc, self.num_procs)
+        shape = (self.num_steps_per_proc, self.num_procs)
         act_shape = shape + self.action_space_shape
 
         self.obs = self.env.reset()
-        self.obss = [None]*(shape[0])
+        self.obss = [None] * (shape[0])
         if self.model.recurrent:
             self.memory = torch.zeros(shape[1], self.model.memory_size, device=self.device)
             self.memories = torch.zeros(*shape, self.model.memory_size, device=self.device)
         self.mask = torch.ones(shape[1], device=self.device)
         self.masks = torch.zeros(*shape, device=self.device)
-        self.actions = torch.zeros(*act_shape, device=self.device)#, dtype=torch.int)
+        self.actions = torch.zeros(*act_shape, device=self.device)  # , dtype=torch.int)
         self.values = torch.zeros(*shape, device=self.device)
         self.rewards = torch.zeros(*shape, device=self.device)
         self.advantages = torch.zeros(*shape, device=self.device)
@@ -96,11 +97,11 @@ class BaseAlgo(ABC):
         # Initialize log values
 
         self.log_episode_return = torch.zeros(self.num_procs, device=self.device)
-        self.log_episode_num_frames = torch.zeros(self.num_procs, device=self.device)
+        self.log_episode_num_steps = torch.zeros(self.num_procs, device=self.device)
 
         self.log_done_counter = 0
         self.log_return = [0] * self.num_procs
-        self.log_num_frames = [0] * self.num_procs
+        self.log_num_steps = [0] * self.num_procs
 
     def collect_experiences(self):
         """Collects rollouts and computes advantages.
@@ -114,8 +115,8 @@ class BaseAlgo(ABC):
         exps : DictList
             Contains actions, rewards, advantages etc as attributes.
             Each attribute, e.g. `exps.reward` has a shape
-            (self.num_frames_per_proc * num_envs, ...). k-th block
-            of consecutive `self.num_frames_per_proc` frames contains
+            (self.num_steps_per_proc * num_envs, ...). k-th block
+            of consecutive `self.num_steps_per_proc` steps contains
             data obtained from the k-th environment. Be careful not to mix
             data from different environments!
         logs : dict
@@ -123,7 +124,7 @@ class BaseAlgo(ABC):
             reward, policy loss, value loss, etc.
         """
 
-        for i in range(self.num_frames_per_proc):
+        for i in range(self.num_steps_per_proc):
             # Do one agent-environment interaction
 
             preprocessed_obs = self.preprocess_obss(self.obs, device=self.device)
@@ -153,16 +154,16 @@ class BaseAlgo(ABC):
             # Update log values
 
             self.log_episode_return += torch.tensor(reward, device=self.device, dtype=torch.float)
-            self.log_episode_num_frames += torch.ones(self.num_procs, device=self.device)
+            self.log_episode_num_steps += torch.ones(self.num_procs, device=self.device)
 
             for i, done_ in enumerate(done):
                 if done_:
                     self.log_done_counter += 1
                     self.log_return.append(self.log_episode_return[i].item())
-                    self.log_num_frames.append(self.log_episode_num_frames[i].item())
+                    self.log_num_steps.append(self.log_episode_num_steps[i].item())
 
             self.log_episode_return *= self.mask
-            self.log_episode_num_frames *= self.mask
+            self.log_episode_num_steps *= self.mask
 
         # Add advantage and return to experiences
 
@@ -173,10 +174,10 @@ class BaseAlgo(ABC):
             else:
                 _, next_value = self.model(preprocessed_obs)
 
-        for i in reversed(range(self.num_frames_per_proc)):
-            next_mask = self.masks[i+1] if i < self.num_frames_per_proc - 1 else self.mask
-            next_value = self.values[i+1] if i < self.num_frames_per_proc - 1 else next_value
-            next_advantage = self.advantages[i+1] if i < self.num_frames_per_proc - 1 else 0
+        for i in reversed(range(self.num_steps_per_proc)):
+            next_mask = self.masks[i + 1] if i < self.num_steps_per_proc - 1 else self.mask
+            next_value = self.values[i + 1] if i < self.num_steps_per_proc - 1 else next_value
+            next_advantage = self.advantages[i + 1] if i < self.num_steps_per_proc - 1 else 0
 
             delta = self.rewards[i] + self.discount * next_value * next_mask - self.values[i]
             self.advantages[i] = delta + self.discount * self.gae_lambda * next_advantage * next_mask
@@ -185,26 +186,26 @@ class BaseAlgo(ABC):
         #   the whole experience is the concatenation of the experience
         #   of each process.
         # In comments below:
-        #   - T is self.num_frames_per_proc,
+        #   - T is self.num_steps_per_proc,
         #   - P is self.num_procs,
         #   - D is the dimensionality.
 
         exps = DictList()
         exps.obs = [self.obss[i][j]
                     for j in range(self.num_procs)
-                    for i in range(self.num_frames_per_proc)]
+                    for i in range(self.num_steps_per_proc)]
         if self.model.recurrent:
             # T x P x D -> P x T x D -> (P * T) x D
             exps.memory = self.memories.transpose(0, 1).reshape(-1, *self.memories.shape[2:])
             # T x P -> P x T -> (P * T) x 1
             exps.mask = self.masks.transpose(0, 1).reshape(-1).unsqueeze(1)
         # for all tensors below, T x P -> P x T -> P * T
-        exps.action = self.actions.transpose(0, 1).reshape((-1, ) + self.action_space_shape)
+        exps.action = self.actions.transpose(0, 1).reshape((-1,) + self.action_space_shape)
         exps.value = self.values.transpose(0, 1).reshape(-1)
         exps.reward = self.rewards.transpose(0, 1).reshape(-1)
         exps.advantage = self.advantages.transpose(0, 1).reshape(-1)
         exps.returnn = exps.value + exps.advantage
-        exps.log_prob = self.log_probs.transpose(0, 1).reshape((-1, ) + self.action_space_shape)
+        exps.log_prob = self.log_probs.transpose(0, 1).reshape((-1,) + self.action_space_shape)
 
         # Preprocess experiences
 
@@ -216,13 +217,13 @@ class BaseAlgo(ABC):
 
         logs = {
             "return_per_episode": self.log_return[-keep:],
-            "num_frames_per_episode": self.log_num_frames[-keep:],
-            "num_frames": self.num_frames
+            "num_steps_per_episode": self.log_num_steps[-keep:],
+            "num_steps": self.num_steps
         }
 
         self.log_done_counter = 0
         self.log_return = self.log_return[-self.num_procs:]
-        self.log_num_frames = self.log_num_frames[-self.num_procs:]
+        self.log_num_steps = self.log_num_steps[-self.num_procs:]
 
         return exps, logs
 

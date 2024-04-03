@@ -1,28 +1,31 @@
+from typing import Callable
+
 import numpy
 import torch
 
+from config import PPOConfig
 from torch_ac.algos.base import BaseAlgo
+
 
 class PPO(BaseAlgo):
     """The Proximal Policy Optimization algorithm
     ([Schulman et al., 2015](https://arxiv.org/abs/1707.06347))."""
 
-    def __init__(self, envs, model, device=None, num_frames_per_proc=None, discount=0.99, lr=0.001, gae_lambda=0.95,
-                 entropy_coef=0.01, value_loss_coef=0.5, max_grad_norm=0.5, recurrence=4,
-                 adam_eps=1e-8, clip_eps=0.2, epochs=4, batch_size=256, preprocess_obss=None):
-        num_frames_per_proc = num_frames_per_proc or 128
+    def __init__(self, envs, model, device, config: PPOConfig, preprocess_obss: Callable):
 
-        super().__init__(envs, model, device, num_frames_per_proc, discount, lr, gae_lambda, entropy_coef,
-                         value_loss_coef, max_grad_norm, recurrence, preprocess_obss)
+        num_steps_per_proc = config.steps_per_process
 
-        self.clip_eps = clip_eps
-        self.epochs = epochs
-        self.batch_size = batch_size
+        super().__init__(envs, model, device, num_steps_per_proc, config.discount, config.lr, config.gae_lambda,
+                         config.entropy_coef, config.value_loss_coef, config.max_grad_norm, preprocess_obss)
+
+        self.clip_eps = config.clip_eps
+        self.epochs = config.epochs
+        self.batch_size = config.batch_size
         self.act_shape = envs[0].action_space.shape
 
         assert self.batch_size % self.recurrence == 0
 
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr, eps=adam_eps)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), config.lr, eps=config.optim_eps)
         self.batch_num = 0
 
     def update_parameters(self, exps):
@@ -67,7 +70,7 @@ class PPO(BaseAlgo):
 
                     # ratio = torch.exp(dist.log_prob(sb.action) - sb.log_prob)
                     delta_log_prob = dist.log_prob(sb.action) - sb.log_prob
-                    if (len(self.act_shape) == 1): # Not scalar actions (multivariate)
+                    if (len(self.act_shape) == 1):  # Not scalar actions (multivariate)
                         delta_log_prob = torch.sum(delta_log_prob, dim=1)
                     ratio = torch.exp(delta_log_prob)
                     surr1 = ratio * sb.advantage
@@ -106,8 +109,10 @@ class PPO(BaseAlgo):
 
                 self.optimizer.zero_grad()
                 batch_loss.backward()
-                grad_norm = sum(p.grad.data.norm(2).item() ** 2 for p in self.model.parameters() if p.requires_grad) ** 0.5
-                torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad], self.max_grad_norm)
+                grad_norm = sum(
+                    p.grad.data.norm(2).item() ** 2 for p in self.model.parameters() if p.requires_grad) ** 0.5
+                torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad],
+                                               self.max_grad_norm)
                 self.optimizer.step()
 
                 # Update log values
@@ -144,16 +149,16 @@ class PPO(BaseAlgo):
             the indexes of the experiences to be used at first for each batch
         """
 
-        indexes = numpy.arange(0, self.num_frames, self.recurrence)
+        indexes = numpy.arange(0, self.num_steps, self.recurrence)
         indexes = numpy.random.permutation(indexes)
 
         # Shift starting indexes by self.recurrence//2 half the time
         if self.batch_num % 2 == 1:
-            indexes = indexes[(indexes + self.recurrence) % self.num_frames_per_proc != 0]
+            indexes = indexes[(indexes + self.recurrence) % self.num_steps_per_proc != 0]
             indexes += self.recurrence // 2
         self.batch_num += 1
 
         num_indexes = self.batch_size // self.recurrence
-        batches_starting_indexes = [indexes[i:i+num_indexes] for i in range(0, len(indexes), num_indexes)]
+        batches_starting_indexes = [indexes[i:i + num_indexes] for i in range(0, len(indexes), num_indexes)]
 
         return batches_starting_indexes

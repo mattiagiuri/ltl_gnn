@@ -1,4 +1,5 @@
-from train.experiment_metadata import ExperimentMetadata
+import argparse
+
 from utils.logging.logger import Logger
 
 
@@ -7,12 +8,11 @@ class TextLogger(Logger):
     A logger that logs to standard output.
     """
 
-    def __init__(self, experiment: ExperimentMetadata):
-        super().__init__(experiment)
-        self.log_metadata()
+    def __init__(self, config: argparse.Namespace):
+        super().__init__(config)
 
-    def log_metadata(self):
-        print(self.metadata)
+    def log_config(self):
+        print(self.config.experiment)
 
     def log(self, data: dict[str, float | list[float]]):
         data = self.aggregate(data)
@@ -34,10 +34,10 @@ class TextLogger(Logger):
             return 'rμ'
         elif key == 'return_per_episode_std':
             return 'rσ'
-        elif key == 'num_frames_per_episode_mean':
-            return 'fμ'
-        elif key == 'num_frames_per_episode_std':
-            return 'fσ'
+        elif key == 'num_steps_per_episode_mean':
+            return 'sμ'
+        elif key == 'num_steps_per_episode_std':
+            return 'sσ'
         elif key == 'duration':
             return 't'
         else:

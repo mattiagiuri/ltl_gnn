@@ -1,14 +1,14 @@
+import argparse
 import os
 
 import torch
 
 import utils
-from train.experiment_metadata import ExperimentMetadata
 
 
 class ModelStore:
-    def __init__(self, experiment: ExperimentMetadata):
-        self.path = utils.get_experiment_path(experiment)
+    def __init__(self, config: argparse.Namespace):
+        self.path = utils.get_experiment_path(config)
 
     def save_training_status(self, status: dict[str, any]):
         torch.save(status, f'{self.path}/status.pth')
