@@ -11,11 +11,9 @@ import torch_ac
 
 import utils
 from ltl import EventuallySampler
-from model.ltl.ltl_embedding import LtlEmbedding
-from model.model import Model
-from model.policy.continuous_actor import ContinuousActor
-from utils import torch_utils
+from model import build_model
 from envs import make_env
+from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
 from utils.logging.text_logger import TextLogger
@@ -33,7 +31,8 @@ class Trainer:
     def train(self, log_csv: bool = True, log_wandb: bool = False):
         envs = self.make_envs()
         training_status, resuming = self.get_training_status()
-        model = self.build_model(envs[0], training_status)
+        model = build_model(envs[0], training_status, model_configs[self.args.model_config])
+        model.to(self.args.experiment.device)
         algo = torch_ac.PPO(envs, model, self.args.experiment.device, self.args.ppo,
                             preprocess_obss=preprocessing.preprocess_obss)
         if "optimizer_state" in training_status:
@@ -42,6 +41,7 @@ class Trainer:
         logger = self.make_logger(log_csv, log_wandb, resuming)
         logger.log_config()
 
+        self.text_logger.info(f'Num parameters: {torch_utils.get_number_of_params(model)}\n')
         num_steps = training_status["num_steps"]
         num_updates = training_status["num_updates"]
         while num_steps < self.args.experiment.num_steps:
@@ -83,31 +83,6 @@ class Trainer:
         except FileNotFoundError:
             training_status = {"num_steps": 0, "num_updates": 0}
         return training_status, resuming
-
-    # noinspection PyShadowingNames
-    def build_model(self, env: gymnasium.Env, training_status: dict) -> Model:
-        model_config = model_configs[self.args.model_config]
-        obs_dim = env.observation_space['features'].shape[0]
-        action_dim = env.action_space.shape[0]
-        env_net = torch_utils.make_mlp_layers([obs_dim, *model_config.env_net.layers],
-                                              activation=model_config.env_net.activation)
-        env_embedding_dim = model_config.env_net.layers[-1]
-        ltl_embedding_dim = 32
-        ltl_net = LtlEmbedding(5, ltl_embedding_dim)
-        actor = ContinuousActor(action_dim=action_dim,
-                                layers=[env_embedding_dim + ltl_embedding_dim, *model_config.actor.layers],
-                                activation=model_config.actor.activation,
-                                state_dependent_std=model_config.actor.state_dependent_std)
-        critic = torch_utils.make_mlp_layers([env_embedding_dim + ltl_embedding_dim, *model_config.critic.layers, 1],
-                                             activation=model_config.critic.activation,
-                                             final_layer_activation=False)
-        model = Model(env_net, ltl_net, actor, critic)
-        if "model_state" in training_status:
-            model.load_state_dict(training_status["model_state"])
-            self.text_logger.info("Loaded model from existing run.\n")
-        model.to(self.args.experiment.device)
-        self.text_logger.info(f'Num parameters: {torch_utils.get_number_of_params(model)}\n')
-        return model
 
     def make_logger(self, log_csv: bool, log_wandb: bool, resuming: bool) -> MultiLogger:
         loggers = [self.text_logger]
