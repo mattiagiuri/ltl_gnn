@@ -25,11 +25,11 @@ class GoalIndexWrapper(gymnasium.Wrapper):
         if not self.is_valid(obs['goal']):
             raise ValueError('Fixed embeddings only support reachability goals')
 
-        obs['goal_index'] = self.proposition_to_index[self.goal_to_label(obs['goal'])]
+        obs['goal_index'] = self.proposition_to_index[self.goal_to_proposition(obs['goal'])]
         reward = 0.
         if terminated:
             reward = -1.
-        elif self.goal_to_label(obs['goal']) in info['label']:
+        elif self.goal_to_proposition(obs['goal']) in info['propositions']:
             reward = 1.
             terminated = True
             obs['goal_index'] = len(self.proposition_to_index)  # Indicate that the goal has been reached
@@ -38,12 +38,12 @@ class GoalIndexWrapper(gymnasium.Wrapper):
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
         WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
-        obs['goal_index'] = self.proposition_to_index[self.goal_to_label(obs['goal'])]
+        obs['goal_index'] = self.proposition_to_index[self.goal_to_proposition(obs['goal'])]
         return obs, info
 
     def is_valid(self, goal: str) -> bool:
-        return goal[0] == 'F' and self.goal_to_label(goal) in self.proposition_to_index
+        return goal[0] == 'F' and self.goal_to_proposition(goal) in self.proposition_to_index
 
     @staticmethod
-    def goal_to_label(goal: str) -> str:
+    def goal_to_proposition(goal: str) -> str:
         return goal[1:].strip()
