@@ -7,7 +7,7 @@ import numpy as np
 def preprocess_obss(obss: list[dict[str, np.ndarray | str]], device=None) -> torch_ac.DictList:
     return torch_ac.DictList({
         "features": preprocess_features([obs["features"] for obs in obss], device=device),
-        "goal": torch.LongTensor([obs["goal_index"] for obs in obss], device=device)
+        "goal": torch.tensor([obs["goal_index"] for obs in obss], device=device, dtype=torch.long),
     })
 
 

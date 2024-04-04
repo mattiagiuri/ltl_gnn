@@ -8,7 +8,7 @@ from config import model_configs
 
 env = make_env('PointLtl2-v0', EventuallySampler, render_mode='human')
 config = model_configs['default']
-training_status = torch.load('experiments/ppo/PointLtl2-v0/parserefactor/1/status.pth')
+training_status = torch.load('experiments/ppo/PointLtl2-v0/testseed/0/status.pth', map_location='cpu')
 model = build_model(env, training_status, config)
 agent = Agent(model)
 

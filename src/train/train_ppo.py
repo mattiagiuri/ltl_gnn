@@ -69,8 +69,12 @@ class Trainer:
         for i in range(self.args.experiment.num_procs):
             assert self.args.experiment.ltl_sampler == 'eventually_sampler'
             envs.append(make_env(self.args.experiment.env, EventuallySampler))
-        # TODO: sample random seeds for the different environments
-        envs[0].reset(seed=self.args.experiment.seed)
+        # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
+        seed_offset = 100 * self.args.experiment.seed
+        seeds = [seed_offset + i for i in range(self.args.experiment.num_procs)]
+        self.text_logger.info(f"Using seeds: {seeds}\n")
+        for env, seed in zip(envs, seeds):
+            env.reset(seed=seed)
         self.text_logger.info("Environments loaded.\n")
         return envs
 
@@ -95,6 +99,7 @@ class Trainer:
     def augment_logs(self, logs: dict, update_time: float, num_steps: int) -> dict:
         sps = logs["num_steps"] / update_time
         remaining_duration = int((self.args.experiment.num_steps - num_steps) / sps)
+        remaining_duration = 0 if remaining_duration < 0 else remaining_duration
         remaining_time = str(datetime.timedelta(seconds=remaining_duration))
 
         average_reward_per_step = utils.average_reward_per_step(logs["return_per_episode"],
@@ -119,6 +124,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_arguments(config.PPOConfig, dest="ppo")
     parser.add_argument("--model_config", type=str, default="default", choices=model_configs.keys(),
                         required=True)
+    parser.add_argument("--log_wandb", action="store_true", default=False)
     args = parser.parse_args()
     return args
 
@@ -126,7 +132,10 @@ def parse_arguments() -> argparse.Namespace:
 def main():
     args = parse_arguments()
     trainer = Trainer(args)
-    trainer.train(log_csv=True, log_wandb=False)
+    start_time = time.time()
+    trainer.train(log_csv=True, log_wandb=args.log_wandb)
+    training_time = datetime.timedelta(seconds=int(time.time() - start_time))
+    print(f"Training took {training_time}.")
 
 
 if __name__ == '__main__':
