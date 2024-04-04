@@ -38,37 +38,26 @@ def get_model_and_assets():
     return xml_string, common.ASSETS
 
 
-@SUITE.add('benchmarking', 'easy')
-def easy(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
-    """Returns the easy point_mass task."""
+@SUITE.add('ltl')
+def ltl(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+    """Returns the LTL task."""
     physics = Physics.from_xml_string(*get_model_and_assets())
-    task = PointMass(randomize_gains=False, random=random)
+    task = LTLPointMass(randomize_gains=False, random=random)
     environment_kwargs = environment_kwargs or {}
-    return control.Environment(
-        physics, task, time_limit=time_limit, **environment_kwargs)
-
-
-@SUITE.add()
-def hard(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
-    """Returns the hard point_mass task."""
-    physics = Physics.from_xml_string(*get_model_and_assets())
-    task = PointMass(randomize_gains=True, random=random)
-    environment_kwargs = environment_kwargs or {}
-    return control.Environment(
-        physics, task, time_limit=time_limit, **environment_kwargs)
+    return control.Environment(physics, task, time_limit=time_limit, **environment_kwargs)
 
 
 class Physics(mujoco.Physics):
-    """physics for the point_mass domain."""
+    """Physics for the point_mass domain."""
 
     def point_mass_position(self):
         return self.named.data.geom_xpos['pointmass']
 
 
-class PointMass(base.Task):
-    """A point_mass `Task` to reach target with smooth reward."""
+class LTLPointMass(base.Task):
+    """The PointMass LTL task"""
 
-    def __init__(self, randomize_gains, random=None):
+    def __init__(self, randomize_gains=False, random=None):
         """Initialize an instance of `PointMass`.
 
         Args:
@@ -109,21 +98,22 @@ class PointMass(base.Task):
         obs = collections.OrderedDict()
         obs['position'] = physics.position()
         obs['velocity'] = physics.velocity()
-        obs['label'] = self.get_label(physics)
+        obs['propositions'] = self.get_propositions(physics)
         obs['terminated'] = False
         return obs
 
     def get_reward(self, physics):
         return 0
 
-    def observation_spec(self, physics):  # This is a hack, since the label and terminated information is not actually part of the observation
+    def observation_spec(self, physics):
+        # This is a hack, since the label and terminated information is not actually part of the observation
         observation = self.get_observation(physics)
-        del observation['label']
+        del observation['propositions']
         del observation['terminated']
         return _spec_from_observation(observation)
 
     @staticmethod
-    def get_label(physics):
+    def get_propositions(physics):
         pos = physics.point_mass_position()
         x, y = pos[0], pos[1]
         if .05 <= x <= .25 and .05 <= y <= .25:

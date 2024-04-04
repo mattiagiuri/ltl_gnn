@@ -45,26 +45,13 @@ def get_model_and_assets(num_poles=1):
     return _make_model(num_poles), common.ASSETS
 
 
-@SUITE.add('benchmarking')
-def balance(time_limit=_DEFAULT_TIME_LIMIT, random=None,
-            environment_kwargs=None):
-    """Returns the Cartpole Balance task."""
+@SUITE.add('ltl')
+def ltl(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+    """Returns the LTL task."""
     physics = Physics.from_xml_string(*get_model_and_assets())
-    task = Balance(swing_up=False, sparse=False, random=random)
+    task = LTLCartpole(swing_up=False, sparse=False, random=random)
     environment_kwargs = environment_kwargs or {}
-    return control.Environment(
-        physics, task, time_limit=time_limit, **environment_kwargs)
-
-
-@SUITE.add('benchmarking')
-def balance_sparse(time_limit=_DEFAULT_TIME_LIMIT, random=None,
-                   environment_kwargs=None):
-    """Returns the sparse reward variant of the Cartpole Balance task."""
-    physics = Physics.from_xml_string(*get_model_and_assets())
-    task = Balance(swing_up=False, sparse=True, random=random)
-    environment_kwargs = environment_kwargs or {}
-    return control.Environment(
-        physics, task, time_limit=time_limit, **environment_kwargs)
+    return control.Environment(physics, task, time_limit=time_limit, **environment_kwargs)
 
 
 def _make_model(n_poles):
@@ -114,17 +101,13 @@ class Physics(mujoco.Physics):
                           self.named.data.xmat[2:, ['zz', 'xz']].ravel()))
 
 
-class Balance(base.Task):
-    """A Cartpole `Task` to balance the pole.
-
-    State is initialized either close to the target configuration or at a random
-    configuration.
-    """
+class LTLCartpole(base.Task):
+    """The LTL task for cartpole."""
     _CART_RANGE = (-1.55, 1.55)
     _ANGLE_COSINE_RANGE = (.85, 1)
 
     def __init__(self, swing_up, sparse, random=None):
-        """Initializes an instance of `Balance`.
+        """Initializes an instance of `LTL`.
 
         Args:
           swing_up: A `bool`, which if `True` sets the cart to the middle of the
@@ -165,18 +148,19 @@ class Balance(base.Task):
         obs = collections.OrderedDict()
         obs['position'] = physics.bounded_position()
         obs['velocity'] = physics.velocity()
-        obs['label'] = self.get_label(physics)
-        obs['terminated'] = self.get_terminated(physics)
+        obs['propositions'] = self.get_propositions(physics)
+        obs['terminated'] = self.is_terminated(physics)
         return obs
 
-    def observation_spec(self, physics):  # This is a hack, since the label and terminated information is not actually part of the observation
+    def observation_spec(self, physics):
+        # This is a hack, since the label and terminated information is not actually part of the observation
         observation = self.get_observation(physics)
-        del observation['label']
+        del observation['propositions']
         del observation['terminated']
         return _spec_from_observation(observation)
 
     @staticmethod
-    def get_label(physics):
+    def get_propositions(physics):
         x_pos = physics.cart_position()
         if 0.9 <= x_pos <= 1.1:
             return ['green']
@@ -195,8 +179,7 @@ class Balance(base.Task):
                                                self._CART_RANGE)
             angle_in_bounds = rewards.tolerance(physics.pole_angle_cosine(),
                                                 self._ANGLE_COSINE_RANGE).prod()
-            # return cart_in_bounds * angle_in_bounds
-            return 0.
+            return cart_in_bounds * angle_in_bounds
         else:
             upright = (physics.pole_angle_cosine() + 1) / 2
             centered = rewards.tolerance(physics.cart_position(), margin=2)
@@ -213,7 +196,7 @@ class Balance(base.Task):
         """Returns a sparse or a smooth reward, as specified in the constructor."""
         return self._get_reward(physics, sparse=self._sparse)
 
-    def get_terminated(self, physics):
+    def is_terminated(self, physics):
         cart_in_bounds = rewards.tolerance(physics.cart_position(),
                                            self._CART_RANGE)
         angle_in_bounds = rewards.tolerance(physics.pole_angle_cosine(),
