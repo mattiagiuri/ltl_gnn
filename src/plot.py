@@ -9,8 +9,8 @@ sns.set_theme(font_scale=.8)
 
 
 def main():
-    env = 'PointLtl2-v0'
-    experiments = ['default']
+    env = 'ltl_point_mass'
+    experiments = ['big_model']
     df = process_logs(env, experiments)
     ax = sns.relplot(df, x='num_steps', y='return_smooth', kind='line', errorbar=('ci', 90), hue='exp')
     ax.set(ylabel='success rate')
@@ -24,6 +24,8 @@ def process_logs(env: str, experiments: list[str], smooth_radius=10):
         path = f'experiments/ppo/{env}/{experiment}'
         seeds = [int(x) for x in os.listdir(path) if os.path.isdir(f'{path}/{x}') and str.isnumeric(x)]
         for seed in seeds:
+            if seed != 42:
+                continue
             df = pd.read_csv(f'{path}/{seed}/log.csv')
             df['exp'] = experiment
             df['return'] = df['return_per_episode_mean']

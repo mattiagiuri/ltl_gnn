@@ -11,7 +11,7 @@ class GoalIndexWrapper(gymnasium.Wrapper):
     where p is a proposition in the environment.
     """
 
-    def __init__(self, env: gymnasium.Env):
+    def __init__(self, env: gymnasium.Env, punish_termination=False):
         super().__init__(env)
         if not isinstance(env.observation_space, gymnasium.spaces.Dict):
             raise ValueError('Goal index wrapper requires dict observations')
@@ -19,6 +19,7 @@ class GoalIndexWrapper(gymnasium.Wrapper):
             raise ValueError('Goal index wrapper requires goal in observation space')
         self.observation_space['goal_index'] = spaces.Discrete(len(env.get_propositions()) + 1)
         self.proposition_to_index = {p: i for i, p in enumerate(env.get_propositions())}
+        self.punish_termination = punish_termination
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         obs, _, terminated, truncated, info = super().step(action)
@@ -27,7 +28,7 @@ class GoalIndexWrapper(gymnasium.Wrapper):
 
         obs['goal_index'] = self.proposition_to_index[self.goal_to_proposition(obs['goal'])]
         reward = 0.
-        if terminated:
+        if self.punish_termination and terminated:
             reward = -1.
         elif self.goal_to_proposition(obs['goal']) in info['propositions']:
             reward = 1.

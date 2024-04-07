@@ -23,7 +23,7 @@ def dm_spec2gym_space(spec) -> spaces.Space[Any]:
             low=low,
             high=high,
             shape=spec.shape,
-            dtype=spec.dtype,  # pyright: ignore[reportGeneralTypeIssues]
+            dtype=spec.dtype,
         )
     elif type(spec) is Array:
         if np.issubdtype(spec.dtype, np.integer):
@@ -42,13 +42,13 @@ def dm_spec2gym_space(spec) -> spaces.Space[Any]:
             low=low,
             high=high,
             shape=spec.shape,
-            dtype=spec.dtype,  # pyright: ignore[reportGeneralTypeIssues]
+            dtype=spec.dtype
         )
     elif type(spec) is DiscreteArray:
         return spaces.Discrete(spec.num_values)
     else:
         raise NotImplementedError(
-            f"Cannot convert dm_spec to gymnasium space, unknown spec: {spec}, please report."
+            f"Cannot convert dm_spec to gymnasium space, unknown spec: {spec}."
         )
 
 
@@ -65,7 +65,7 @@ def dm_obs2gym_obs(obs) -> Any:
     """
     if isinstance(obs, (OrderedDict, dict)):
         return {key: dm_obs2gym_obs(value) for key, value in copy.copy(obs).items() if
-                key != 'terminated' and key != "label"}
+                key != 'terminated' and key != 'propositions'}
     else:
         return np.asarray(obs)
 
@@ -95,7 +95,7 @@ def dm_env_step2gym_step(timestep) -> tuple[Any, float, bool, bool, dict[str, An
     info = {
         "timestep.discount": timestep.discount,
         "timestep.step_type": timestep.step_type,
-        "label": timestep.observation["label"]
+        "propositions": timestep.observation["propositions"]
     }
 
     return (

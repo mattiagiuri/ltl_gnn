@@ -47,6 +47,9 @@ class Trainer:
         while num_steps < self.args.experiment.num_steps:
             start = time.time()
             exps, logs = algo.collect_experiences()
+            for env in envs:
+                ltl_sampler = utils.call_wrapper_function('get_ltl_sampler', env)
+                ltl_sampler.returns = logs['avg_goal_returns']
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)
             update_time = time.time() - start
@@ -124,7 +127,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_arguments(config.PPOConfig, dest="ppo")
     parser.add_argument("--model_config", type=str, default="default", choices=model_configs.keys(),
                         required=True)
-    parser.add_argument("--log_wandb", action="store_true", default=False)
+    parser.add_argument("--log_csv",  action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--log_wandb", action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
     return args
 
@@ -133,7 +137,7 @@ def main():
     args = parse_arguments()
     trainer = Trainer(args)
     start_time = time.time()
-    trainer.train(log_csv=True, log_wandb=args.log_wandb)
+    trainer.train(log_csv=args.log_csv, log_wandb=args.log_wandb)
     training_time = datetime.timedelta(seconds=int(time.time() - start_time))
     print(f"Training took {training_time}.")
 

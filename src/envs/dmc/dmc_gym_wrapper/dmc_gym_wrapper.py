@@ -1,6 +1,4 @@
 # Adapted from Shimmy (MIT License): https://github.com/Farama-Foundation/Shimmy/blob/main/shimmy/dm_control_compatibility.py
-from __future__ import annotations
-
 from typing import Any
 
 import gymnasium as gym
@@ -14,7 +12,7 @@ class DMCGymWrapper(gym.Env):
     """
     A wrapper from (custom) DeepMind Control Suite environments to the gymnasium API.
     """
-    metadata = {"render_modes": ["rgb_array"], "render_fps": 100}
+    metadata = {"render_modes": ["rgb_array"], "render_fps": 60}
 
     def __init__(self, env, render_mode=None):
         self._env = env
@@ -24,6 +22,8 @@ class DMCGymWrapper(gym.Env):
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
+        self.height = 480
+        self.width = 640
 
     @property
     def dt(self):
@@ -40,7 +40,6 @@ class DMCGymWrapper(gym.Env):
 
         timestep = self._env.reset()
         obs, reward, terminated, truncated, info = dm_env_step2gym_step(timestep)
-
         return obs, info
 
     def step(
@@ -53,7 +52,7 @@ class DMCGymWrapper(gym.Env):
     def render(self) -> np.ndarray | None:
         """Renders the dm-control env."""
         if self.render_mode == "rgb_array":
-            return self._env.physics.render()
+            return self._env.physics.render(self.height, self.width)
 
     def close(self):
         """Closes the environment."""
@@ -75,3 +74,7 @@ class DMCGymWrapper(gym.Env):
     def __getattr__(self, item: str):
         """If the attribute is missing, try getting the attribute from dm_control env."""
         return getattr(self._env, item)
+
+    def get_propositions(self) -> list[str]:
+        """Returns the propositions of the environment."""
+        return self._env.task.get_propositions()

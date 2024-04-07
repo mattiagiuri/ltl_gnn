@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Optional
 
 from dataclasses import dataclass
 
@@ -22,7 +22,7 @@ class StandardNetConfig:
 class ModelConfig:
     actor: ActorConfig
     critic: StandardNetConfig
-    env_net: StandardNetConfig
+    env_net: Optional[StandardNetConfig]
 
 
 default_model_config = ModelConfig(
@@ -33,6 +33,22 @@ default_model_config = ModelConfig(
             output=nn.Tanh
         ),
         state_dependent_std=True
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.Tanh
+    ),
+    env_net=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.Tanh
+    )
+)
+
+point_mass = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64],
+        activation=nn.Tanh,
+        state_dependent_std=False
     ),
     critic=StandardNetConfig(
         layers=[64, 64],

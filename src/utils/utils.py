@@ -2,6 +2,7 @@ import random
 from typing import Callable
 import time
 
+import gymnasium
 import numpy as np
 import torch
 
@@ -19,3 +20,11 @@ def timeit(func: Callable, *args, **kwargs):
     result = func(*args, **kwargs)
     print(f'Function {func.__name__} takes {time.time() - start:.2f} seconds')
     return result
+
+
+def call_wrapper_function(func: str, wrapper: gymnasium.Wrapper, *args, **kwargs):
+    while not hasattr(wrapper, func):
+        if not hasattr(wrapper, 'env'):
+            raise AttributeError(f'Wrapper does not have attribute {func}')
+        wrapper = wrapper.env
+    return getattr(wrapper, func)(*args, **kwargs)

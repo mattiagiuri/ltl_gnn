@@ -35,5 +35,5 @@ class ContinuousActor(nn.Module):
             std = self.softplus(self.std(hidden))
         else:
             std = self.logstd.expand_as(mu).exp()
-        std += + 1e-3
+        std = std + 1e-3
         return Normal(mu, std)
