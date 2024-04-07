@@ -2,6 +2,8 @@ from typing import Type
 
 from gymnasium.wrappers import FlattenObservation
 
+from envs.alternate_wrapper import AlternateWrapper
+from envs.dict_wrapper import DictWrapper
 from envs.dmc.dmc_gym_wrapper.dmc_gym_wrapper import DMCGymWrapper
 from envs.zones.safety_gym_wrapper import SafetyGymWrapper
 from envs.ltl_goal_wrapper import LTLGoalWrapper
@@ -44,7 +46,13 @@ def make_dmc_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | No
     env = suite.load(domain_name=name, task_name='ltl', visualize_reward=False)
     env = DMCGymWrapper(env, render_mode=render_mode)
     env = FlattenObservation(env)
-    env = LTLGoalWrapper(env, ltl_sampler(env.get_propositions()))
-    env = GoalIndexWrapper(env, punish_termination=False)
-    env = RemoveTruncWrapper(env)
+    if name.startswith('ltl_cartpole'):
+        # load alternate task
+        env = DictWrapper(env)
+        env = AlternateWrapper(env, ['yellow', 'green'])
+        env = RemoveTruncWrapper(env)
+    else:
+        env = LTLGoalWrapper(env, ltl_sampler(env.get_propositions()))
+        env = GoalIndexWrapper(env, punish_termination=False)
+        env = RemoveTruncWrapper(env)
     return env

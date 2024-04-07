@@ -17,21 +17,21 @@ def render(env) -> int:
 
 
 def main():
-    env_name = 'ltl_point_mass'
-    exp = 'big_model'
+    env_name = 'ltl_cartpole'
+    exp = 'first'
 
     env = make_env(env_name, EventuallySampler, render_mode='rgb_array')
     config = model_configs['default']
-    training_status = torch.load(f'experiments/ppo/{env_name}/{exp}/42/status.pth', map_location='cpu')
+    training_status = torch.load(f'experiments/ppo/{env_name}/{exp}/1/status.pth', map_location='cpu')
     model = build_model(env, training_status, config)
     agent = Agent(model)
 
     obs = env.reset()
-    print(obs['goal'])
+    # print(obs['goal'])
     ret = 0
     for i in range(5000):
         key = render(env)
-        action = agent.get_action(obs, deterministic=False)
+        action = agent.get_action(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
         ret += reward
         if key == ord('q'):
@@ -41,7 +41,7 @@ def main():
         if done:
             obs = env.reset()
             print(f'Done! Reward: {ret}')
-            print(obs['goal'])
+            # print(obs['goal'])
             ret = 0
 
     env.close()
