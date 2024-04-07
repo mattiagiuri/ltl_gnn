@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
+
 import torch
 
 from torch_ac.utils import DictList, ParallelEnv
@@ -103,6 +105,9 @@ class BaseAlgo(ABC):
         self.log_return = [0] * self.num_procs
         self.log_num_steps = [0] * self.num_procs
 
+        self.goal_returns = defaultdict(float)
+        self.goal_counts = defaultdict(int)
+
     def collect_experiences(self):
         """Collects rollouts and computes advantages.
 
@@ -156,11 +161,16 @@ class BaseAlgo(ABC):
             self.log_episode_return += torch.tensor(reward, device=self.device, dtype=torch.float)
             self.log_episode_num_steps += torch.ones(self.num_procs, device=self.device)
 
-            for i, done_ in enumerate(done):
+            for j, done_ in enumerate(done):
                 if done_:
                     self.log_done_counter += 1
-                    self.log_return.append(self.log_episode_return[i].item())
-                    self.log_num_steps.append(self.log_episode_num_steps[i].item())
+                    self.log_return.append(self.log_episode_return[j].item())
+                    self.log_num_steps.append(self.log_episode_num_steps[j].item())
+
+                    ret = self.log_episode_return[j].item()
+                    goal = self.obss[i][j]['goal']
+                    self.goal_returns[goal] += ret
+                    self.goal_counts[goal] += 1
 
             self.log_episode_return *= self.mask
             self.log_episode_num_steps *= self.mask
@@ -218,12 +228,15 @@ class BaseAlgo(ABC):
         logs = {
             "return_per_episode": self.log_return[-keep:],
             "num_steps_per_episode": self.log_num_steps[-keep:],
-            "num_steps": self.num_steps
+            "num_steps": self.num_steps,
+            "avg_goal_returns": {k: v / self.goal_counts[k] for k, v in self.goal_returns.items()},
         }
 
         self.log_done_counter = 0
         self.log_return = self.log_return[-self.num_procs:]
         self.log_num_steps = self.log_num_steps[-self.num_procs:]
+        self.goal_returns = defaultdict(float)
+        self.goal_counts = defaultdict(int)
 
         return exps, logs
 

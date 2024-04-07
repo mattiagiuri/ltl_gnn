@@ -12,6 +12,7 @@ class Args:
     seed: int | list[int]
     device: str
     num_procs: int
+    log_csv: bool = True
     log_wandb: bool = False
 
 
@@ -33,7 +34,7 @@ def main():
             '--log_interval', '1',
             '--save_interval', '2',
             '--epochs', '10',
-            '--num_steps', '10_000_000',
+            '--num_steps', '3_500_000',
             '--model_config', 'default',
             '--name', args.name,
             '--seed', str(seed),
@@ -42,13 +43,15 @@ def main():
         ]
         if args.log_wandb:
             command.append('--log_wandb')
+        if not args.log_csv:
+            command.append('--no-log_csv')
 
         subprocess.run(command, env=env)
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name high_entropy --seed 1 --log_wandb'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name curr --seed 1 --log_wandb'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

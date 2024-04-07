@@ -19,8 +19,8 @@ def render(env) -> tuple[np.ndarray, int]:
 
 
 def main():
-    env_name = 'ltl_cartpole'
-    exp = 'first'
+    env_name = 'ltl_point_mass'
+    exp = 'curr'
     save_gif = False
 
     env = make_env(env_name, EventuallySampler, render_mode='rgb_array')
@@ -32,13 +32,13 @@ def main():
     images = []
 
     obs = env.reset()
-    # print(obs['goal'])
+    print(obs['goal'])
     ret = 0
     for i in range(5000):
         im, key = render(env)
         if save_gif:
             images.append(im)
-        action = agent.get_action(obs, deterministic=False)
+        action = agent.get_action(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
         ret += reward
         if key == ord('q'):
@@ -48,7 +48,7 @@ def main():
         if done:
             obs = env.reset()
             print(f'Done! Reward: {ret}')
-            # print(obs['goal'])
+            print(obs['goal'])
             ret = 0
 
     env.close()
