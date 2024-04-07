@@ -56,7 +56,7 @@ def ltl(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
 
 def _make_model(n_poles):
     """Generates an xml string defining a cart with `n_poles` bodies."""
-    with open(f'envs/dmc/ltl_cartpole/cartpole.xml', mode='rb') as f:
+    with open(f'src/envs/dmc/ltl_cartpole/cartpole.xml', mode='rb') as f:
         xml_string = f.read()
     if n_poles == 1:
         return xml_string
@@ -148,7 +148,7 @@ class LTLCartpole(base.Task):
         obs = collections.OrderedDict()
         obs['position'] = physics.bounded_position()
         obs['velocity'] = physics.velocity()
-        obs['propositions'] = self.get_propositions(physics)
+        obs['propositions'] = self.compute_active_propositions(physics)
         obs['terminated'] = self.is_terminated(physics)
         return obs
 
@@ -160,7 +160,7 @@ class LTLCartpole(base.Task):
         return _spec_from_observation(observation)
 
     @staticmethod
-    def get_propositions(physics):
+    def compute_active_propositions(physics):
         x_pos = physics.cart_position()
         if 0.9 <= x_pos <= 1.1:
             return ['green']
@@ -172,6 +172,10 @@ class LTLCartpole(base.Task):
             return ['red']
         else:
             return []
+
+    @staticmethod
+    def get_propositions() -> list[str]:
+        return sorted(['green', 'yellow'])
 
     def _get_reward(self, physics, sparse):
         if sparse:

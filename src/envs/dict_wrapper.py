@@ -10,7 +10,7 @@ class DictWrapper(gymnasium.Wrapper):
         super().__init__(env)
         if isinstance(env.observation_space, spaces.Dict):
             return
-        self.obs_key = 'raw_observation'
+        self.obs_key = 'features'
         self.observation_space = spaces.Dict({self.obs_key: env.observation_space})
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:

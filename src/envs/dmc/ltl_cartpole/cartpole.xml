@@ -2,7 +2,7 @@
   <include file="./common/skybox.xml"/>
   <include file="./common/visual.xml"/>
   <include file="./common/materials.xml"/>
-  <include file="envs/dmc/ltl_materials.xml"/>
+  <include file="src/envs/dmc/ltl_materials.xml"/>
 
   <option timestep="0.01" integrator="RK4">
     <flag contact="disable" energy="enable"/>

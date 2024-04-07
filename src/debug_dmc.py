@@ -7,15 +7,15 @@ dmc.register_with_suite()
 
 
 def main():
-    env = suite.load(domain_name="ltl_cartpole", task_name="ltl", visualize_reward=True)
+    env = suite.load(domain_name="ltl_point_mass", task_name="ltl", visualize_reward=False)
     action_spec = env.action_spec()
 
     def random_policy(time_step):
         print(time_step.observation['propositions'])
-        print(time_step.observation['terminated'])
-        return np.random.uniform(low=action_spec.minimum,
-                                 high=action_spec.maximum,
-                                 size=action_spec.shape)
+        # return np.random.uniform(low=action_spec.minimum,
+        #                          high=action_spec.maximum,
+        #                          size=action_spec.shape)
+        return np.array([1., -1.])
 
     viewer.launch(env, policy=random_policy)
 

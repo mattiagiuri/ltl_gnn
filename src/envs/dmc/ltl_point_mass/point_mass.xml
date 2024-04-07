@@ -2,7 +2,7 @@
     <include file="./common/skybox.xml"/>
     <include file="./common/visual.xml"/>
     <include file="./common/materials.xml"/>
-    <include file="envs/dmc/ltl_materials.xml"/>
+    <include file="src/envs/dmc/ltl_materials.xml"/>
 
     <option timestep="0.02">
         <flag contact="disable"/>
@@ -29,10 +29,10 @@
             <geom name="pointmass" type="sphere" size=".01" material="self" mass=".3"/>
         </body>
 
-        <site type="box" pos=".15 .15 .0001" size=".1 .1 .0001" material="green"/>
-        <site type="box" pos="-.15 .15 .0001" size=".1 .1 .0001" material="blue"/>
-        <site type="box" pos="-.15 -.15 .0001" size=".1 .1 .0001" material="red"/>
-        <site type="box" pos=".15 -.15 .0001" size=".1 .1 .0001" material="yellow"/>
+        <site type="box" pos=".15 .15 .0001" size=".05 .05 .0001" material="green"/>
+        <site type="box" pos="-.15 .15 .0001" size=".05 .05 .0001" material="blue"/>
+        <site type="box" pos="-.15 -.15 .0001" size=".05 .05 .0001" material="red"/>
+        <site type="box" pos=".15 -.15 .0001" size=".05 .05 .0001" material="yellow"/>
     </worldbody>
 
     <tendon>
