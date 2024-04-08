@@ -1,0 +1,2 @@
+simple_parsing==0.1.5
+wandb==0.16.6
