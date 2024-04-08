@@ -4,8 +4,6 @@ from gymnasium.wrappers import FlattenObservation
 
 from envs.alternate_wrapper import AlternateWrapper
 from envs.dict_wrapper import DictWrapper
-from envs.dmc.dmc_gym_wrapper.dmc_gym_wrapper import DMCGymWrapper
-from envs.zones.safety_gym_wrapper import SafetyGymWrapper
 from envs.ltl_goal_wrapper import LTLGoalWrapper
 from envs.goal_index_wrapper import GoalIndexWrapper
 from envs.remove_trunc_wrapper import RemoveTruncWrapper
@@ -27,6 +25,7 @@ def is_safety_gym_env(name: str) -> bool:
 def make_safety_gym_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | None = None):
     # noinspection PyUnresolvedReferences
     import safety_gymnasium
+    from envs.zones.safety_gym_wrapper import SafetyGymWrapper
 
     env = safety_gymnasium.make(name, render_mode=render_mode)
     env = SafetyGymWrapper(env)
@@ -42,6 +41,7 @@ def make_dmc_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | No
     from dm_control import suite, viewer
     import envs.dmc as dmc
     dmc.register_with_suite()
+    from envs.dmc.dmc_gym_wrapper.dmc_gym_wrapper import DMCGymWrapper
 
     env = suite.load(domain_name=name, task_name='ltl', visualize_reward=False)
     env = DMCGymWrapper(env, render_mode=render_mode)
