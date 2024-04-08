@@ -30,7 +30,7 @@ def make_safety_gym_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: s
     env = safety_gymnasium.make(name, render_mode=render_mode)
     env = SafetyGymWrapper(env)
     env = FlattenObservation(env)
-    env = LTLGoalWrapper(env, ltl_sampler(env.get_propositions()))
+    env = LTLGoalWrapper(env, ltl_sampler(env.get_wrapper_attr('get_propositions')()))
     env = GoalIndexWrapper(env, punish_termination=True)
     env = RemoveTruncWrapper(env)
     return env
@@ -52,7 +52,7 @@ def make_dmc_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | No
         env = AlternateWrapper(env, ['yellow', 'green'])
         env = RemoveTruncWrapper(env)
     else:
-        env = LTLGoalWrapper(env, ltl_sampler(env.get_propositions()))
+        env = LTLGoalWrapper(env, ltl_sampler(env.get_wrapper_attr('get_propositions')()))
         env = GoalIndexWrapper(env, punish_termination=False)
         env = RemoveTruncWrapper(env)
     return env

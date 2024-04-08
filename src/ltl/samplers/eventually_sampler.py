@@ -15,12 +15,19 @@ class EventuallySampler(LTLSampler):
     def sample(self) -> str:
         if self.returns is None:
             return f'F {random.choice(self.propositions)}'
+        assert len(self.returns) == len(self.propositions)
         probs = self.compute_sampling_prob()
         return f'F {np.random.choice(self.propositions, p=probs)}'
 
     def compute_sampling_prob(self) -> np.ndarray:
-        returns = sorted(self.returns.items(), key=lambda kv: kv[0])
-        returns = torch.tensor([r[1] for r in returns])
-        assert (returns <= 1).all().item()
-        probs = torch.nn.functional.softmax(-returns / self.temperature, dim=0)
+        rets = sorted(self.returns.items(), key=lambda kv: kv[0])
+        rets = torch.tensor([r[1] for r in rets])
+        assert (rets <= 1).all().item()
+        probs = torch.nn.functional.softmax(-rets / self.temperature, dim=0)
         return probs.numpy()
+
+    def update_returns(self, returns: dict[str, float]):
+        if self.returns is None:
+            self.returns = returns
+        else:
+            self.returns.update(returns)

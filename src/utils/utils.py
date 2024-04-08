@@ -1,4 +1,5 @@
 import random
+import subprocess
 from typing import Callable
 import time
 
@@ -22,9 +23,6 @@ def timeit(func: Callable, *args, **kwargs):
     return result
 
 
-def call_wrapper_function(func: str, wrapper: gymnasium.Wrapper, *args, **kwargs):
-    while not hasattr(wrapper, func):
-        if not hasattr(wrapper, 'env'):
-            raise AttributeError(f'Wrapper does not have attribute {func}')
-        wrapper = wrapper.env
-    return getattr(wrapper, func)(*args, **kwargs)
+# kill all wandb processes – sometimes required due a bug in wandb
+def kill_all_wandb_processes():
+    subprocess.run('ps aux|grep wandb|grep -v grep | awk \'{print $2}\'|xargs kill -9', shell=True)

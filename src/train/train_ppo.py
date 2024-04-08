@@ -37,19 +37,19 @@ class Trainer:
                             preprocess_obss=preprocessing.preprocess_obss)
         if "optimizer_state" in training_status:
             algo.optimizer.load_state_dict(training_status["optimizer_state"])
-            self.text_logger.info("Loaded optimizer from existing run.\n")
+            self.text_logger.info("Loaded optimizer from existing run.")
         logger = self.make_logger(log_csv, log_wandb, resuming)
         logger.log_config()
 
-        self.text_logger.info(f'Num parameters: {torch_utils.get_number_of_params(model)}\n')
+        self.text_logger.info(f'Num parameters: {torch_utils.get_number_of_params(model)}')
         num_steps = training_status["num_steps"]
         num_updates = training_status["num_updates"]
         while num_steps < self.args.experiment.num_steps:
             start = time.time()
             exps, logs = algo.collect_experiences()
             for env in envs:
-                ltl_sampler = utils.call_wrapper_function('get_ltl_sampler', env)
-                ltl_sampler.returns = logs['avg_goal_returns']
+                ltl_sampler = env.get_wrapper_attr('ltl_sampler')
+                ltl_sampler.update_returns(logs['avg_goal_returns'])
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)
             update_time = time.time() - start
@@ -75,17 +75,17 @@ class Trainer:
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
         seeds = [seed_offset + i for i in range(self.args.experiment.num_procs)]
-        self.text_logger.info(f"Using seeds: {seeds}\n")
+        self.text_logger.info(f"Using seeds: {seeds}")
         for env, seed in zip(envs, seeds):
             env.reset(seed=seed)
-        self.text_logger.info("Environments loaded.\n")
+        self.text_logger.info("Environments loaded.")
         return envs
 
     def get_training_status(self) -> tuple[dict, bool]:
         resuming = False
         try:
             training_status = self.model_store.load_training_status()
-            self.text_logger.info("Resuming training from existing run.\n")
+            self.text_logger.important_info("Resuming training from existing run.")
             resuming = True
         except FileNotFoundError:
             training_status = {"num_steps": 0, "num_updates": 0}

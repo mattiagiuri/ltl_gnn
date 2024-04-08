@@ -1,8 +1,11 @@
+#!/usr/bin/env python
 import os
 import subprocess
 import sys
 from dataclasses import dataclass
 import simple_parsing
+
+import utils
 import wandb
 
 
@@ -51,10 +54,11 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name curr --seed 1 --log_wandb'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name newconf2 --seed 1 --log_csv false'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
         print('Interrupted!')
         wandb.finish()
+        utils.kill_all_wandb_processes()
         sys.exit(0)

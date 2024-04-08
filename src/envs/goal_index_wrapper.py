@@ -17,8 +17,9 @@ class GoalIndexWrapper(gymnasium.Wrapper):
             raise ValueError('Goal index wrapper requires dict observations')
         if 'goal' not in env.observation_space.spaces:
             raise ValueError('Goal index wrapper requires goal in observation space')
-        self.observation_space['goal_index'] = spaces.Discrete(len(env.get_propositions()) + 1)
-        self.proposition_to_index = {p: i for i, p in enumerate(env.get_propositions())}
+        propositions = env.get_wrapper_attr('get_propositions')()
+        self.observation_space['goal_index'] = spaces.Discrete(len(propositions) + 1)
+        self.proposition_to_index = {p: i for i, p in enumerate(propositions)}
         self.punish_termination = punish_termination
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:

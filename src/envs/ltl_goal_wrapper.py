@@ -30,6 +30,3 @@ class LTLGoalWrapper(gymnasium.Wrapper):
         self.goal = self.ltl_sampler.sample()
         obs = {'features': obs, 'goal': self.goal}
         return obs, info
-
-    def get_ltl_sampler(self) -> LTLSampler:
-        return self.ltl_sampler

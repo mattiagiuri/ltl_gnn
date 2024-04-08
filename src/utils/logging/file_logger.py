@@ -6,6 +6,7 @@ import json
 import os
 
 import utils
+from config import model_configs
 from utils.logging.json_encoder import JsonEncoder
 from utils.logging.logger import Logger
 
@@ -36,18 +37,22 @@ class FileLogger(Logger):
             if f.tell() > 0:  # metadata file exists already
                 f.seek(0)
                 previous_config = json.load(f)
-                if previous_config != self.config_as_json():
+                json_config = json.loads(json.dumps(self.config_as_dict(), cls=JsonEncoder))
+                if previous_config != json_config:
                     raise ValueError('Previous log with different config exists!')
             else:
-                config = vars(copy.deepcopy(self.config))
-                del config['experiment']
-                json.dump(config, f, indent=4, cls=JsonEncoder)
+                json.dump(self.config_as_dict(), f, indent=4, cls=JsonEncoder)
             fcntl.flock(f, fcntl.LOCK_UN)
 
-    def config_as_json(self) -> dict:
-        config = vars(copy.deepcopy(self.config))
-        del config['experiment']
-        return json.loads(json.dumps(config, cls=JsonEncoder))
+    def config_as_dict(self) -> dict:
+        json_config = vars(copy.deepcopy(self.config))
+        del json_config['experiment']
+        model_config_name = self.config.model_config
+        json_config['model_config'] = {
+            'name': model_config_name,
+            'config': model_configs[model_config_name]
+        }
+        return json_config
 
     def log(self, data: dict[str, float | list[float]]):
         data = self.aggregate(data)
@@ -58,4 +63,3 @@ class FileLogger(Logger):
             if first_log:
                 writer.writeheader()
             writer.writerow(data)
-

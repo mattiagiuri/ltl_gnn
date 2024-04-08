@@ -1,4 +1,5 @@
 import argparse
+from colorama import Fore
 
 from utils.logging.logger import Logger
 
@@ -46,3 +47,7 @@ class TextLogger(Logger):
     @staticmethod
     def info(message: str):
         print(message)
+
+    @staticmethod
+    def important_info(message: str):
+        print(f'{Fore.GREEN}{message}{Fore.RESET}')
