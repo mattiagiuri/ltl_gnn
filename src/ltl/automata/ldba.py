@@ -12,15 +12,19 @@ class LDBA:
         self.state_to_transitions: dict[int, list[LDBATransition]] = {}
         self.propositions = set()
 
-    def set_states(self, num_states: int, initial: int):
-        if num_states <= 0:
-            raise ValueError('Number of states must be positive.')
-        if initial < 0 or initial >= num_states:
-            raise ValueError('Initial state must be a valid state index.')
-        self.num_states = num_states
-        self.initial_state = initial
-        for state in range(num_states):
+    def add_state(self, state: int, initial=False):
+        if state < 0:
+            raise ValueError('State must be a positive integer.')
+        if initial:
+            if self.initial_state is not None:
+                raise ValueError('Initial state already set.')
+            self.initial_state = state
+        self.num_states = max(self.num_states, state + 1)
+        if state not in self.state_to_transitions:
             self.state_to_transitions[state] = []
+
+    def contains_state(self, state: int) -> bool:
+        return state <= self.num_states
 
     def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool):
         if source < 0 or source >= self.num_states:
@@ -35,6 +39,7 @@ class LDBA:
         if label is None:
             return
         props = [p.ap_name() for p in spot.atomic_prop_collect(spot.formula(label))]
+        props = [p for p in props if p != 't']  # filter out 'true'
         self.propositions.update(props)
 
     def check_valid(self) -> bool:

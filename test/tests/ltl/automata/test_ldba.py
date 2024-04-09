@@ -6,42 +6,46 @@ class TestLDBA(unittest.TestCase):
     def setUp(self):
         self.ldba = LDBA()
 
+    def add_states(self, num_states: int, initial_state: int):
+        for state in range(num_states):
+            self.ldba.add_state(state, initial=state == initial_state)
+
     def test_set_states_with_valid_input(self):
-        self.ldba.set_states(5, 0)
+        self.add_states(5, 0)
         self.assertEqual(self.ldba.num_states, 5)
         self.assertEqual(self.ldba.initial_state, 0)
 
-    def test_set_states_with_negative_num_states(self):
-        with self.assertRaises(ValueError):
-            self.ldba.set_states(-5, 0)
-
-    def test_set_states_with_invalid_initial_state(self):
-        with self.assertRaises(ValueError):
-            self.ldba.set_states(5, 6)
-
     def test_add_transition_with_valid_input(self):
-        self.ldba.set_states(2, 0)
+        self.add_states(2, 0)
         self.ldba.add_transition(0, 1, 'a', True)
         self.assertEqual(len(self.ldba.state_to_transitions[0]), 1)
 
     def test_check_valid_with_valid_ldba(self):
-        self.ldba.set_states(2, 0)
+        self.add_states(2, 0)
         self.ldba.add_transition(0, 1, 'a', False)
         self.ldba.add_transition(1, 1, 't', True)
         self.assertTrue(self.ldba.check_valid())
 
+        self.ldba = LDBA()
+        self.add_states(3, 0)
+        self.ldba.add_transition(0, 1, 'a', False)
+        self.ldba.add_transition(0, 2, 'b', False)
+        self.ldba.add_transition(1, 2, 'c', False)
+        self.ldba.add_transition(2, 1, 'd', True)
+        self.assertTrue(self.ldba.check_valid())
+
     def test_check_valid_with_empty_first(self):
-        self.ldba.set_states(1, 0)
+        self.add_states(1, 0)
         self.ldba.add_transition(0, 0, 'a', True)
         self.assertTrue(self.ldba.check_valid())
 
     def test_check_valid_without_accepting(self):
-        self.ldba.set_states(2, 0)
+        self.add_states(2, 0)
         self.ldba.add_transition(0, 1, None, False)
         self.assertFalse(self.ldba.check_valid())
 
     def test_check_valid_with_epsilon_in_first(self):
-        self.ldba.set_states(4, 0)
+        self.add_states(4, 0)
         self.ldba.add_transition(0, 2, 'a', False)
         self.ldba.add_transition(2, 1, 'b', False)
         self.ldba.add_transition(2, 3, None, False)
@@ -51,7 +55,7 @@ class TestLDBA(unittest.TestCase):
         self.assertFalse(self.ldba.check_valid())
 
     def test_check_valid_with_transition_from_second_to_first(self):
-        self.ldba.set_states(2, 0)
+        self.add_states(2, 0)
         self.ldba.add_transition(0, 0, 'a', False)
         self.ldba.add_transition(0, 1, None, False)
         self.ldba.add_transition(1, 1, 'b', True)
@@ -60,7 +64,7 @@ class TestLDBA(unittest.TestCase):
         self.assertFalse(self.ldba.check_valid())
 
     def test_check_valid_with_epsilon_in_second(self):
-        self.ldba.set_states(3, 0)
+        self.add_states(3, 0)
         self.ldba.add_transition(0, 1, None, False)
         self.ldba.add_transition(1, 1, 'a', True)
         self.assertTrue(self.ldba.check_valid())
@@ -68,26 +72,26 @@ class TestLDBA(unittest.TestCase):
         self.assertFalse(self.ldba.check_valid())
 
     def test_check_valid_with_accepting_in_first(self):
-        self.ldba.set_states(2, 0)
+        self.add_states(2, 0)
         self.ldba.add_transition(0, 0, 'a', True)
         self.ldba.add_transition(0, 1, None, False)
         self.ldba.add_transition(1, 1, 'b', True)
         self.assertFalse(self.ldba.check_valid())
 
     def test_check_deterministic_transitions_with_deterministic_transitions(self):
-        self.ldba.set_states(2, 0)
+        self.add_states(2, 0)
         self.ldba.add_transition(0, 1, 'a', False)
         self.ldba.add_transition(0, 1, 'b', False)
         self.assertTrue(self.ldba.check_deterministic_transitions(0))
 
     def test_check_deterministic_transitions_with_non_deterministic_transitions(self):
-        self.ldba.set_states(2, 0)
+        self.add_states(2, 0)
         self.ldba.add_transition(0, 1, 'a & b', False)
         self.ldba.add_transition(0, 1, 'b & a', False)
         self.assertFalse(self.ldba.check_deterministic_transitions(0))
 
     def test_propositions(self):
-        self.ldba.set_states(3, 0)
+        self.add_states(3, 0)
         self.ldba.add_transition(0, 0, 'a & b', False)
         self.ldba.add_transition(0, 1, '!c', False)
         self.ldba.add_transition(1, 1, 'var | e', False)
