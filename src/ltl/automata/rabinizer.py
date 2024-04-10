@@ -16,7 +16,7 @@ def ltl2ldba(formula: str) -> str:
 
 
 if __name__ == '__main__':
-    formula = 'FG a & G!b'
+    formula = '(!a U (b & (!c U d)))'
     ldba = ltl2ldba(formula)
     with open(f'ldba.hoa', 'w') as file:
         file.write(ldba)

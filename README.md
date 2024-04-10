@@ -10,3 +10,5 @@ pip install -e .
 
 `conda create -n deepltl-dmc python=3.10`
 
+`conda install spot -c conda-forge`
+
