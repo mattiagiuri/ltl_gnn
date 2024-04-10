@@ -107,7 +107,7 @@ class LDBA:
         return True
 
 
-@dataclass
+@dataclass(frozen=True)
 class LDBATransition:
     source: int
     target: int

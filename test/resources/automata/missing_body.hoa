@@ -1,0 +1,7 @@
+HOA: v1
+tool: "owl" "* *"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-acc trans-label
+AP: 2 "a" "b"
+Start: 0

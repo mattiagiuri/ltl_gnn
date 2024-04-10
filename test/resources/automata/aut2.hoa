@@ -1,0 +1,16 @@
+HOA: v1
+tool: "owl" "* *"
+Start: 0
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-acc trans-label 
+AP: 3 "a" "b" "u"
+--BODY--
+State: 0
+[!1 & !2] 0
+[!0 & 1 & !2] 1
+[0 & 1 & !2] 0 {0}
+State: 1
+[!0 & !2] 1
+[0 & !2] 0 {0}
+--END--
