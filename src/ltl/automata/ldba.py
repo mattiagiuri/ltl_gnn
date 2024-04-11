@@ -2,14 +2,18 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Optional
 
-import spot
+from sympy import simplify_logic
+
+from utils import to_sympy
 
 
 class LDBA:
     def __init__(self):
         self.num_states = 0
+        self.num_transitions = 0
         self.initial_state = None
         self.state_to_transitions: dict[int, list[LDBATransition]] = {}
+        self.state_to_incoming_transitions: dict[int, list[LDBATransition]] = {}
         self.propositions = set()
 
     def add_state(self, state: int, initial=False):
@@ -22,6 +26,8 @@ class LDBA:
         self.num_states = max(self.num_states, state + 1)
         if state not in self.state_to_transitions:
             self.state_to_transitions[state] = []
+        if state not in self.state_to_incoming_transitions:
+            self.state_to_incoming_transitions[state] = []
 
     def contains_state(self, state: int) -> bool:
         return state <= self.num_states
@@ -32,14 +38,15 @@ class LDBA:
         if target < 0 or target >= self.num_states:
             raise ValueError('Target state must be a valid state index.')
         transition = LDBATransition(source, target, label, accepting)
+        self.num_transitions += 1
         self.state_to_transitions[source].append(transition)
+        self.state_to_incoming_transitions[target].append(transition)
         self.update_propositions(label)
 
     def update_propositions(self, label: Optional[str]):
         if label is None:
             return
-        props = [p.ap_name() for p in spot.atomic_prop_collect(spot.formula(label))]
-        props = [p for p in props if p != 't']  # filter out 'true'
+        props = [str(a) for a in to_sympy(label).atoms() if str(a) != 't']
         self.propositions.update(props)
 
     def check_valid(self) -> bool:
@@ -51,6 +58,7 @@ class LDBA:
            - All transitions from the second component stay in the second component
            - All accepting transitions are in the second component
            - The first component may be empty
+           - The LDBA is fully connected
         """
         if self.initial_state is None:
             return False
@@ -93,18 +101,25 @@ class LDBA:
                     second_queue.append(transition.target)
                 if transition.accepting:
                     found_accepting = True
+        visited = first_visited | second_visited
+        if len(visited) < self.num_states:
+            return False  # not fully connected
         return found_accepting
 
     def check_deterministic_transitions(self, state: int) -> bool:
         """Checks that the transitions from a state are deterministic."""
         num_label_transitions = Counter([
-            # Spot implements equivalence checking for boolean formulae
-            spot.formula(transition.label) for transition in self.state_to_transitions[state]
+            simplify_logic(to_sympy(transition.label)) for transition in self.state_to_transitions[state]
             if transition.label is not None
         ])
         if any(c > 1 for c in num_label_transitions.values()):
             return False
         return True
+
+    def complete_sink_state(self):
+        sink_state = self.num_states
+        added_sink_state = False
+        # TODO
 
 
 @dataclass(frozen=True)

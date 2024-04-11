@@ -17,7 +17,11 @@ def test_add_transition_with_valid_input():
     ldba = LDBA()
     add_states(ldba, 2, 0)
     ldba.add_transition(0, 1, 'a', True)
+    assert ldba.num_transitions == 1
     assert len(ldba.state_to_transitions[0]) == 1
+    assert ldba.state_to_transitions[0][0].label == 'a'
+    assert len(ldba.state_to_incoming_transitions[1]) == 1
+    assert ldba.state_to_incoming_transitions[1][0].label == 'a'
 
 
 def test_check_valid_with_valid_ldba():
@@ -78,7 +82,6 @@ def test_check_valid_with_epsilon_in_second():
     add_states(ldba, 3, 0)
     ldba.add_transition(0, 1, None, False)
     ldba.add_transition(1, 1, 'a', True)
-    assert ldba.check_valid()
     ldba.add_transition(1, 2, None, False)
     assert not ldba.check_valid()
 
@@ -89,6 +92,14 @@ def test_check_valid_with_accepting_in_first():
     ldba.add_transition(0, 0, 'a', True)
     ldba.add_transition(0, 1, None, False)
     ldba.add_transition(1, 1, 'b', True)
+    assert not ldba.check_valid()
+
+
+def test_check_valid_not_connected():
+    ldba = LDBA()
+    add_states(ldba, 4, 0)
+    ldba.add_transition(0, 1, 'a', True)
+    ldba.add_transition(2, 3, 'b', False)
     assert not ldba.check_valid()
 
 
@@ -106,6 +117,11 @@ def test_check_deterministic_transitions_with_non_deterministic_transitions():
     ldba.add_transition(0, 1, 'a & b', False)
     ldba.add_transition(0, 1, 'b & a', False)
     assert not ldba.check_deterministic_transitions(0)
+    ldba = LDBA()
+    add_states(ldba, 3, 0)
+    ldba.add_transition(0, 1, '!(a | b)', False)
+    ldba.add_transition(0, 2, '!a & !b', False)
+    assert not ldba.check_deterministic_transitions(0)
 
 
 def test_propositions():
@@ -113,7 +129,7 @@ def test_propositions():
     add_states(ldba, 3, 0)
     ldba.add_transition(0, 0, 'a & b', False)
     ldba.add_transition(0, 1, '!c', False)
-    ldba.add_transition(1, 1, 'var | e', False)
+    ldba.add_transition(1, 1, 'asd | e', False)
     ldba.add_transition(1, 2, 'c', False)
-    ldba.add_transition(2, 1, 'f & ((g_2 => !h) | !asd)', False)
-    assert ldba.propositions == {'a', 'b', 'c', 'var', 'e', 'f', 'g_2', 'h', 'asd'}
+    ldba.add_transition(2, 1, 'f & ((g_2 | !h) | !asd)', False)
+    assert ldba.propositions == {'a', 'b', 'c', 'asd', 'e', 'f', 'g_2', 'h'}
