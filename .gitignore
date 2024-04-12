@@ -1,7 +1,6 @@
 spot-2.9/
 **/__pycache__
 .idea
-storage
 wandb
 experiments
 ldba.png
