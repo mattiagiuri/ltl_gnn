@@ -18,32 +18,45 @@ class HOAParser:
     def parse_hoa(self) -> LDBA:
         if self.ldba is not None:
             return self.ldba
-        self.ldba = LDBA()
+        self.propositions = self.find_and_parse_ap_line()
+        self.ldba = LDBA(set(self.propositions))
         self.parse_header()
         self.parse_body()
         return self.ldba
 
+    def find_and_parse_ap_line(self) -> list[str]:
+        for num, line in enumerate(self.lines):
+            if line.startswith('AP:'):
+                return self.parse_ap_line(line.split(':')[1].strip(), num)
+        raise ValueError('Error parsing HOA. Missing required header field `AP`.')
+
+    @staticmethod
+    def parse_ap_line(value: str, line_number: int) -> list[str]:
+        parts = value.split(' ')
+        num_props = parts[0]
+        props = parts[1:]
+        if int(num_props) != len(props):
+            raise ValueError(f'Error parsing HOA at line {line_number}. Expected {num_props} propositions.')
+        return [p.replace('"', '') for p in props]
+
     def parse_header(self):
         self.expect_line('HOA: v1')
-        required = {'Start', 'AP'}
+        found_start = False
         while self.peek(error_msg='Expecting "--BODY--".') != '--BODY--':
             name, value = self.parse_header_line()
             match name:
                 case 'Start':
                     self.ldba.add_state(int(value), initial=True)
-                    required.remove('Start')
+                    found_start = True
                 case 'acc-name':
                     self.expect('Buchi', value)
                 case 'Acceptance':
                     self.expect('1 Inf(0)', value)
-                case 'AP':
-                    self.propositions = self.parse_ap_line(value)
-                    required.remove('AP')
                 case _:
                     continue
-        if len(required) > 0:
+        if not found_start:
             raise ValueError(
-                f'Error parsing HOA at line {self.line_number}. Missing required header fields: {required}.')
+                f'Error parsing HOA at line {self.line_number}. Missing required header field `Start`.')
 
     def parse_header_line(self) -> tuple[str, str]:
         line = self.consume(error_msg="Expecting header line.")
@@ -51,14 +64,6 @@ class HOAParser:
             raise ValueError(f'Error parsing HOA at line {self.line_number}. Expected a header line.')
         name, value = line.split(':')
         return name.strip(), value.strip()
-
-    def parse_ap_line(self, value: str) -> list[str]:
-        parts = value.split(' ')
-        num_props = parts[0]
-        props = parts[1:]
-        if int(num_props) != len(props):
-            raise ValueError(f'Error parsing HOA at line {self.line_number}. Expected {num_props} propositions.')
-        return [p.replace('"', '') for p in props]
 
     def parse_body(self):
         self.expect_line('--BODY--')

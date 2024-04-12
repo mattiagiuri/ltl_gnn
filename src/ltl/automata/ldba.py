@@ -8,14 +8,15 @@ from ltl.logic.sympy_utils import to_sympy, simplify, to_str
 
 
 class LDBA:
-    def __init__(self):
+    def __init__(self, propositions: set[str]):
+        self.propositions: tuple[str, ...] = tuple(sorted(propositions))
         self.num_states = 0
         self.num_transitions = 0
         self.initial_state = None
         self.state_to_transitions: dict[int, list[LDBATransition]] = {}
         self.state_to_incoming_transitions: dict[int, list[LDBATransition]] = {}
-        self.propositions = set()
         self.sink_state: Optional[int] = None
+        self.complete = False
 
     def add_state(self, state: int, initial=False):
         if state < 0:
@@ -38,17 +39,10 @@ class LDBA:
             raise ValueError('Source state must be a valid state index.')
         if target < 0 or target >= self.num_states:
             raise ValueError('Target state must be a valid state index.')
-        transition = LDBATransition(source, target, label, accepting)
+        transition = LDBATransition(source, target, label, accepting, self.propositions)
         self.num_transitions += 1
         self.state_to_transitions[source].append(transition)
         self.state_to_incoming_transitions[target].append(transition)
-        self.update_propositions(label)
-
-    def update_propositions(self, label: Optional[str]):
-        if label is None:
-            return
-        props = [str(a) for a in to_sympy(label).atoms() if str(a) != 'True']
-        self.propositions.update(props)
 
     def check_valid(self) -> bool:
         """Checks that the LDBA satisfies the following conditions:
@@ -109,20 +103,19 @@ class LDBA:
 
     def check_deterministic_transitions(self, state: int) -> bool:
         """Checks that the transitions from a state are deterministic."""
-        props = tuple(self.propositions)
         num_assignment_transitions = Counter([
-            a for transition in self.state_to_transitions[state] for a in transition.valid_assignments(props)
+            a for transition in self.state_to_transitions[state] for a in transition.valid_assignments
         ])
         return all(c <= 1 for c in num_assignment_transitions.values())
 
     def complete_sink_state(self):
-        if self.has_sink_state():
-            raise ValueError('Sink state already exists.')
+        if self.complete:
+            return
         sink_state = self.num_states
         all_assignments = set([a.to_frozen() for a in Assignment.all_possible_assignments(tuple(self.propositions))])
         for state in range(self.num_states):
             covered_assignments = set.union(
-                *[t.valid_assignments(tuple(self.propositions)) for t in self.state_to_transitions[state]]
+                *[t.valid_assignments for t in self.state_to_transitions[state]]
             )
             if len(covered_assignments) != 2 ** len(self.propositions):
                 # missing transitions - need to add sink state
@@ -134,6 +127,7 @@ class LDBA:
                 sink_assignments = all_assignments - covered_assignments
                 sink_label = self.valid_assignments_to_label(sink_assignments)
                 self.add_transition(state, sink_state, sink_label, False)
+        self.complete = True
 
     def has_sink_state(self) -> bool:
         return self.sink_state is not None
@@ -152,13 +146,14 @@ class LDBATransition:
     target: int
     label: Optional[str]  # None for epsilon transitions
     accepting: bool
+    propositions: tuple[str, ...]
 
     def is_epsilon(self) -> bool:
         return self.label is None
 
-    @functools.cache
-    def valid_assignments(self, propositions: tuple[str, ...]) -> set[FrozenAssignment]:
+    @functools.cached_property
+    def valid_assignments(self) -> set[FrozenAssignment]:
         if self.is_epsilon():
             return set()
         formula = to_sympy(self.label)
-        return {a.to_frozen() for a in Assignment.all_possible_assignments(propositions) if a.satisfies(formula)}
+        return {a.to_frozen() for a in Assignment.all_possible_assignments(self.propositions) if a.satisfies(formula)}

@@ -50,7 +50,7 @@ def test_assignment_satisfies(assignment):
 
 def test_to_frozen(assignment):
     frozen = assignment.to_frozen()
-    assert frozen == frozenset([('a', True), ('b', False), ('c', True)])
+    assert frozen.assignment == frozenset([('a', True), ('b', False), ('c', True)])
 
 
 def test_to_label(assignment):

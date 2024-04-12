@@ -1,15 +1,14 @@
 from ltl.hoa.hoa_writer import HOAWriter
 from ltl.automata.ldba import LDBA
+from test.utils import get_resource
 
 
 def get_hoa_text(automaton_name) -> str:
-    with open(f'resources/automata/{automaton_name}.hoa', 'r') as file:
-        hoa_text = file.read()
-    return hoa_text
+    return get_resource(f'{automaton_name}.hoa')
 
 
 def test_aut_1():
-    ldba = LDBA()
+    ldba = LDBA({'a', 'b'})
     ldba.add_state(0, initial=True)
     ldba.add_state(1)
     ldba.add_state(2)
@@ -22,7 +21,7 @@ def test_aut_1():
 
 
 def test_aut_2():
-    ldba = LDBA()
+    ldba = LDBA({'a', 'b'})
     ldba.add_state(0, initial=True)
     ldba.add_state(1)
     ldba.add_state(2)
