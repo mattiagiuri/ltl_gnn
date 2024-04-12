@@ -6,7 +6,7 @@ from ltl.hoa.hoa_parser import HOAParser
 from ltl.hoa.hoa_writer import HOAWriter
 
 
-def render_ldba(ldba: LDBA, filename='tmp_ldba', fmt='pdf', view=True) -> None:
+def draw_ldba(ldba: LDBA, filename='tmp_ldba', fmt='pdf', view=True) -> None:
     """Render an LDBA as a graph using Graphviz."""
     hoa = HOAWriter(ldba).get_hoa()
     aut = spot.automaton(hoa)
@@ -28,4 +28,4 @@ if __name__ == '__main__':
         hoa_text = file.read()
     ldba = HOAParser(hoa_text).parse_hoa()
     assert ldba.check_valid()
-    render_ldba(ldba)
+    draw_ldba(ldba)

@@ -1,6 +1,6 @@
 import pytest
 
-from ltl.automata.utils import render_ldba
+from ltl.automata.utils import draw_ldba
 from test.utils import get_resource
 from test.ltl.automata.test_ldba import assert_transitions_equal
 from ltl.hoa.hoa_parser import HOAParser

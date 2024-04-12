@@ -14,7 +14,7 @@ class Assignment(MutableMapping):
     @staticmethod
     @functools.cache
     def all_possible_assignments(propositions: tuple[str, ...]) -> list['Assignment']:
-        """Returns all possible assignments for a given set of propositions."""
+        """Returns all possible assignments for a given set of propositions. Guarantees a deterministic order."""
         p = propositions[0]
         rest = propositions[1:]
         if not rest:
