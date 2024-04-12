@@ -4,4 +4,7 @@ spot-2.9/
 storage
 wandb
 experiments
-tmp_ldba.pdf
+ldba.png
+ldba.pdf
+transition_graph.png
+transition_graph.pdf
