@@ -12,3 +12,7 @@ pip install -e .
 
 `conda install spot -c conda-forge`
 
+`conda install pyg -c pyg`
+
+`conda install sympy -c conda-forge`
+

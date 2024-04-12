@@ -1,5 +1,8 @@
 import subprocess
 
+from ltl.automata.utils import render_ldba
+from ltl.hoa import HOAParser
+
 RABINIZER_PATH = 'rabinizer4/bin/ltl2ldba'
 
 
@@ -16,8 +19,15 @@ def ltl2ldba(formula: str) -> str:
 
 
 if __name__ == '__main__':
-    formula = '(!a U (b & (!c U d)))'
-    ldba = ltl2ldba(formula)
-    with open(f'ldba.hoa', 'w') as file:
-        file.write(ldba)
-    print(ldba)
+    # formula = '(!a U (b & (!c U d)))'
+    # formula = '(F(a&b) | F(a & XFc)) & G!d'
+    # formula = '(F(a&b) | F(a & XFb))'
+    # formula = 'F((a&b)&FGb)'
+    # formula = '(Fc) & (G(a => F b))'
+    formula = 'FGa | FGb'
+    hoa = ltl2ldba(formula)
+    with open('ldba.hoa', 'w') as file:
+        file.write(hoa)
+    ldba = HOAParser(hoa).parse_hoa()
+    ldba.complete_sink_state()
+    render_ldba(ldba, fmt='png')

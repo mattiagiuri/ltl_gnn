@@ -3,7 +3,6 @@ import subprocess
 from typing import Callable
 import time
 
-import gymnasium
 import numpy as np
 import torch
 

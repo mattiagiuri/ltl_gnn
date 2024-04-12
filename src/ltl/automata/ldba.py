@@ -1,10 +1,10 @@
+import functools
 from collections import Counter
 from dataclasses import dataclass
 from typing import Optional
 
-from sympy import simplify_logic
-
-from utils import to_sympy
+from ltl.logic.assignment import FrozenAssignment, Assignment
+from ltl.logic.sympy_utils import to_sympy, simplify, to_str
 
 
 class LDBA:
@@ -15,6 +15,7 @@ class LDBA:
         self.state_to_transitions: dict[int, list[LDBATransition]] = {}
         self.state_to_incoming_transitions: dict[int, list[LDBATransition]] = {}
         self.propositions = set()
+        self.sink_state: Optional[int] = None
 
     def add_state(self, state: int, initial=False):
         if state < 0:
@@ -46,7 +47,7 @@ class LDBA:
     def update_propositions(self, label: Optional[str]):
         if label is None:
             return
-        props = [str(a) for a in to_sympy(label).atoms() if str(a) != 't']
+        props = [str(a) for a in to_sympy(label).atoms() if str(a) != 'True']
         self.propositions.update(props)
 
     def check_valid(self) -> bool:
@@ -72,7 +73,7 @@ class LDBA:
             if not self.check_deterministic_transitions(state):
                 return False
             for transition in self.state_to_transitions[state]:
-                if transition.label is None:
+                if transition.is_epsilon():
                     if transition.target in first_visited:
                         return False  # epsilon transition in the first component
                     second_states.add(transition.target)
@@ -93,7 +94,7 @@ class LDBA:
             if not self.check_deterministic_transitions(state):
                 return False
             for transition in self.state_to_transitions[state]:
-                if transition.label is None:
+                if transition.is_epsilon():
                     return False  # epsilon transition in the second component
                 if transition.target in first_visited:
                     return False  # transition back from second to first component
@@ -108,18 +109,41 @@ class LDBA:
 
     def check_deterministic_transitions(self, state: int) -> bool:
         """Checks that the transitions from a state are deterministic."""
-        num_label_transitions = Counter([
-            simplify_logic(to_sympy(transition.label)) for transition in self.state_to_transitions[state]
-            if transition.label is not None
+        props = tuple(self.propositions)
+        num_assignment_transitions = Counter([
+            a for transition in self.state_to_transitions[state] for a in transition.valid_assignments(props)
         ])
-        if any(c > 1 for c in num_label_transitions.values()):
-            return False
-        return True
+        return all(c <= 1 for c in num_assignment_transitions.values())
 
     def complete_sink_state(self):
+        if self.has_sink_state():
+            raise ValueError('Sink state already exists.')
         sink_state = self.num_states
-        added_sink_state = False
-        # TODO
+        all_assignments = set([a.to_frozen() for a in Assignment.all_possible_assignments(tuple(self.propositions))])
+        for state in range(self.num_states):
+            covered_assignments = set.union(
+                *[t.valid_assignments(tuple(self.propositions)) for t in self.state_to_transitions[state]]
+            )
+            if len(covered_assignments) != 2 ** len(self.propositions):
+                # missing transitions - need to add sink state
+                if not self.has_sink_state():
+                    self.sink_state = sink_state
+                    self.add_state(sink_state)
+                    self.add_transition(sink_state, sink_state, 't', False)
+                    assert self.has_sink_state()
+                sink_assignments = all_assignments - covered_assignments
+                sink_label = self.valid_assignments_to_label(sink_assignments)
+                self.add_transition(state, sink_state, sink_label, False)
+
+    def has_sink_state(self) -> bool:
+        return self.sink_state is not None
+
+    @staticmethod
+    def valid_assignments_to_label(valid_assignments: set[FrozenAssignment]) -> str:
+        assert len(valid_assignments) > 0
+        formula = ' | '.join('(' + a.to_label() + ')' for a in valid_assignments)
+        simplified = simplify(to_sympy(formula))
+        return to_str(simplified)
 
 
 @dataclass(frozen=True)
@@ -128,3 +152,13 @@ class LDBATransition:
     target: int
     label: Optional[str]  # None for epsilon transitions
     accepting: bool
+
+    def is_epsilon(self) -> bool:
+        return self.label is None
+
+    @functools.cache
+    def valid_assignments(self, propositions: tuple[str, ...]) -> set[FrozenAssignment]:
+        if self.is_epsilon():
+            return set()
+        formula = to_sympy(self.label)
+        return {a.to_frozen() for a in Assignment.all_possible_assignments(propositions) if a.satisfies(formula)}
