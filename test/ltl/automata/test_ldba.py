@@ -215,6 +215,26 @@ def test_complete_sink_state3():
     })
 
 
+def test_complete_sink_state_no_change():
+    ldba = LDBA({'a', 'b'})
+    add_states(ldba, 2, 0)
+    ldba.add_transition(0, 0, 'a', False)
+    ldba.add_transition(0, 1, '!a', False)
+    ldba.add_transition(1, 1, 'a | b | !a', True)
+    assert ldba.check_valid()
+    ldba.complete_sink_state()
+    assert ldba.check_valid()
+    assert not ldba.has_sink_state()
+    assert ldba.sink_state is None
+    assert len(ldba.state_to_transitions) == 2
+    assert_transitions_equal(ldba, 0, {
+        (0, 0, 'a', False),
+        (0, 1, '!a', False)})
+    assert_transitions_equal(ldba, 1, {
+        (1, 1, 'a | b | !a', True),
+    })
+
+
 def assert_transitions_equal(ldba: LDBA, state: int, expected: set[tuple[int, int, str, bool]]):
     expected = {LDBATransition(*e, propositions=ldba.propositions) for e in expected}
     assert set(ldba.state_to_transitions[state]) == expected
