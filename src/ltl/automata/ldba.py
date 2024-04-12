@@ -34,11 +34,13 @@ class LDBA:
     def contains_state(self, state: int) -> bool:
         return state <= self.num_states
 
-    def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool):
+    def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool, simplify_label=True):
         if source < 0 or source >= self.num_states:
             raise ValueError('Source state must be a valid state index.')
         if target < 0 or target >= self.num_states:
             raise ValueError('Target state must be a valid state index.')
+        if simplify_label and label is not None:
+            label = to_str(simplify(to_sympy(label)))
         transition = LDBATransition(source, target, label, accepting, self.propositions)
         self.num_transitions += 1
         self.state_to_transitions[source].append(transition)

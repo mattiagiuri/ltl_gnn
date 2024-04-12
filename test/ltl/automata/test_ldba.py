@@ -220,7 +220,7 @@ def test_complete_sink_state_no_change():
     add_states(ldba, 2, 0)
     ldba.add_transition(0, 0, 'a', False)
     ldba.add_transition(0, 1, '!a', False)
-    ldba.add_transition(1, 1, 'a | b | !a', True)
+    ldba.add_transition(1, 1, 't', True)
     assert ldba.check_valid()
     ldba.complete_sink_state()
     assert ldba.check_valid()
@@ -231,7 +231,7 @@ def test_complete_sink_state_no_change():
         (0, 0, 'a', False),
         (0, 1, '!a', False)})
     assert_transitions_equal(ldba, 1, {
-        (1, 1, 'a | b | !a', True),
+        (1, 1, 't', True),
     })
 
 

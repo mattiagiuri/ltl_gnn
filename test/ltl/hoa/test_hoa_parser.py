@@ -1,15 +1,14 @@
 import pytest
 
-from ltl.automata.utils import draw_ldba
 from test.utils import get_resource
 from test.ltl.automata.test_ldba import assert_transitions_equal
 from ltl.hoa.hoa_parser import HOAParser
 from ltl.automata.ldba import LDBA
 
 
-def parse_automaton(automaton_name) -> LDBA:
+def parse_automaton(automaton_name, simplify_labels=False) -> LDBA:
     hoa_text = get_resource(f'{automaton_name}.hoa')
-    parser = HOAParser(hoa_text)
+    parser = HOAParser(hoa_text, simplify_labels=simplify_labels)
     return parser.parse_hoa()
 
 
@@ -95,6 +94,25 @@ def test_not_alphabetical():
     })
     assert_transitions_equal(ldba, 2, {
         (2, 2, 't', True),
+    })
+
+
+def test_simplify_labels():
+    ldba = parse_automaton('simplify', simplify_labels=True)
+    assert 3 == ldba.num_states
+    assert 0 == ldba.initial_state
+    assert ldba.propositions == ('a', 'b')
+    assert ldba.check_valid()
+    assert 3 == len(ldba.state_to_transitions)
+    assert_transitions_equal(ldba, 0, {
+        (0, 1, 'a', False),
+        (0, 2, '!a', False),
+    })
+    assert_transitions_equal(ldba, 1, {
+        (1, 1, 'a', True),
+    })
+    assert_transitions_equal(ldba, 2, {
+        (2, 2, 'b', True),
     })
 
 
