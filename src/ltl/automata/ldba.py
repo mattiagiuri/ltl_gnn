@@ -3,8 +3,8 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Optional
 
-from ltl.logic.assignment import FrozenAssignment, Assignment
-from ltl.logic.sympy_utils import to_sympy, simplify, to_str
+from ltl.logic import FrozenAssignment, Assignment
+from utils import to_sympy, simplify, sympy_to_str
 
 
 class LDBA:
@@ -40,7 +40,7 @@ class LDBA:
         if target < 0 or target >= self.num_states:
             raise ValueError('Target state must be a valid state index.')
         if simplify_label and label is not None:
-            label = to_str(simplify(to_sympy(label)))
+            label = sympy_to_str(simplify(to_sympy(label)))
         transition = LDBATransition(source, target, label, accepting, self.propositions)
         self.num_transitions += 1
         self.state_to_transitions[source].append(transition)
@@ -139,7 +139,7 @@ class LDBA:
         assert len(valid_assignments) > 0
         formula = ' | '.join('(' + a.to_label() + ')' for a in valid_assignments)
         simplified = simplify(to_sympy(formula))
-        return to_str(simplified)
+        return sympy_to_str(simplified)
 
 
 @dataclass(frozen=True)

@@ -2,8 +2,8 @@ import pytest
 
 from test.utils import get_resource
 from test.ltl.automata.test_ldba import assert_transitions_equal
-from ltl.hoa.hoa_parser import HOAParser
-from ltl.automata.ldba import LDBA
+from ltl.hoa import HOAParser
+from ltl.automata import LDBA
 
 
 def parse_automaton(automaton_name, simplify_labels=False) -> LDBA:

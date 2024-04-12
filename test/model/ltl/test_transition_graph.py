@@ -1,9 +1,8 @@
 import pytest
 import torch
 
-from ltl.automata.ldba import LDBA, LDBATransition
-from ltl.automata.visualize import draw_ldba
-from model.ltl.transition_graph import TransitionGraph
+from ltl.automata import LDBA, LDBATransition
+from model.ltl import TransitionGraph
 
 
 def assert_edge_index_equal(edge_index1, edge_index2):

@@ -1,4 +1,4 @@
-from ltl.automata.ldba import LDBA, LDBATransition
+from ltl.automata import LDBA, LDBATransition
 
 
 def add_states(ldba, num_states: int, initial_state: int):

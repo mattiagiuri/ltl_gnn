@@ -1,7 +1,7 @@
 import pytest
 import sympy
 
-from ltl.logic.assignment import Assignment
+from ltl.logic import Assignment
 
 
 @pytest.fixture

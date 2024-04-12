@@ -3,8 +3,8 @@ from dataclasses import dataclass
 import torch
 from torch_geometric.data import Data
 
-from ltl.automata.ldba import LDBA, LDBATransition
-from ltl.logic.assignment import Assignment
+from ltl.automata import LDBA, LDBATransition
+from ltl.logic import Assignment
 
 
 class TransitionGraph(Data):

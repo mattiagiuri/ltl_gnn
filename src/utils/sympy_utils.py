@@ -10,7 +10,7 @@ def to_sympy(label: str) -> sympy.logic.boolalg.Boolean:
     return sympy.sympify(label.replace('!', '~'))
 
 
-def to_str(formula: sympy.logic.boolalg.Boolean) -> str:
+def sympy_to_str(formula: sympy.logic.boolalg.Boolean) -> str:
     result = str(formula).replace('~', '!')
     if result == 'True':
         return 't'

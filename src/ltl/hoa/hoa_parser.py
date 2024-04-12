@@ -1,7 +1,7 @@
 from typing import Optional
 import re
 
-from ltl.automata.ldba import LDBA
+from ltl.automata import LDBA
 
 
 class HOAParser:

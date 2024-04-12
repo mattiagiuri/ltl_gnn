@@ -1,5 +1,5 @@
-from ltl.hoa.hoa_writer import HOAWriter
-from ltl.automata.ldba import LDBA
+from ltl.hoa import HOAWriter
+from ltl.automata import LDBA
 from test.utils import get_resource
 
 
