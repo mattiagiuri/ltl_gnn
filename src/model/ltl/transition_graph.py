@@ -11,6 +11,7 @@ class TransitionGraph(Data):
     @dataclass
     class Info:
         labels: dict[int, str]
+        positive_labels: dict[int, str]
         accepting_transitions: set[int]
         epsilon_transitions: set[int]
         sink_transitions: set[int]
@@ -29,6 +30,7 @@ class TransitionGraph(Data):
         edge_index = []
         features = [None] * ldba.num_transitions
         labels = {}
+        positive_labels = {}
         accepting_transitions = set()
         epsilon_transitions = set()
         sink_transitions = set()
@@ -41,8 +43,9 @@ class TransitionGraph(Data):
                     if incoming_transition not in transition_to_index:
                         transition_to_index[incoming_transition] = len(transition_to_index)
                     edge_index.append((current_index, transition_to_index[incoming_transition]))
-                features[current_index] = TransitionGraph.get_features(transition)
+                features[current_index] = TransitionGraph.get_features(transition, ldba.possible_assignments)
                 labels[current_index] = transition.label
+                positive_labels[current_index] = transition.positive_label
                 if transition.accepting:
                     accepting_transitions.add(current_index)
                 if transition.is_epsilon():
@@ -53,17 +56,17 @@ class TransitionGraph(Data):
         edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
         assert all(feature is not None for feature in features)
         features = torch.stack(features, dim=0)
-        info = TransitionGraph.Info(labels, accepting_transitions, epsilon_transitions, sink_transitions)
+        info = TransitionGraph.Info(labels, positive_labels, accepting_transitions, epsilon_transitions, sink_transitions)
         return TransitionGraph(edge_index, features, info)
 
     @staticmethod
-    def get_features(transition: LDBATransition) -> torch.tensor:
+    def get_features(transition: LDBATransition, possible_assignments: list[Assignment]) -> torch.tensor:
         # we use the following feature representation:
         # - 2^|propositions| features indicating which assignments satisfy the transition label
         # - 1 feature indicating whether the transition is an epsilon transition
         # - 1 feature indicating whether the transition is accepting
         features = []
-        for assignment in Assignment.all_possible_assignments(transition.propositions):
+        for assignment in possible_assignments:
             satisfies = assignment.to_frozen() in transition.valid_assignments
             features.append(int(satisfies))
         features.append(int(transition.is_epsilon()))

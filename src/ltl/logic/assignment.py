@@ -1,7 +1,7 @@
 import functools
 from typing import MutableMapping
 
-import sympy.logic.boolalg
+from utils import to_sympy
 
 
 class Assignment(MutableMapping):
@@ -24,7 +24,8 @@ class Assignment(MutableMapping):
         result += [Assignment({p: True}, **assignment) for assignment in rest_assignments]
         return result
 
-    def satisfies(self, formula: sympy.logic.boolalg.Boolean) -> bool:
+    def satisfies(self, label: str) -> bool:
+        formula = to_sympy(label)
         return formula.subs(self) == True
 
     def to_frozen(self) -> 'FrozenAssignment':

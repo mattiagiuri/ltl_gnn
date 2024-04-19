@@ -1,10 +1,9 @@
 import enum
 
-import spot
 from graphviz import Source
 
 from ltl.automata import LDBA, ltl2ldba
-from ltl.hoa import HOAWriter
+from ltl.logic import Assignment
 from model.ltl import TransitionGraph
 
 
@@ -16,27 +15,49 @@ class Color(enum.Enum):
         return self.value
 
 
-def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True) -> None:
+def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=False) -> None:
     """Draw an LDBA as a graph using Graphviz."""
-    hoa = HOAWriter(ldba).get_hoa()
-    aut = spot.automaton(hoa)
-    dot = aut.to_str('dot')
-    if ldba.has_sink_state():
-        dot = insert_dot_line(dot, f'{ldba.sink_state} [color="{Color.SINK}", style="filled"]')
+    dot = 'digraph "" {\n'
+    dot += 'rankdir=LR\n'
+    dot += 'labelloc="t"\n'
+    dot += 'node [shape="circle"]\n'
+    dot += 'I [label="", style=invis, width=0]\n'
+    dot += f'I -> {ldba.initial_state}\n'
+    for state, transitions in ldba.state_to_transitions.items():
+        dot += f'{state} [label="{state}"'
+        if state == ldba.sink_state:
+            dot += f' color="{Color.SINK}" style="filled"'
+        dot += ']\n'
+        for transition in transitions:
+            dot += f'{state} -> {transition.target} [label="{transition.label if not positive_label else transition.positive_label}"'
+            if transition.accepting:
+                dot += f' color="{Color.ACCEPTING}"'
+            dot += ']\n'
+    dot += '}'
     s = Source(dot, filename=filename, format=fmt)
     s.render(view=view, cleanup=True)
 
 
-def insert_dot_line(dot: str, line: str) -> str:
-    dot = dot.split('\n')
-    dot.insert(-2, line)
-    return '\n'.join(dot)
-
-
-def draw_transition_graph(tg: TransitionGraph, filename='transition_graph', fmt='pdf', view=True) -> None:
+def draw_transition_graph(
+        tg: TransitionGraph,
+        filename='transition_graph',
+        fmt='pdf',
+        view=True,
+        positive_label=False,
+        features=False
+) -> None:
+    """Draw a transition graph as a graph using Graphviz. Uses labels by default, but can also use feature vectors."""
+    if positive_label and features:
+        raise ValueError('Can only visualize one of positive_label and features.')
     dot = 'digraph "" {\n'
     dot += 'rankdir=BT\n'
-    for i, label in tg.info.labels.items():
+    if positive_label:
+        nodes = tg.info.positive_labels.items()
+    elif features:
+        nodes = enumerate(tg.x.tolist())
+    else:
+        nodes = tg.info.labels.items()
+    for i, label in nodes:
         dot += f'{i} [label="{label if label is not None else "eps"}"'
         if i in tg.info.accepting_transitions:
             dot += f' color="{Color.ACCEPTING}", style="filled"'
@@ -54,13 +75,28 @@ def draw_transition_graph(tg: TransitionGraph, filename='transition_graph', fmt=
 
 if __name__ == '__main__':
     # formula = '(!a U (b & (!c U d)))'
+    # formula = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
+    # formula = '!a U (b & (!c U (d & (!e U f))))'
     # formula = '(F(a&b) | F(a & XFc)) & G!d'
     # formula = '(F(a&b) | F(a & XFb))'
     # formula = 'F((a&b)&FGb)'
     # formula = '(Fc) & (G(a => F b))'
-    formula = '(FGa | FGb) & G!c'
-    ldba = ltl2ldba(formula)
+    # formula = '(FGa | FGb) & G!c'
+    formula = 'GFa & GFb & G!c'
+    prune = True
+
+    ldba = ltl2ldba(formula, simplify_labels=True)
+    all_possible = Assignment.all_possible_assignments(ldba.propositions)
+    assert ldba.check_valid()
+    print('Constructed LDBA.')
     ldba.complete_sink_state()
-    draw_ldba(ldba, fmt='png')
+    print('Added sink state.')
+    if prune:
+        more_than_one_proposition = {a.to_frozen() for a in all_possible if len([v for v in a.values() if v]) > 1}
+        print(f'Number of remaining assignments: {len(all_possible) - len(more_than_one_proposition)}')
+        ldba.prune_impossible_transitions(more_than_one_proposition)
+        print('Pruned impossible transitions.')
+    draw_ldba(ldba, fmt='pdf', positive_label=False)
     tg = TransitionGraph.from_ldba(ldba)
-    draw_transition_graph(tg, fmt='png')
+    print('Constructed transition graph.')
+    draw_transition_graph(tg, fmt='pdf', positive_label=False, features=True)

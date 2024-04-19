@@ -8,8 +8,9 @@ from utils import to_sympy, simplify, sympy_to_str
 
 
 class LDBA:
-    def __init__(self, propositions: set[str]):
+    def __init__(self, propositions: set[str], simplify_labels=True):
         self.propositions: tuple[str, ...] = tuple(sorted(propositions))
+        self.simplify_labels = simplify_labels
         self.num_states = 0
         self.num_transitions = 0
         self.initial_state = None
@@ -17,6 +18,7 @@ class LDBA:
         self.state_to_incoming_transitions: dict[int, list[LDBATransition]] = {}
         self.sink_state: Optional[int] = None
         self.complete = False
+        self.impossible_assignments: set[FrozenAssignment] = set()
 
     def add_state(self, state: int, initial=False):
         if state < 0:
@@ -34,15 +36,18 @@ class LDBA:
     def contains_state(self, state: int) -> bool:
         return state <= self.num_states
 
-    def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool, simplify_label=True):
+    def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool):
         if source < 0 or source >= self.num_states:
             raise ValueError('Source state must be a valid state index.')
         if target < 0 or target >= self.num_states:
             raise ValueError('Target state must be a valid state index.')
-        if simplify_label and label is not None:
+        if self.simplify_labels and label is not None:
             label = sympy_to_str(simplify(to_sympy(label)))
         transition = LDBATransition(source, target, label, accepting, self.propositions)
         self.num_transitions += 1
+        for t in self.state_to_transitions[source]:
+            if t == transition:
+                raise ValueError('There can only be a single transition between two states. Consider merging labels.')
         self.state_to_transitions[source].append(transition)
         self.state_to_incoming_transitions[target].append(transition)
 
@@ -111,6 +116,7 @@ class LDBA:
         return all(c <= 1 for c in num_assignment_transitions.values())
 
     def complete_sink_state(self):
+        """Adds a sink state and transitions to the LDBA if any transitions are missing."""
         if self.complete:
             return
         sink_state = self.num_states
@@ -134,28 +140,85 @@ class LDBA:
     def has_sink_state(self) -> bool:
         return self.sink_state is not None
 
-    @staticmethod
-    def valid_assignments_to_label(valid_assignments: set[FrozenAssignment]) -> str:
+    def valid_assignments_to_label(self, valid_assignments: set[FrozenAssignment]) -> str:
         assert len(valid_assignments) > 0
         formula = ' | '.join('(' + a.to_label() + ')' for a in valid_assignments)
+        if not self.simplify_labels:
+            return formula
         simplified = simplify(to_sympy(formula))
         return sympy_to_str(simplified)
 
+    def prune_impossible_transitions(self, impossible_assignments: set[FrozenAssignment]):
+        """Prunes transitions that involve impossible assignments. Impossible assignments may be derived from knowledge
+           of the underlying MDP."""
+        self.impossible_assignments = impossible_assignments
+        to_remove = set()
+        for transitions in self.state_to_transitions.values():
+            for t in transitions:
+                if t.is_epsilon():
+                    continue
+                valid = t.valid_assignments
+                remaining = valid - impossible_assignments
+                if not remaining:
+                    to_remove.add(t)
+                elif remaining != valid:
+                    t.label = self.valid_assignments_to_label(remaining)
+                    t._valid_assignments = remaining
+        self.num_transitions -= len(to_remove)
+        for state in range(self.num_states):
+            self.state_to_transitions[state] = [t for t in self.state_to_transitions[state] if t not in to_remove]
+            self.state_to_incoming_transitions[state] = [t for t in self.state_to_incoming_transitions[state]
+                                                         if t not in to_remove]
 
-@dataclass(frozen=True)
+    @functools.cached_property
+    def possible_assignments(self) -> list[Assignment]:
+        assignments = [a for a in Assignment.all_possible_assignments(self.propositions)
+                       if a.to_frozen() not in self.impossible_assignments]
+        return assignments
+
+
+@dataclass
 class LDBATransition:
     source: int
     target: int
     label: Optional[str]  # None for epsilon transitions
     accepting: bool
     propositions: tuple[str, ...]
+    _valid_assignments: set[FrozenAssignment] = None
 
     def is_epsilon(self) -> bool:
         return self.label is None
 
-    @functools.cached_property
+    @property
     def valid_assignments(self) -> set[FrozenAssignment]:
         if self.is_epsilon():
             return set()
-        formula = to_sympy(self.label)
-        return {a.to_frozen() for a in Assignment.all_possible_assignments(self.propositions) if a.satisfies(formula)}
+        if self._valid_assignments is None:
+            self._valid_assignments = {a.to_frozen() for a in Assignment.all_possible_assignments(self.propositions)
+                                       if a.satisfies(self.label)}
+        return self._valid_assignments
+
+    @property
+    def positive_label(self) -> str:
+        if self.is_epsilon():
+            return 'ε'
+        return ' | '.join(
+            '&'.join(
+                k
+                for k, v in a.assignment
+                if v)
+            if sum(v for _, v in a.assignment) > 0
+            else '{}'
+            for a in self.valid_assignments
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, LDBATransition):
+            return False
+        return (self.source == other.source
+                and self.target == other.target
+                and self.is_epsilon() == other.is_epsilon()
+                and self.accepting == other.accepting)
+
+    def __hash__(self):
+        return hash((self.source, self.target, self.is_epsilon(), self.accepting))

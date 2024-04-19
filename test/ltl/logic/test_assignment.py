@@ -38,14 +38,13 @@ def test_all_possible_assignments():
 
 
 def test_assignment_satisfies(assignment):
-    a, b, c = sympy.symbols('a b c')
-    assert assignment.satisfies(a)
-    assert not assignment.satisfies(b)
-    assert assignment.satisfies(c)
-    assert assignment.satisfies(a & c)
-    assert not assignment.satisfies(a & b)
-    assert not assignment.satisfies(b & c)
-    assert assignment.satisfies(a | b)
+    assert assignment.satisfies('a')
+    assert not assignment.satisfies('b')
+    assert assignment.satisfies('c')
+    assert assignment.satisfies('a & c')
+    assert not assignment.satisfies('a & b')
+    assert not assignment.satisfies('b & c')
+    assert assignment.satisfies('a | b')
 
 
 def test_to_frozen(assignment):

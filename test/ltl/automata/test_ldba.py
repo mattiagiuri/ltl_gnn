@@ -1,4 +1,7 @@
+import pytest
+
 from ltl.automata import LDBA, LDBATransition
+from ltl.logic import Assignment
 
 
 def add_states(ldba, num_states: int, initial_state: int):
@@ -22,6 +25,15 @@ def test_add_transition_with_valid_input():
     assert ldba.state_to_transitions[0][0].label == 'a'
     assert len(ldba.state_to_incoming_transitions[1]) == 1
     assert ldba.state_to_incoming_transitions[1][0].label == 'a'
+
+
+def test_cannot_add_two_transitions_with_same_target():
+    ldba = LDBA({'a', 'b'})
+    add_states(ldba, 2, 0)
+    ldba.add_transition(0, 1, 'a', False)
+    with pytest.raises(ValueError):
+        ldba.add_transition(0, 1, 'b', False)
+    ldba.add_transition(0, 1, 'b', True)  # should work
 
 
 def test_check_valid_with_valid_ldba():
@@ -113,9 +125,9 @@ def test_check_deterministic_transitions_with_deterministic_transitions():
 
 def test_check_deterministic_transitions_with_non_deterministic_transitions():
     ldba = LDBA({'a', 'b'})
-    add_states(ldba, 2, 0)
+    add_states(ldba, 3, 0)
     ldba.add_transition(0, 1, 'a & b', False)
-    ldba.add_transition(0, 1, 'b & a', False)
+    ldba.add_transition(0, 2, 'b & a', False)
     assert not ldba.check_deterministic_transitions(0)
     ldba = LDBA({'a', 'b'})
     add_states(ldba, 3, 0)
@@ -233,6 +245,51 @@ def test_complete_sink_state_no_change():
     assert_transitions_equal(ldba, 1, {
         (1, 1, 't', True),
     })
+
+
+def test_prune_impossible_transitions():
+    ldba = LDBA({'a', 'b', 'c'}, )
+    add_states(ldba, 4, 0)
+    ldba.add_transition(0, 1, 'a & !b', False)
+    ldba.add_transition(0, 2, 'b & !a', False)
+    ldba.add_transition(1, 2, 'a & b & c', False)
+    ldba.add_transition(1, 1, 'a & b & !c', True)
+    ldba.add_transition(1, 3, '!a & c', True)
+    ldba.add_transition(2, 1, 'c', True)
+    ldba.add_transition(3, 3, 't', True)
+    assert ldba.check_valid()
+    ldba.prune_impossible_transitions(impossible_assignments={
+        Assignment({'a': True, 'b': True, 'c': False}).to_frozen(),
+        Assignment({'a': True, 'b': True, 'c': True}).to_frozen(),
+    })
+    assert ldba.num_transitions == 5
+    assert_transitions_equal(ldba, 0, {
+        (0, 1, 'a & !b', False),
+        (0, 2, 'b & !a', False),
+    })
+    assert_transitions_equal(ldba, 1, {
+        (1, 3, '!a & c', True),
+    })
+    assert_transitions_equal(ldba, 2, {
+        (2, 1, 'c', True),
+    })
+    assert_transitions_equal(ldba, 3, {
+        (3, 3, 't', True),
+    })
+
+
+def test_positive_label():
+    props = ('a', 'b')
+    t = LDBATransition(0, 1, 'a & !b', True, props)
+    assert t.positive_label == 'a'
+    t = LDBATransition(0, 1, '!a & b', True, props)
+    assert t.positive_label == 'b'
+    t = LDBATransition(0, 1, 'a & b', True, props)
+    assert t.positive_label == 'a&b' or t.positive_label == 'b&a'
+    t = LDBATransition(0, 1, None, False, props)
+    assert t.positive_label == 'ε'
+    t = LDBATransition(0, 1, '!a & !b', False, props)
+    assert t.positive_label == '{}'
 
 
 def assert_transitions_equal(ldba: LDBA, state: int, expected: set[tuple[int, int, str, bool]]):
