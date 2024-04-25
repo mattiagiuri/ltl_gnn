@@ -37,6 +37,17 @@ def test_all_possible_assignments():
             assert assignment[p] in (True, False)
 
 
+def test_more_than_one_true_proposition():
+    propositions = {'a', 'b', 'c'}
+    assignments = Assignment.more_than_one_true_proposition(propositions)
+    assert assignments == {
+        Assignment(a=True, b=True, c=False).to_frozen(),
+        Assignment(a=True, b=False, c=True).to_frozen(),
+        Assignment(a=False, b=True, c=True).to_frozen(),
+        Assignment(a=True, b=True, c=True).to_frozen()
+    }
+
+
 def test_assignment_satisfies(assignment):
     assert assignment.satisfies('a')
     assert not assignment.satisfies('b')

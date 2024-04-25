@@ -24,6 +24,14 @@ class Assignment(MutableMapping):
         result += [Assignment({p: True}, **assignment) for assignment in rest_assignments]
         return result
 
+    @staticmethod
+    def more_than_one_true_proposition(propositions: set[str]) -> set['FrozenAssignment']:
+        return {
+            a.to_frozen()
+            for a in Assignment.all_possible_assignments(tuple(propositions))
+            if len([v for v in a.values() if v]) > 1
+        }
+
     def satisfies(self, label: str) -> bool:
         formula = to_sympy(label)
         return formula.subs(self) == True
