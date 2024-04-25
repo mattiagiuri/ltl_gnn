@@ -18,7 +18,7 @@ def preprocess_obss(obss: list[dict[str, Any]], device=None) -> torch_ac.DictLis
         active_transitions.append(obs["active_transitions"])
     return torch_ac.DictList({
         "features": preprocess_features(features, device=device),
-        "transition_graph": BatchedTransitionGraph(tgs, active_transitions, device=device),
+        "transition_graph": BatchedTransitionGraph(tgs, device=device),
         # "goal": torch.tensor([obs["goal_index"] for obs in obss], device=device, dtype=torch.long),
     })
 

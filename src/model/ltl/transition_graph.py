@@ -75,15 +75,23 @@ class TransitionGraph(Data):
         # - 2^|propositions| features indicating which assignments satisfy the transition label
         # - 1 feature indicating whether the transition is an epsilon transition
         # - 1 feature indicating whether the transition is accepting
-        features = []
-        for assignment in possible_assignments:
-            satisfies = assignment.to_frozen() in transition.valid_assignments
-            features.append(int(satisfies))
-        features.append(int(transition.is_epsilon()))
-        features.append(int(transition.accepting))
-        return torch.tensor(features, dtype=torch.float)
-        # global label_mapping
-        # if transition.label not in label_mapping:
-        #     label_mapping[transition.label] = len(label_mapping)
-        # assert len(label_mapping) <= 9
-        # return torch.tensor([label_mapping[transition.label], transition.accepting], dtype=torch.long)
+        # features = []
+        # for assignment in possible_assignments:
+        #     satisfies = assignment.to_frozen() in transition.valid_assignments
+        #     features.append(int(satisfies))
+        # features.append(int(transition.is_epsilon()))
+        # features.append(int(transition.accepting))
+        # return torch.tensor(features, dtype=torch.float)
+        global label_mapping
+        if transition.label not in label_mapping:
+            label_mapping[transition.label] = len(label_mapping)
+        assert len(label_mapping) <= 9
+        return torch.tensor([label_mapping[transition.label]], dtype=torch.long)
+
+    @property
+    def num_nodes(self):
+        return self.x.shape[0]
+
+    @property
+    def num_edges(self):
+        return self.edge_index.shape[1]
