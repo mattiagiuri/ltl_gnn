@@ -7,12 +7,14 @@ from torch_ac.utils import DictList, ParallelEnv
 
 import numpy as np
 
+from torch_ac.utils.sync_env import SyncEnv
+
 
 class BaseAlgo(ABC):
     """The base class for RL algorithms."""
 
     def __init__(self, envs, model, device, num_steps_per_proc, discount, lr, gae_lambda, entropy_coef,
-                 value_loss_coef, max_grad_norm, preprocess_obss, recurrence=1):
+                 value_loss_coef, max_grad_norm, preprocess_obss, recurrence=1, parallel=False):
         """
         Initializes a `BaseAlgo` instance.
 
@@ -49,7 +51,7 @@ class BaseAlgo(ABC):
 
         # Store parameters
 
-        self.env = ParallelEnv(envs)
+        self.env = ParallelEnv(envs) if parallel else SyncEnv(envs)
         self.model = model
         self.device = device
         self.num_steps_per_proc = num_steps_per_proc

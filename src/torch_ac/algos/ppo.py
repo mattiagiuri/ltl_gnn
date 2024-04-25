@@ -11,12 +11,12 @@ class PPO(BaseAlgo):
     """The Proximal Policy Optimization algorithm
     ([Schulman et al., 2015](https://arxiv.org/abs/1707.06347))."""
 
-    def __init__(self, envs, model, device, config: PPOConfig, preprocess_obss: Callable):
+    def __init__(self, envs, model, device, config: PPOConfig, preprocess_obss: Callable, parallel=False):
 
         num_steps_per_proc = config.steps_per_process
 
         super().__init__(envs, model, device, num_steps_per_proc, config.discount, config.lr, config.gae_lambda,
-                         config.entropy_coef, config.value_loss_coef, config.max_grad_norm, preprocess_obss)
+                         config.entropy_coef, config.value_loss_coef, config.max_grad_norm, preprocess_obss, parallel=parallel)
 
         self.clip_eps = config.clip_eps
         self.epochs = config.epochs

@@ -1,2 +1,3 @@
 from .dictlist import DictList
-from .penv import ParallelEnv
+from .parallel_env import ParallelEnv
+from .sync_env import SyncEnv
