@@ -9,21 +9,31 @@ class HOAParser:
     A parser for LDBAs given in the HOA format. Handles epsilon transitions as output by rabinizer.
     """
 
-    def __init__(self, hoa_text: str, simplify_labels=True):
+    def __init__(self, hoa_text: str, propositions: Optional[set[str]] = None, simplify_labels=True):
         self.lines = hoa_text.split('\n')
         self.line_number = 0
         self.ldba = None
-        self.propositions = None
+        self.propositions: Optional[set[str]] = propositions
+        self.propositions_in_hoa: Optional[list[str]] = None
         self.simplify_labels = simplify_labels
 
     def parse_hoa(self) -> LDBA:
         if self.ldba is not None:
             return self.ldba
-        self.propositions = self.find_and_parse_ap_line()
-        self.ldba = LDBA(set(self.propositions), simplify_labels=self.simplify_labels)
+        self.parse_propositions()
+        self.ldba = LDBA(self.propositions, simplify_labels=self.simplify_labels)
         self.parse_header()
         self.parse_body()
         return self.ldba
+
+    def parse_propositions(self):
+        self.propositions_in_hoa = self.find_and_parse_ap_line()
+        if self.propositions is None:
+            self.propositions = set(self.propositions_in_hoa)
+        else:
+            if not set(self.propositions_in_hoa).issubset(self.propositions):
+                raise ValueError(
+                    'Error parsing HOA. Found propositions in header that do not match given propositions.')
 
     def find_and_parse_ap_line(self) -> list[str]:
         for num, line in enumerate(self.lines):
@@ -103,9 +113,9 @@ class HOAParser:
         return label, line
 
     def replace_numeric_propositions(self, label: str) -> str:
-        assert self.propositions is not None
+        assert self.propositions_in_hoa is not None
         regexp = r'(\d+)'
-        return re.sub(regexp, lambda m: self.propositions[int(m.group(0))], label)
+        return re.sub(regexp, lambda m: self.propositions_in_hoa[int(m.group(0))], label)
 
     def peek(self, error_msg: Optional[str] = None) -> str:
         if self.line_number >= len(self.lines):

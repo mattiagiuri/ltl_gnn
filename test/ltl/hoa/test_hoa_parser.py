@@ -6,9 +6,9 @@ from ltl.hoa import HOAParser
 from ltl.automata import LDBA
 
 
-def parse_automaton(automaton_name, simplify_labels=False) -> LDBA:
+def parse_automaton(automaton_name, propositions=None, simplify_labels=False) -> LDBA:
     hoa_text = get_resource(f'{automaton_name}.hoa')
-    parser = HOAParser(hoa_text, simplify_labels=simplify_labels)
+    parser = HOAParser(hoa_text, propositions=propositions, simplify_labels=simplify_labels)
     return parser.parse_hoa()
 
 
@@ -17,6 +17,26 @@ def test_aut_1():
     assert 3 == ldba.num_states
     assert 0 == ldba.initial_state
     assert ldba.propositions == ('a', 'b')
+    assert ldba.check_valid()
+    assert 3 == len(ldba.state_to_transitions)
+    assert_transitions_equal(ldba, 0, {
+        (0, 0, 't', False),
+        (0, 1, None, False),
+        (0, 2, None, False),
+    })
+    assert_transitions_equal(ldba, 1, {
+        (1, 1, 'b', True),
+    })
+    assert_transitions_equal(ldba, 2, {
+        (2, 2, 'a', True),
+    })
+
+
+def test_more_propositions():
+    ldba = parse_automaton('aut1', propositions={'a', 'b', 'c'})
+    assert 3 == ldba.num_states
+    assert 0 == ldba.initial_state
+    assert ldba.propositions == ('a', 'b', 'c')
     assert ldba.check_valid()
     assert 3 == len(ldba.state_to_transitions)
     assert_transitions_equal(ldba, 0, {
