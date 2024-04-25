@@ -27,6 +27,8 @@ from dm_control.utils import containers
 from dm_control.utils import rewards
 from dm_control.rl.control import _spec_from_observation
 
+from ltl.logic import FrozenAssignment, Assignment
+
 _DEFAULT_TIME_LIMIT = 20
 SUITE = containers.TaggedTasks()
 
@@ -105,15 +107,18 @@ class LTLPointMass(base.Task):
         pos = physics.point_mass_position()
         x, y = pos[0], pos[1]
         if .1 <= x <= .2 and .1 <= y <= .2:
-            return ['green']
+            return {'green'}
         elif -.2 <= x <= -.1 and .1 <= y <= .2:
-            return ['blue']
+            return {'blue'}
         elif -.2 <= x <= -.1 and -.2 <= y <= -.1:
-            return ['red']
+            return {'red'}
         elif .1 <= x <= .2 and -.2 <= y <= -.1:
-            return ['yellow']
-        return []
+            return {'yellow'}
+        return set()
 
     @staticmethod
     def get_propositions() -> list[str]:
         return sorted(['green', 'blue', 'red', 'yellow'])
+
+    def get_impossible_assignments(self) -> set[FrozenAssignment]:
+        return Assignment.more_than_one_true_proposition(set(self.get_propositions()))

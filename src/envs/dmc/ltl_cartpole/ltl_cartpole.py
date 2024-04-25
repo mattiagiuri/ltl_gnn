@@ -36,6 +36,8 @@ from dm_control.utils import containers
 from dm_control.utils import rewards
 from lxml import etree
 
+from ltl.logic import Assignment, FrozenAssignment
+
 _DEFAULT_TIME_LIMIT = 10
 SUITE = containers.TaggedTasks()
 
@@ -163,19 +165,22 @@ class LTLCartpole(base.Task):
     def compute_active_propositions(physics):
         x_pos = physics.cart_position()
         if 0.9 <= x_pos <= 1.1:
-            return ['green']
+            return {'green'}
         elif -1.1 <= x_pos <= -0.9:
-            return ['yellow']
+            return {'yellow'}
         elif 1.55 <= x_pos <= 1.8:
-            return ['red']
+            return {'red'}
         elif -1.8 <= x_pos <= -1.55:
-            return ['red']
+            return {'red'}
         else:
-            return []
+            return set()
 
     @staticmethod
     def get_propositions() -> list[str]:
         return sorted(['green', 'yellow'])
+
+    def get_impossible_assignments(self) -> set[FrozenAssignment]:
+        return Assignment.more_than_one_true_proposition(set(self.get_propositions()))
 
     def _get_reward(self, physics, sparse):
         if sparse:

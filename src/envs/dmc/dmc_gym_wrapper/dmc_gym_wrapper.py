@@ -6,6 +6,7 @@ import numpy as np
 from gymnasium.core import ObsType
 
 from envs.dmc.dmc_gym_wrapper.wrapper_utils import dm_spec2gym_space, dm_env_step2gym_step
+from ltl.logic import FrozenAssignment
 
 
 class DMCGymWrapper(gym.Env):
@@ -78,3 +79,6 @@ class DMCGymWrapper(gym.Env):
     def get_propositions(self) -> list[str]:
         """Returns the propositions of the environment."""
         return self._env.task.get_propositions()
+
+    def get_impossible_assignments(self) -> set[FrozenAssignment]:
+        return self._env.task.get_impossible_assignments()
