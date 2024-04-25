@@ -31,7 +31,6 @@ class BatchedTransitionGraph:
             x=x,
             edge_index=edge_index,
             active_transitions_edges=active_transitions_edges,
-            first_nodes=torch.stack([x[0, :] for x in xs], dim=0),  # TODO: remove
             num_graphs=len(index)
         )
         assert data.validate()
