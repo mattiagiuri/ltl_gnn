@@ -6,6 +6,8 @@ from gymnasium import spaces
 from gymnasium.core import ActType, WrapperObsType
 from gymnasium.spaces import Box
 
+from ltl.logic import FrozenAssignment, Assignment
+
 
 class SafetyGymWrapper(gymnasium.Wrapper):
     """
@@ -31,7 +33,7 @@ class SafetyGymWrapper(gymnasium.Wrapper):
     def step(self, action: ActType):
         obs, reward, cost, terminated, truncated, info = super().step(action)
         obs['wall_sensor'] = info['wall_sensor']
-        info['propositions'] = [c for c in self.colors if info[f'cost_zones_{c}'] > 0]
+        info['propositions'] = {c for c in self.colors if info[f'cost_zones_{c}'] > 0}
         terminated = terminated or info['cost_ltl_walls'] > 0
         return obs, reward, terminated, truncated, info
 
@@ -45,3 +47,6 @@ class SafetyGymWrapper(gymnasium.Wrapper):
 
     def get_propositions(self) -> list[str]:
         return sorted(self.colors)
+
+    def get_impossible_assignments(self) -> set[FrozenAssignment]:
+        return Assignment.more_than_one_true_proposition(set(self.get_propositions()))

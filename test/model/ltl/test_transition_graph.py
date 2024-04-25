@@ -51,6 +51,10 @@ def test_from_ldba1():
     assert tg.info.accepting_transitions == {1, 3, 4}
     assert tg.info.epsilon_transitions == set()
     assert tg.info.sink_transitions == set()
+    label_to_index = {label: index for index, label in expected_labels.items()}
+    for state in range(ldba.num_states):
+        for transition in ldba.state_to_transitions[state]:
+            assert tg.transition_to_index[transition] == label_to_index[transition.label]
 
 
 def test_from_ldba2():
@@ -92,6 +96,7 @@ def test_from_ldba2():
     assert tg.info.accepting_transitions == {4}
     assert tg.info.epsilon_transitions == {3}
     assert tg.info.sink_transitions == {5, 6}
+    assert tg.transition_to_index[LDBATransition(0, 1, 'a & b', False, ldba.propositions)] == 1
 
 
 def test_from_ldba3():

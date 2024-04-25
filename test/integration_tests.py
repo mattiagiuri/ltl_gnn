@@ -16,3 +16,4 @@ def test_transition_graph_from_formula():
     tg = TransitionGraph.from_ldba(ldba)
     assert tg.num_nodes == 69
     assert tg.num_edges == 239
+    assert tg.num_node_features == 11

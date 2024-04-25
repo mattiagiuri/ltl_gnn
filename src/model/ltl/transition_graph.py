@@ -6,6 +6,8 @@ from torch_geometric.data import Data
 from ltl.automata import LDBA, LDBATransition
 from ltl.logic import Assignment
 
+label_mapping = {}
+
 
 class TransitionGraph(Data):
     @dataclass
@@ -16,12 +18,20 @@ class TransitionGraph(Data):
         epsilon_transitions: set[int]
         sink_transitions: set[int]
 
-    def __init__(self, edge_index: torch.tensor, features: torch.tensor, info: 'TransitionGraph.Info', **kwargs):
+    def __init__(
+            self,
+            edge_index: torch.tensor,
+            transition_to_index: dict[LDBATransition, int],
+            features: torch.tensor,
+            info: 'TransitionGraph.Info',
+            **kwargs
+    ):
         super().__init__(x=features, edge_index=edge_index, **kwargs)
+        self.transition_to_index = transition_to_index
         self.info = info
 
-    @staticmethod
-    def from_ldba(ldba: LDBA) -> 'TransitionGraph':
+    @classmethod
+    def from_ldba(cls, ldba: LDBA) -> 'TransitionGraph':
         if not ldba.complete:
             raise ValueError(
                 'LDBA must be complete. Make sure to call `complete_sink_state` before creating the transition graph.'
@@ -43,7 +53,7 @@ class TransitionGraph(Data):
                     if incoming_transition not in transition_to_index:
                         transition_to_index[incoming_transition] = len(transition_to_index)
                     edge_index.append((current_index, transition_to_index[incoming_transition]))
-                features[current_index] = TransitionGraph.get_features(transition, ldba.possible_assignments)
+                features[current_index] = cls.get_features(transition, ldba.possible_assignments)
                 labels[current_index] = transition.label
                 positive_labels[current_index] = transition.positive_label
                 if transition.accepting:
@@ -56,11 +66,11 @@ class TransitionGraph(Data):
         edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
         assert all(feature is not None for feature in features)
         features = torch.stack(features, dim=0)
-        info = TransitionGraph.Info(labels, positive_labels, accepting_transitions, epsilon_transitions, sink_transitions)
-        return TransitionGraph(edge_index, features, info)
+        info = cls.Info(labels, positive_labels, accepting_transitions, epsilon_transitions, sink_transitions)
+        return cls(edge_index, transition_to_index, features, info)
 
-    @staticmethod
-    def get_features(transition: LDBATransition, possible_assignments: list[Assignment]) -> torch.tensor:
+    @classmethod
+    def get_features(cls, transition: LDBATransition, possible_assignments: list[Assignment]) -> torch.tensor:
         # we use the following feature representation:
         # - 2^|propositions| features indicating which assignments satisfy the transition label
         # - 1 feature indicating whether the transition is an epsilon transition
@@ -72,3 +82,8 @@ class TransitionGraph(Data):
         features.append(int(transition.is_epsilon()))
         features.append(int(transition.accepting))
         return torch.tensor(features, dtype=torch.float)
+        # global label_mapping
+        # if transition.label not in label_mapping:
+        #     label_mapping[transition.label] = len(label_mapping)
+        # assert len(label_mapping) <= 9
+        # return torch.tensor([label_mapping[transition.label], transition.accepting], dtype=torch.long)

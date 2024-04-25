@@ -20,12 +20,13 @@ def render(env) -> tuple[np.ndarray, int]:
 
 def main():
     env_name = 'ltl_point_mass'
-    exp = 'curr'
+    exp = 'two'
+    seed = 1
     save_gif = False
 
     env = make_env(env_name, EventuallySampler, render_mode='rgb_array')
     config = model_configs['default']
-    training_status = torch.load(f'experiments/ppo/{env_name}/{exp}/0/status.pth', map_location='cpu')
+    training_status = torch.load(f'experiments/ppo/{env_name}/{exp}/{seed}/status.pth', map_location='cpu')
     model = build_model(env, training_status, config)
     agent = Agent(model)
 

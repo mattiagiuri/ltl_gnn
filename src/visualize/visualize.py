@@ -74,29 +74,29 @@ def draw_transition_graph(
 
 
 if __name__ == '__main__':
-    # formula = '(!a U (b & (!c U d)))'
+    formula = '(!a U (b & (!c U d)))'
+    # formula = 'F (g & G!r) & G!b'
     # formula = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
     # formula = '!a U (b & (!c U (d & (!e U f))))'
     # formula = '(F(a&b) | F(a & XFc)) & G!d'
     # formula = '(F(a&b) | F(a & XFb))'
     # formula = 'F((a&b)&FGb)'
-    # formula = '(Fc) & (G(a => F b))'
     # formula = '(FGa | FGb) & G!c'
-    formula = 'GFa & GFb & G!c'
+    # formula = 'GFa & GFb & G!c'
+    # formula = '!r U g'
     prune = True
 
+
+    # ldba = ltl2ldba(formula, propositions=frozenset({'green', 'red', 'yellow', 'blue'}), simplify_labels=True)
     ldba = ltl2ldba(formula, simplify_labels=True)
-    all_possible = Assignment.all_possible_assignments(ldba.propositions)
     assert ldba.check_valid()
     print('Constructed LDBA.')
     ldba.complete_sink_state()
     print('Added sink state.')
     if prune:
-        more_than_one_proposition = {a.to_frozen() for a in all_possible if len([v for v in a.values() if v]) > 1}
-        print(f'Number of remaining assignments: {len(all_possible) - len(more_than_one_proposition)}')
-        ldba.prune_impossible_transitions(more_than_one_proposition)
+        ldba.prune_impossible_transitions(Assignment.more_than_one_true_proposition(set(ldba.propositions)))
         print('Pruned impossible transitions.')
-    draw_ldba(ldba, fmt='pdf', positive_label=False)
-    tg = TransitionGraph.from_ldba(ldba)
-    print('Constructed transition graph.')
-    draw_transition_graph(tg, fmt='pdf', positive_label=False, features=True)
+    draw_ldba(ldba, fmt='pdf', positive_label=True)
+    # tg = TransitionGraph.from_ldba(ldba)
+    # print('Constructed transition graph.')
+    # draw_transition_graph(tg, fmt='pdf', positive_label=True, features=False)

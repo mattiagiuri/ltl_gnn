@@ -3,6 +3,7 @@ spot-2.9/
 .idea
 wandb
 experiments
+.pytest_cache
 ldba.png
 ldba.pdf
 transition_graph.png

@@ -7,6 +7,7 @@ from envs.dict_wrapper import DictWrapper
 from envs.ltl_goal_wrapper import LTLGoalWrapper
 from envs.goal_index_wrapper import GoalIndexWrapper
 from envs.remove_trunc_wrapper import RemoveTruncWrapper
+from envs.transition_graph_wrapper import TransitionGraphWrapper
 
 from ltl import LTLSampler
 
@@ -31,7 +32,8 @@ def make_safety_gym_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: s
     env = SafetyGymWrapper(env)
     env = FlattenObservation(env)
     env = LTLGoalWrapper(env, ltl_sampler(env.get_wrapper_attr('get_propositions')()))
-    env = GoalIndexWrapper(env, punish_termination=True)
+    # env = GoalIndexWrapper(env, punish_termination=True)
+    env = TransitionGraphWrapper(env, punish_termination=True)
     env = RemoveTruncWrapper(env)
     return env
 
@@ -53,6 +55,7 @@ def make_dmc_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | No
         env = RemoveTruncWrapper(env)
     else:
         env = LTLGoalWrapper(env, ltl_sampler(env.get_wrapper_attr('get_propositions')()))
-        env = GoalIndexWrapper(env, punish_termination=False)
+        # env = GoalIndexWrapper(env, punish_termination=False)
+        env = TransitionGraphWrapper(env, punish_termination=True)
         env = RemoveTruncWrapper(env)
     return env

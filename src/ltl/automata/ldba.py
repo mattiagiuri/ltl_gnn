@@ -33,6 +33,15 @@ class LDBA:
         if state not in self.state_to_incoming_transitions:
             self.state_to_incoming_transitions[state] = []
 
+    def get_next_state(self, state: int, propositions: set[str]) -> tuple[int, bool]:
+        """Returns the next state and whether the taken transition is accepting,
+           given the current state and the propositions that are true."""
+        assignment = Assignment({p: (p in propositions) for p in self.propositions}).to_frozen()
+        for transition in self.state_to_transitions[state]:
+            if assignment in transition.valid_assignments:
+                return transition.target, transition.accepting
+        raise ValueError('Invalid transition.')
+
     def contains_state(self, state: int) -> bool:
         return state <= self.num_states
 

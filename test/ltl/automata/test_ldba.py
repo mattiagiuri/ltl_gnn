@@ -295,3 +295,30 @@ def test_positive_label():
 def assert_transitions_equal(ldba: LDBA, state: int, expected: set[tuple[int, int, str, bool]]):
     expected = {LDBATransition(*e, propositions=ldba.propositions) for e in expected}
     assert set(ldba.state_to_transitions[state]) == expected
+
+
+def test_get_next_state():
+    ldba = LDBA({'a', 'b'})
+    add_states(ldba, 4, 0)
+    ldba.add_transition(0, 1, 'a', False)
+    ldba.add_transition(0, 0, '!a', False)
+    ldba.add_transition(1, 2, 'a & b', True)
+    ldba.add_transition(1, 3, 'a & !b', False)
+    ldba.add_transition(2, 3, 'b', True)
+    ldba.add_transition(3, 3, 't', True)
+    ldba.complete_sink_state()
+    assert ldba.check_valid()
+    assert ldba.sink_state == 4
+
+    assert_next_states(ldba, 0, [0, 1, 0, 1], [False, False, False, False])
+    assert_next_states(ldba, 1, [4, 3, 4, 2], [False, False, False, True])
+    assert_next_states(ldba, 2, [4, 4, 3, 3], [False, False, True, True])
+    assert_next_states(ldba, 3, [3, 3, 3, 3], [True, True, True, True])
+    assert_next_states(ldba, 4, [4, 4, 4, 4], [False, False, False, False])
+
+
+def assert_next_states(ldba: LDBA, state: int, expected_states: list[int], expected_accepting: list[bool]):
+    """Asserts that the next states are as expected for the given state. The expected states should be given in order of
+    the assignments {}, {a}, {b}, {a,b}."""
+    for i, assignment in enumerate([set(), {'a'}, {'b'}, {'a', 'b'}]):
+        assert ldba.get_next_state(state, assignment) == (expected_states[i], expected_accepting[i])

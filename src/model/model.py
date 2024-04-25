@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from config import ModelConfig
 from model.ltl import LtlEmbedding
+from model.ltl.gnn import GNN
 from model.policy import ContinuousActor
 from utils import torch_utils
 
@@ -26,7 +27,7 @@ class Model(nn.Module):
 
     def forward(self, obs):
         env_embedding = self.env_net(obs.features) if self.env_net is not None else obs.features
-        ltl_embedding = self.ltl_net(obs.goal)
+        ltl_embedding = self.ltl_net(obs.transition_graph)
         embedding = torch.cat([env_embedding, ltl_embedding], dim=1)
 
         dist = self.actor(embedding)
@@ -44,8 +45,12 @@ def build_model(env: gymnasium.Env, training_status: dict[str, Any], model_confi
         env_net = torch_utils.make_mlp_layers([obs_dim, *model_config.env_net.layers],
                                               activation=model_config.env_net.activation)
         env_embedding_dim = model_config.env_net.layers[-1]
-    ltl_embedding_dim = 4
-    ltl_net = LtlEmbedding(5, ltl_embedding_dim)
+    # ltl_embedding_dim = 4
+    # ltl_net = LtlEmbedding(5, ltl_embedding_dim)
+    ltl_embedding_dim = 16
+    gnn_feature_dim = -1 # env.observation_space['transition_graph'].node_space.shape[0]
+    ltl_net = GNN(gnn_feature_dim, ltl_embedding_dim, num_layers=2, concat_initial_features=False)
+    print(f'Num GNN parameters: {torch_utils.get_number_of_params(ltl_net)}')
     actor = ContinuousActor(action_dim=action_dim,
                             layers=[env_embedding_dim + ltl_embedding_dim, *model_config.actor.layers],
                             activation=model_config.actor.activation,
