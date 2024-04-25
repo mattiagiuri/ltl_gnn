@@ -17,6 +17,7 @@ class Args:
     num_procs: int
     log_csv: bool = True
     log_wandb: bool = False
+    save: bool = True
 
 
 def main():
@@ -48,13 +49,15 @@ def main():
             command.append('--log_wandb')
         if not args.log_csv:
             command.append('--no-log_csv')
+        if not args.save:
+            command.append('--no-save')
 
         subprocess.run(command, env=env)
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name newconf2 --seed 1 --log_csv false'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name try --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

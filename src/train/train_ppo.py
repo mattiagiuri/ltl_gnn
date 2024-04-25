@@ -33,8 +33,10 @@ class Trainer:
         training_status, resuming = self.get_training_status()
         model = build_model(envs[0], training_status, model_configs[self.args.model_config])
         model.to(self.args.experiment.device)
+        print(model.ltl_net)
         algo = torch_ac.PPO(envs, model, self.args.experiment.device, self.args.ppo,
-                            preprocess_obss=preprocessing.preprocess_obss)
+                            preprocess_obss=preprocessing.preprocess_obss,
+                            parallel=False)  # TODO: add cmd argument for this
         if "optimizer_state" in training_status:
             algo.optimizer.load_state_dict(training_status["optimizer_state"])
             self.text_logger.info("Loaded optimizer from existing run.")
@@ -59,7 +61,8 @@ class Trainer:
             if num_updates % self.args.experiment.log_interval == 0:
                 logs = self.augment_logs(logs, update_time, num_steps)
                 logger.log(logs)
-            if self.args.experiment.save_interval > 0 and num_updates % self.args.experiment.save_interval == 0:
+            if self.args.experiment.save_interval > 0 and num_updates % self.args.experiment.save_interval == 0 \
+                    and self.args.save:
                 training_status = {"num_steps": num_steps, "num_updates": num_updates,
                                    "model_state": algo.model.state_dict(),
                                    "optimizer_state": algo.optimizer.state_dict()}
@@ -127,8 +130,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_arguments(config.PPOConfig, dest="ppo")
     parser.add_argument("--model_config", type=str, default="default", choices=model_configs.keys(),
                         required=True)
-    parser.add_argument("--log_csv",  action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--log_csv", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--log_wandb", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--save', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
     return args
 
