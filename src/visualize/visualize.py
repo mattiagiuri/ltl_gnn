@@ -15,7 +15,7 @@ class Color(enum.Enum):
         return self.value
 
 
-def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=False) -> None:
+def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=False, self_loops=True) -> None:
     """Draw an LDBA as a graph using Graphviz."""
     dot = 'digraph "" {\n'
     dot += 'rankdir=LR\n'
@@ -29,6 +29,8 @@ def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=
             dot += f' color="{Color.SINK}" style="filled"'
         dot += ']\n'
         for transition in transitions:
+            if not self_loops and transition.target == state:
+                continue
             dot += f'{state} -> {transition.target} [label="{transition.label if not positive_label else transition.positive_label}"'
             if transition.accepting:
                 dot += f' color="{Color.ACCEPTING}"'
@@ -74,21 +76,21 @@ def draw_transition_graph(
 
 
 if __name__ == '__main__':
-    formula = '(!a U (b & (!c U d)))'
-    # formula = 'F (g & G!r) & G!b'
-    # formula = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
-    # formula = '!a U (b & (!c U (d & (!e U f))))'
-    # formula = '(F(a&b) | F(a & XFc)) & G!d'
-    # formula = '(F(a&b) | F(a & XFb))'
-    # formula = 'F((a&b)&FGb)'
-    # formula = '(FGa | FGb) & G!c'
-    # formula = 'GFa & GFb & G!c'
-    # formula = '!r U g'
+    f = '(!a U (b & (!c U d)))'
+    # f = 'F (g & G!r) & G!b'
+    # f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
+    # f = '!a U (b & (!c U (d & (!e U f))))'
+    # f = '(F(a&b) | F(a & XFc)) & G!d'
+    # f = '(F(a&b) | F(a & XFb))'
+    # f = 'F((a&b)&FGb)'
+    # f = '(FGa | FGb)'  # & G!c
+    # f = 'GFa & GFb & G!c'
+    # f = '!r U g'
+    # f = 'F (g & G!r)'
     prune = True
 
-
     # ldba = ltl2ldba(formula, propositions=frozenset({'green', 'red', 'yellow', 'blue'}), simplify_labels=True)
-    ldba = ltl2ldba(formula, simplify_labels=True)
+    ldba = ltl2ldba(f, simplify_labels=True)
     assert ldba.check_valid()
     print('Constructed LDBA.')
     ldba.complete_sink_state()
@@ -96,7 +98,7 @@ if __name__ == '__main__':
     if prune:
         ldba.prune_impossible_transitions(Assignment.more_than_one_true_proposition(set(ldba.propositions)))
         print('Pruned impossible transitions.')
-    draw_ldba(ldba, fmt='pdf', positive_label=True)
+    draw_ldba(ldba, fmt='pdf', positive_label=True, self_loops=True)
     # tg = TransitionGraph.from_ldba(ldba)
     # print('Constructed transition graph.')
     # draw_transition_graph(tg, fmt='pdf', positive_label=True, features=False)
