@@ -8,3 +8,8 @@ def get_experiment_path(config: argparse.Namespace) -> str:
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
     return path
+
+
+def get_pretraining_experiment_path(config: argparse.Namespace) -> str:
+    experiment = config.experiment
+    return f'experiments/ppo/pretraining_{experiment.env}/{config.pretraining_experiment}/{experiment.seed}'

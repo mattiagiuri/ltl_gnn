@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Type
+from typing import Type, Optional
 
 import torch
 from torch import nn
@@ -20,11 +20,14 @@ def get_device():
 
 def make_mlp_layers(
         layer_sizes: list[int],
-        activation: Type[nn.Module],
+        activation: Optional[Type[nn.Module]],
         final_layer_activation=True,
         weight_init=torch.nn.init.orthogonal_,
-        bias_init=partial(torch.nn.init.constant_, val=0.0)) -> nn.Module:
+        bias_init=partial(torch.nn.init.constant_, val=0.0)
+) -> nn.Module:
     layers = []
+    if activation is None and len(layer_sizes) > 2:
+        raise ValueError('Activation function should not be None if there are hidden layers')
     for i in range(len(layer_sizes) - 1):
         layers.append(nn.Linear(layer_sizes[i], layer_sizes[i + 1]))
         if weight_init is not None:

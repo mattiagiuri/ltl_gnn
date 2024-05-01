@@ -8,14 +8,14 @@ from torch import nn
 @dataclass
 class ActorConfig:
     layers: list[int]
-    activation: Type[nn.Module] | dict[str, Type[nn.Module]]
+    activation: Optional[Type[nn.Module]] | dict[str, Type[nn.Module]]
     state_dependent_std: bool = False
 
 
 @dataclass
 class StandardNetConfig:
     layers: list[int]
-    activation: Type[nn.Module]
+    activation: Optional[Type[nn.Module]]
 
 
 @dataclass
@@ -59,3 +59,17 @@ point_mass = ModelConfig(
         activation=nn.Tanh
     )
 )
+
+pretraining = ModelConfig(
+    actor=ActorConfig(
+        layers=[],
+        activation=None,
+        state_dependent_std=False
+    ),
+    critic=StandardNetConfig(
+        layers=[],
+        activation=None
+    ),
+    env_net=None
+)
+

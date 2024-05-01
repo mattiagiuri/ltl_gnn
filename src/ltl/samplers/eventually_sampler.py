@@ -9,7 +9,7 @@ from ltl.samplers import LTLSampler
 class EventuallySampler(LTLSampler):
     def __init__(self, propositions: list[str]):
         super().__init__(propositions)
-        self.temperature = 1. / 6.0
+        self.temperature = 0.5
         self.returns = None
 
     def sample(self) -> str:

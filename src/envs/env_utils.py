@@ -1,6 +1,6 @@
 from typing import Type
 
-from gymnasium.wrappers import FlattenObservation
+from gymnasium.wrappers import FlattenObservation, TimeLimit
 
 from envs.alternate_wrapper import AlternateWrapper
 from envs.dict_wrapper import DictWrapper
@@ -10,9 +10,16 @@ from envs.remove_trunc_wrapper import RemoveTruncWrapper
 from envs.transition_graph_wrapper import TransitionGraphWrapper
 
 from ltl import LTLSampler
+from ltl.logic import FrozenAssignment
 
 
 def make_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | None = None):
+    if name.startswith('pretraining_'):
+        underlying = name[len('pretraining_'):]
+        underlying_env = make_env(underlying, ltl_sampler, render_mode)
+        propositions = underlying_env.get_wrapper_attr('get_propositions')()
+        impossible_assignments = underlying_env.get_wrapper_attr('get_impossible_assignments')()
+        return make_pretraining_env(propositions, impossible_assignments, ltl_sampler)
     if is_safety_gym_env(name):
         return make_safety_gym_env(name, ltl_sampler, render_mode)
     else:
@@ -58,4 +65,19 @@ def make_dmc_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | No
         # env = GoalIndexWrapper(env, punish_termination=False)
         env = TransitionGraphWrapper(env, punish_termination=True)
         env = RemoveTruncWrapper(env)
+    return env
+
+
+def make_pretraining_env(
+        propositions: set[str],
+        impossible_assignments: set[FrozenAssignment],
+        ltl_sampler: Type[LTLSampler]
+):
+    from envs.pretraining.pretraining_env import PretrainingEnv
+
+    env = PretrainingEnv(propositions, impossible_assignments)
+    env = LTLGoalWrapper(env, ltl_sampler(env.get_wrapper_attr('get_propositions')()))
+    env = TransitionGraphWrapper(env, punish_termination=True)
+    env = TimeLimit(env, max_episode_steps=100)
+    env = RemoveTruncWrapper(env)
     return env

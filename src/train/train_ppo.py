@@ -1,9 +1,12 @@
 import argparse
+from typing import Optional
 
 import gymnasium
 import simple_parsing
 import time
 import datetime
+
+import torch
 
 import config
 import preprocessing
@@ -31,7 +34,9 @@ class Trainer:
     def train(self, log_csv: bool = True, log_wandb: bool = False):
         envs = self.make_envs()
         training_status, resuming = self.get_training_status()
-        model = build_model(envs[0], training_status, model_configs[self.args.model_config])
+        pretrained_model = self.load_pretrained_model()
+        model = build_model(envs[0], training_status, model_configs[self.args.model_config], pretrained_model,
+                            self.args.freeze_pretrained)
         model.to(self.args.experiment.device)
         print(model.ltl_net)
         algo = torch_ac.PPO(envs, model, self.args.experiment.device, self.args.ppo,
@@ -67,6 +72,7 @@ class Trainer:
                                    "model_state": algo.model.state_dict(),
                                    "optimizer_state": algo.optimizer.state_dict()}
                 self.model_store.save_training_status(training_status)
+                self.model_store.save_ltl_net(algo.model.ltl_net.state_dict())
                 self.text_logger.info("Saved training status")
 
     def make_envs(self) -> list[gymnasium.Env]:
@@ -93,6 +99,13 @@ class Trainer:
         except FileNotFoundError:
             training_status = {"num_steps": 0, "num_updates": 0}
         return training_status, resuming
+
+    def load_pretrained_model(self) -> Optional[dict]:
+        if self.args.pretraining_experiment is not None:
+            pretrained = self.model_store.load_pretrained()
+            self.text_logger.important_info(f"Loaded pretrained model.")
+            return pretrained
+        return None
 
     def make_logger(self, log_csv: bool, log_wandb: bool, resuming: bool) -> MultiLogger:
         loggers = [self.text_logger]
@@ -130,10 +143,15 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_arguments(config.PPOConfig, dest="ppo")
     parser.add_argument("--model_config", type=str, default="default", choices=model_configs.keys(),
                         required=True)
+    parser.add_argument("--pretraining_experiment", type=str, default=None)
+    parser.add_argument("--freeze_pretrained", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--log_csv", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--log_wandb", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--save', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
+
+    if args.pretraining_experiment is None and args.freeze_pretrained:
+        raise ValueError("Cannot freeze without providing a pretrained model.")
     return args
 
 
