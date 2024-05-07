@@ -4,10 +4,10 @@ from gymnasium.wrappers import FlattenObservation, TimeLimit
 
 from envs.alternate_wrapper import AlternateWrapper
 from envs.dict_wrapper import DictWrapper
+from envs.ldba_graph_wrapper import LDBAGraphWrapper
 from envs.ltl_goal_wrapper import LTLGoalWrapper
 from envs.goal_index_wrapper import GoalIndexWrapper
 from envs.remove_trunc_wrapper import RemoveTruncWrapper
-from envs.transition_graph_wrapper import TransitionGraphWrapper
 
 from ltl import LTLSampler
 from ltl.logic import FrozenAssignment
@@ -63,7 +63,7 @@ def make_dmc_env(name: str, ltl_sampler: Type[LTLSampler], render_mode: str | No
     else:
         env = LTLGoalWrapper(env, ltl_sampler(env.get_wrapper_attr('get_propositions')()))
         # env = GoalIndexWrapper(env, punish_termination=False)
-        env = TransitionGraphWrapper(env, punish_termination=True)
+        env = LDBAGraphWrapper(env, punish_termination=True)
         env = RemoveTruncWrapper(env)
     return env
 
@@ -77,7 +77,7 @@ def make_pretraining_env(
 
     env = PretrainingEnv(propositions, impossible_assignments)
     env = LTLGoalWrapper(env, ltl_sampler(env.get_wrapper_attr('get_propositions')()))
-    env = TransitionGraphWrapper(env, punish_termination=True)
+    env = LDBAGraphWrapper(env, punish_termination=True)
     env = TimeLimit(env, max_episode_steps=100)
     env = RemoveTruncWrapper(env)
     return env

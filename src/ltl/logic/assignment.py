@@ -34,7 +34,7 @@ class Assignment(MutableMapping):
 
     def satisfies(self, label: str) -> bool:
         formula = to_sympy(label)
-        return formula.subs(self) == True
+        return formula.subs(self) == True  # TODO: speed this up?
 
     def to_frozen(self) -> 'FrozenAssignment':
         return FrozenAssignment(self)

@@ -9,7 +9,8 @@ class HOAParser:
     A parser for LDBAs given in the HOA format. Handles epsilon transitions as output by rabinizer.
     """
 
-    def __init__(self, hoa_text: str, propositions: Optional[set[str]] = None, simplify_labels=True):
+    def __init__(self, formula: str, hoa_text: str, propositions: Optional[set[str]] = None, simplify_labels=True):
+        self.formula = formula
         self.lines = hoa_text.split('\n')
         self.line_number = 0
         self.ldba = None
@@ -21,7 +22,7 @@ class HOAParser:
         if self.ldba is not None:
             return self.ldba
         self.parse_propositions()
-        self.ldba = LDBA(self.propositions, simplify_labels=self.simplify_labels)
+        self.ldba = LDBA(self.formula, self.propositions, simplify_labels=self.simplify_labels)
         self.parse_header()
         self.parse_body()
         return self.ldba

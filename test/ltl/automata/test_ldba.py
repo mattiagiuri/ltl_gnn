@@ -350,7 +350,7 @@ def test_find_sccs1():
         ldba.add_transition(*t)
     ldba.complete_sink_state()
     assert ldba.check_valid()
-    ldba.find_sccs()
+    ldba.compute_sccs()
     expected = {
         SCC(states=frozenset({2, 3}), accepting=False, bottom=True),
         SCC(states=frozenset({4, 5, 6, 7}), accepting=True, bottom=False),
@@ -375,7 +375,7 @@ def test_find_sccs2():
         ldba.add_transition(*t)
     ldba.complete_sink_state()
     assert ldba.check_valid()
-    ldba.find_sccs()
+    ldba.compute_sccs()
     expected = {
         SCC(states=frozenset({4}), accepting=False, bottom=True),
         SCC(states=frozenset({0}), accepting=True, bottom=False),

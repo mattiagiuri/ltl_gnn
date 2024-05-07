@@ -8,7 +8,8 @@ from utils import to_sympy, simplify, sympy_to_str
 
 
 class LDBA:
-    def __init__(self, propositions: set[str], simplify_labels=True):
+    def __init__(self, formula: str, propositions: set[str], simplify_labels=True):
+        self.formula = formula
         self.propositions: tuple[str, ...] = tuple(sorted(propositions))
         self.simplify_labels = simplify_labels
         self.num_states = 0
@@ -186,8 +187,8 @@ class LDBA:
                        if a.to_frozen() not in self.impossible_assignments]
         return assignments
 
-    def find_sccs(self) -> None:
-        """Finds the strongly connected components of the LDBA using Tarjan's algorithm."""
+    def compute_sccs(self) -> None:
+        """Computes the strongly connected components of the LDBA using Tarjan's algorithm."""
         if self.state_to_scc:
             return
         num = 0

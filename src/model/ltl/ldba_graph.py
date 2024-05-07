@@ -8,6 +8,8 @@ from ltl.logic import Assignment
 
 
 class LDBAGraph(Data):
+    CACHE: dict[tuple[str, int], tuple['LDBAGraph', 'LDBAGraph']] = {}
+
     def __init__(
             self,
             features: torch.tensor,
@@ -19,20 +21,23 @@ class LDBAGraph(Data):
         self.labels = labels
 
     @classmethod
-    def from_ldba(cls, ldba: LDBA) -> tuple['LDBAGraph', 'LDBAGraph']:
+    def from_ldba(cls, ldba: LDBA, current_state: int) -> tuple['LDBAGraph', 'LDBAGraph']:
         """Returns the positive and negative LDBA graphs."""
         if not ldba.complete:
-            ldba.complete_sink_state()
+            raise ValueError('The LDBA must be complete. Make sure to call '
+                             '`ldba.complete_sink_state()` before constructing the graph.')
         if not ldba.state_to_scc:
-            ldba.find_sccs()
-        if ldba.state_to_scc[ldba.initial_state].bottom and not ldba.state_to_scc[ldba.initial_state].accepting:
-            raise ValueError('The language of the LDBA is empty.')
-        pos_graph = cls.construct_graph(ldba, positive=True)
-        neg_graph = cls.construct_graph(ldba, positive=False)
+            raise ValueError('The SCCs of the LDBA must be initialised. Make sure to call '
+                             '`ldba.compute_sccs()` before constructing the graph.')
+        if (ldba.formula, current_state) in cls.CACHE:
+            return cls.CACHE[(ldba.formula, current_state)]
+        pos_graph = cls.construct_graph(ldba, current_state, positive=True)
+        neg_graph = cls.construct_graph(ldba, current_state, positive=False)
+        cls.CACHE[(ldba.formula, current_state)] = pos_graph, neg_graph
         return pos_graph, neg_graph
 
     @classmethod
-    def construct_graph(cls, ldba: LDBA, positive: bool) -> 'LDBAGraph':
+    def construct_graph(cls, ldba: LDBA, current_state: int, positive: bool) -> 'LDBAGraph':
         transition_to_index = {}
         negative = not positive
         edges = set()
@@ -76,7 +81,7 @@ class LDBAGraph(Data):
             del state_to_path_index[state]
             return transitions
 
-        root_transitions = dfs(ldba.initial_state, [], {}, None)
+        root_transitions = dfs(current_state, [], {}, None)
         edges |= {(transition_to_index[st], 0) for st in root_transitions}  # add edges to root node
         edges = torch.tensor(list(edges), dtype=torch.long).t().contiguous()
         features = [[0] * (len(ldba.possible_assignments) + 2)]
