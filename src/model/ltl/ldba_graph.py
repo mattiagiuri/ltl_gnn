@@ -1,0 +1,115 @@
+from typing import Optional
+
+import torch
+from torch_geometric.data import Data
+
+from ltl.automata import LDBA, LDBATransition
+from ltl.logic import Assignment
+
+
+class LDBAGraph(Data):
+    def __init__(
+            self,
+            features: torch.tensor,
+            edge_index: torch.tensor,
+            labels: dict[int, str],
+            **kwargs
+    ):
+        super().__init__(x=features, edge_index=edge_index, **kwargs)
+        self.labels = labels
+
+    @classmethod
+    def from_ldba(cls, ldba: LDBA) -> tuple['LDBAGraph', 'LDBAGraph']:
+        """Returns the positive and negative LDBA graphs."""
+        if not ldba.complete:
+            ldba.complete_sink_state()
+        if not ldba.state_to_scc:
+            ldba.find_sccs()
+        if ldba.state_to_scc[ldba.initial_state].bottom and not ldba.state_to_scc[ldba.initial_state].accepting:
+            raise ValueError('The language of the LDBA is empty.')
+        pos_graph = cls.construct_graph(ldba, positive=True)
+        neg_graph = cls.construct_graph(ldba, positive=False)
+        return pos_graph, neg_graph
+
+    @classmethod
+    def construct_graph(cls, ldba: LDBA, positive: bool) -> 'LDBAGraph':
+        transition_to_index = {}
+        negative = not positive
+        edges = set()
+
+        def add_to_index(transition: LDBATransition):
+            if transition not in transition_to_index:
+                transition_to_index[transition] = len(transition_to_index) + 1  # 0 is root node
+
+        def dfs(state: int, path: list[LDBATransition], state_to_path_index: dict[int, int],
+                accepting_transition: Optional[LDBATransition]) -> set[LDBATransition]:
+            state_to_path_index[state] = len(path)
+            transitions = set()
+            for transition in ldba.state_to_transitions[state]:
+                scc = ldba.state_to_scc[transition.target]
+                if negative and scc.bottom and not scc.accepting:
+                    transitions.add(transition)
+                    add_to_index(transition)
+                else:
+                    path.append(transition)
+                    stays_in_scc = scc == ldba.state_to_scc[transition.source]
+                    updated_accepting_transition = accepting_transition
+                    if transition.accepting and stays_in_scc:
+                        updated_accepting_transition = transition
+                    if transition.target in state_to_path_index:  # found cycle
+                        if positive and updated_accepting_transition in path[state_to_path_index[transition.target]:]:
+                            # found accepting cycle
+                            future_transitions = [path[state_to_path_index[transition.target]]]
+                        else:
+                            path.pop()
+                            continue  # found non-accepting cycle
+                    else:
+                        future_transitions = dfs(transition.target, path, state_to_path_index,
+                                                 updated_accepting_transition)
+                    if future_transitions:
+                        transitions.add(transition)
+                        add_to_index(transition)
+                        for t in future_transitions:
+                            add_to_index(t)
+                            edges.add((transition_to_index[t], transition_to_index[transition]))
+                    path.pop()
+            del state_to_path_index[state]
+            return transitions
+
+        root_transitions = dfs(ldba.initial_state, [], {}, None)
+        edges |= {(transition_to_index[st], 0) for st in root_transitions}  # add edges to root node
+        edges = torch.tensor(list(edges), dtype=torch.long).t().contiguous()
+        features = [[0] * (len(ldba.possible_assignments) + 2)]
+        sorted_transitions = sorted(transition_to_index.keys(), key=lambda x: transition_to_index[x])
+        features += [cls.get_features(t, ldba.possible_assignments) for t in sorted_transitions]
+        features = torch.tensor(features, dtype=torch.float)
+        graph = LDBAGraph(features, edges, {
+            0: 'root',
+            **{i + 1: transition.positive_label for i, transition in enumerate(sorted_transitions)}
+        })
+        return graph
+
+    @classmethod
+    def get_features(cls, transition: LDBATransition, possible_assignments: list[Assignment]) -> torch.tensor:
+        # we use the following feature representation:
+        # - 2^|propositions| features indicating which assignments satisfy the transition label
+        # - 1 feature indicating whether the transition is an epsilon transition
+        # - 1 feature indicating whether the transition is accepting
+        features = []
+        for assignment in possible_assignments:
+            satisfies = assignment.to_frozen() in transition.valid_assignments
+            features.append(int(satisfies))
+        features.append(int(transition.is_epsilon()))
+        features.append(int(transition.accepting))
+        return features
+
+    @property
+    def num_nodes(self):
+        return self.x.shape[0]
+
+    @property
+    def num_edges(self):
+        return 0 if self.edge_index.shape[0] == 0 else self.edge_index.shape[1]
+
+    def is_empty(self) -> bool:
+        return self.num_nodes == 1 and self.num_edges == 0

@@ -33,9 +33,7 @@ class TransitionGraph(Data):
     @classmethod
     def from_ldba(cls, ldba: LDBA) -> 'TransitionGraph':
         if not ldba.complete:
-            raise ValueError(
-                'LDBA must be complete. Make sure to call `complete_sink_state` before creating the transition graph.'
-            )
+            ldba.complete_sink_state()
         transition_to_index = {}
         edge_index = []
         features = [None] * ldba.num_transitions

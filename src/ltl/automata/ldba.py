@@ -19,6 +19,7 @@ class LDBA:
         self.sink_state: Optional[int] = None
         self.complete = False
         self.impossible_assignments: set[FrozenAssignment] = set()
+        self.state_to_scc = {}
 
     def add_state(self, state: int, initial=False):
         if state < 0:
@@ -131,7 +132,7 @@ class LDBA:
         sink_state = self.num_states
         all_assignments = set([a.to_frozen() for a in Assignment.all_possible_assignments(tuple(self.propositions))])
         for state in range(self.num_states):
-            covered_assignments = set.union(
+            covered_assignments = set() if not self.state_to_transitions[state] else set.union(
                 *[t.valid_assignments for t in self.state_to_transitions[state]]
             )
             if len(covered_assignments) != 2 ** len(self.propositions):
@@ -185,6 +186,51 @@ class LDBA:
                        if a.to_frozen() not in self.impossible_assignments]
         return assignments
 
+    def find_sccs(self) -> None:
+        """Finds the strongly connected components of the LDBA using Tarjan's algorithm."""
+        if self.state_to_scc:
+            return
+        num = 0
+        nums: dict[int, int] = {}
+        visited: set[int] = set()
+        stack: list[tuple[int, set[int]]] = []
+        active: set[int] = set()
+
+        def tarjan(s: int):
+            nonlocal num
+            nonlocal nums
+            nonlocal visited
+            nonlocal stack
+            nonlocal active
+            visited.add(s)
+            active.add(s)
+            num += 1
+            nums[s] = num
+            stack.append((s, {s}))
+            for t in self.state_to_transitions[s]:
+                if t.target not in visited:
+                    tarjan(t.target)
+                elif t.target in active:
+                    scc = set()
+                    while True:
+                        u, current = stack.pop()
+                        scc |= current
+                        if nums[u] <= nums[t.target]:
+                            break
+                    stack.append((u, scc))
+            if stack[-1][0] == s:
+                _, states = stack.pop()
+                active -= states
+                transitions = [t for state in states for t in self.state_to_transitions[state]]
+                accepting = any(t.accepting and t.target in states for t in transitions)
+                bottom = all(t.target in states for t in transitions)
+                scc = SCC(frozenset(states), accepting, bottom)
+                for state in states:
+                    assert state not in self.state_to_scc
+                    self.state_to_scc[state] = scc
+
+        tarjan(self.initial_state)
+
 
 @dataclass
 class LDBATransition:
@@ -231,3 +277,10 @@ class LDBATransition:
 
     def __hash__(self):
         return hash((self.source, self.target, self.is_epsilon(), self.accepting))
+
+
+@dataclass(eq=True, frozen=True)
+class SCC:
+    states: frozenset[int]
+    accepting: bool
+    bottom: bool

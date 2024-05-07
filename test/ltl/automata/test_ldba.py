@@ -1,6 +1,7 @@
 import pytest
 
 from ltl.automata import LDBA, LDBATransition
+from ltl.automata.ldba import SCC
 from ltl.logic import Assignment
 
 
@@ -322,3 +323,62 @@ def assert_next_states(ldba: LDBA, state: int, expected_states: list[int], expec
     the assignments {}, {a}, {b}, {a,b}."""
     for i, assignment in enumerate([set(), {'a'}, {'b'}, {'a', 'b'}]):
         assert ldba.get_next_state(state, assignment) == (expected_states[i], expected_accepting[i])
+
+
+def test_find_sccs1():
+    ldba = LDBA({'a', 'b'})
+    add_states(ldba, 12, 0)
+    transitions = [
+        (0, 1, 'a', False),
+        (1, 2, 't', True),
+        (2, 3, 't', False),
+        (3, 2, 't', False),
+        (0, 4, '!a', False),
+        (4, 5, 't', True),
+        (5, 6, 'a', False),
+        (5, 3, '!a', False),
+        (6, 7, 'a', False),
+        (6, 8, '!a', False),
+        (7, 5, 'a', False),
+        (7, 4, '!a', False),
+        (8, 9, 't', True),
+        (9, 10, 't', False),
+        (10, 11, 't', False),
+        (11, 8, 't', False),
+    ]
+    for t in transitions:
+        ldba.add_transition(*t)
+    ldba.complete_sink_state()
+    assert ldba.check_valid()
+    ldba.find_sccs()
+    expected = {
+        SCC(states=frozenset({2, 3}), accepting=False, bottom=True),
+        SCC(states=frozenset({4, 5, 6, 7}), accepting=True, bottom=False),
+        SCC(states=frozenset({8, 9, 10, 11}), accepting=True, bottom=True),
+        SCC(states=frozenset({1}), accepting=False, bottom=False),
+        SCC(states=frozenset({0}), accepting=False, bottom=False),
+    }
+    assert (expected == set(ldba.state_to_scc.values()))
+
+
+def test_find_sccs2():
+    ldba = LDBA({'a', 'b'})
+    add_states(ldba, 4, 0)
+    transitions = [
+        (0, 1, 'a & !b', False),
+        (0, 0, 'b & !a', True),
+        (1, 2, 'b', False),
+        (2, 3, 'c', False),
+        (3, 1, 'd', True),
+    ]
+    for t in transitions:
+        ldba.add_transition(*t)
+    ldba.complete_sink_state()
+    assert ldba.check_valid()
+    ldba.find_sccs()
+    expected = {
+        SCC(states=frozenset({4}), accepting=False, bottom=True),
+        SCC(states=frozenset({0}), accepting=True, bottom=False),
+        SCC(states=frozenset({1, 2, 3}), accepting=True, bottom=False)
+    }
+    assert (expected == set(ldba.state_to_scc.values()))
