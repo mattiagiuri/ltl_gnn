@@ -6,7 +6,7 @@ from torch_geometric.data import Data
 
 class BatchedGraph:
     def __init__(self, graphs: list[Data], device=None):
-        self.batch_x, self.batch_edge_index, self.active_nodes = self.batch(graphs, device)
+        self.batch_x, self.batch_edge_index, self.root_node_mask = self.batch(graphs, device)
         self.batch_num_nodes = torch.tensor([tg.num_nodes for tg in graphs], dtype=torch.long)
 
     @staticmethod
@@ -17,18 +17,18 @@ class BatchedGraph:
         batch_size = len(graphs)
         x = torch.zeros((batch_size, max_nodes, feature_dim), dtype=torch.float)
         edge_index = torch.zeros((batch_size, 2, max_edges), dtype=torch.long)
-        active_nodes = torch.zeros((batch_size, max_nodes), dtype=torch.bool)
+        root_node_mask = torch.zeros((batch_size, max_nodes), dtype=torch.bool)
         for i, tg in enumerate(graphs):
             x[i, :tg.num_nodes, :] = tg.x
             edge_index[i, :, :tg.num_edges] = tg.edge_index
             edge_index[i, :, tg.num_edges:] = tg.num_nodes  # padding
-            active_nodes[i, 0] = 1
-        return x.to(device), edge_index.to(device), active_nodes.to(device)
+            root_node_mask[i, 0] = True
+        return x.to(device), edge_index.to(device), root_node_mask.to(device)
 
     def __getitem__(self, index) -> Data:
         """Returns a sub-batch of the given graphs."""
         x = self.batch_x[index].reshape(-1, self.batch_x.shape[2])
-        active_nodes = self.active_nodes[index].reshape(-1)
+        root_node_mask = self.root_node_mask[index].reshape(-1)
         edge_index = self.batch_edge_index[index]
         # Shift the edges of subsequent graphs in the batch
         cumsum = self.batch_num_nodes[index].cumsum(0) - self.batch_num_nodes[index[0]]
@@ -38,7 +38,7 @@ class BatchedGraph:
             x=x,
             edge_index=edge_index,
             num_graphs=len(index),
-            active_nodes=active_nodes
+            root_node_mask=root_node_mask
         )
         assert data.validate()
         return data
