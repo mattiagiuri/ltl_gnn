@@ -7,7 +7,7 @@ from torch_geometric.data import Data
 class BatchedGraph:
     def __init__(self, graphs: list[Data], device=None):
         self.batch_x, self.batch_edge_index, self.root_node_mask = self.batch(graphs, device)
-        self.batch_num_nodes = torch.tensor([tg.num_nodes for tg in graphs], dtype=torch.long)
+        self.batch_num_nodes = torch.tensor([tg.num_nodes for tg in graphs], dtype=torch.long).to(device)
 
     @staticmethod
     def batch(graphs: list[Data], device=None) -> tuple[torch.tensor, torch.tensor, torch.tensor]:
@@ -15,15 +15,15 @@ class BatchedGraph:
         max_edges = max(tg.num_edges for tg in graphs)
         feature_dim = graphs[0].x.shape[1]
         batch_size = len(graphs)
-        x = torch.zeros((batch_size, max_nodes, feature_dim), dtype=torch.float)
-        edge_index = torch.zeros((batch_size, 2, max_edges), dtype=torch.long)
-        root_node_mask = torch.zeros((batch_size, max_nodes), dtype=torch.bool)
+        x = torch.zeros((batch_size, max_nodes, feature_dim), dtype=torch.float).to(device)
+        edge_index = torch.zeros((batch_size, 2, max_edges), dtype=torch.long).to(device)
+        root_node_mask = torch.zeros((batch_size, max_nodes), dtype=torch.bool).to(device)
         for i, g in enumerate(graphs):
             x[i, :g.num_nodes, :] = g.x
             edge_index[i, :, :g.num_edges] = g.edge_index
             edge_index[i, :, g.num_edges:] = g.num_nodes  # padding
             root_node_mask[i, 0] = True
-        return x.to(device), edge_index.to(device), root_node_mask.to(device)
+        return x, edge_index, root_node_mask
 
     def __getitem__(self, index) -> Data:
         """Returns a sub-batch of the given graphs."""

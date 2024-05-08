@@ -150,6 +150,10 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--save', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
 
+    if args.experiment.device == 'gpu':
+        assert torch.cuda.is_available(), "CUDA is not available."
+        args.experiment.device = 'cuda'
+
     if args.pretraining_experiment is None and args.freeze_pretrained:
         raise ValueError("Cannot freeze without providing a pretrained model.")
     return args
