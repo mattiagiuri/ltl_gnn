@@ -13,6 +13,13 @@ class ActorConfig:
 
 
 @dataclass
+class GNNConfig:
+    embedding_dim: int
+    num_layers: int
+    concat_initial_features: bool = True
+
+
+@dataclass
 class StandardNetConfig:
     layers: list[int]
     activation: Optional[Type[nn.Module]]
@@ -22,6 +29,7 @@ class StandardNetConfig:
 class ModelConfig:
     actor: ActorConfig
     critic: StandardNetConfig
+    gnn: GNNConfig
     env_net: Optional[StandardNetConfig]
 
 
@@ -38,21 +46,10 @@ default_model_config = ModelConfig(
         layers=[64, 64],
         activation=nn.Tanh
     ),
-    env_net=StandardNetConfig(
-        layers=[128, 64],
-        activation=nn.Tanh
-    )
-)
-
-point_mass = ModelConfig(
-    actor=ActorConfig(
-        layers=[64, 64],
-        activation=nn.Tanh,
-        state_dependent_std=False
-    ),
-    critic=StandardNetConfig(
-        layers=[64, 64],
-        activation=nn.Tanh
+    gnn=GNNConfig(
+        embedding_dim=16,
+        num_layers=2,
+        concat_initial_features=True
     ),
     env_net=StandardNetConfig(
         layers=[128, 64],
@@ -70,6 +67,10 @@ pretraining = ModelConfig(
         layers=[],
         activation=None
     ),
+    gnn=GNNConfig(
+        embedding_dim=16,
+        num_layers=2,
+        concat_initial_features=True
+    ),
     env_net=None
 )
-

@@ -1,3 +1,4 @@
+import functools
 import os.path
 
 import numpy as np
@@ -6,6 +7,7 @@ import cv2
 
 from envs import make_env
 from ltl import EventuallySampler
+from ltl.samplers.fixed_sampler import FixedSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
@@ -20,14 +22,17 @@ def render(env) -> tuple[np.ndarray, int]:
 
 def main():
     env_name = 'ltl_point_mass'
-    exp = 'two'
+    exp = 'gnn_refactor'
     seed = 1
     save_gif = False
 
-    env = make_env(env_name, EventuallySampler, render_mode='rgb_array')
+    sampler = FixedSampler.partial_from_formula('GF red & GF blue & GF yellow')
+    # sampler = FixedSampler.partial_from_formula('GF blue')
+    # sampler = FixedSampler.partial_from_formula('F (red | yellow)')
+    env = make_env(env_name, sampler, render_mode='rgb_array')
     config = model_configs['default']
     training_status = torch.load(f'experiments/ppo/{env_name}/{exp}/{seed}/status.pth', map_location='cpu')
-    model = build_model(env, training_status, config)
+    model = build_model(env, training_status, config, None, False)
     agent = Agent(model)
 
     images = []
@@ -54,7 +59,6 @@ def main():
 
     env.close()
     if save_gif:
-        # create a gif using imageio
         import imageio
         images = images[::5]  # increase fps by skipping frames
         imageio.mimsave(os.path.expanduser('~/tmp/agent.gif'), images, fps=60, loop=0, subrectangles=True)

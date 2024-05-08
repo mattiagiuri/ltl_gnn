@@ -22,7 +22,7 @@ class HOAParser:
         if self.ldba is not None:
             return self.ldba
         self.parse_propositions()
-        self.ldba = LDBA(self.formula, self.propositions, simplify_labels=self.simplify_labels)
+        self.ldba = LDBA(self.propositions, formula=self.formula, simplify_labels=self.simplify_labels)
         self.parse_header()
         self.parse_body()
         return self.ldba

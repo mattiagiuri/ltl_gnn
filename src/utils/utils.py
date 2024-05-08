@@ -1,5 +1,6 @@
 import random
 import subprocess
+from contextlib import ContextDecorator
 from typing import Callable
 import time
 
@@ -15,11 +16,18 @@ def set_seed(seed: int):
         torch.cuda.manual_seed_all(seed)
 
 
-def timeit(func: Callable, *args, **kwargs):
-    start = time.time()
-    result = func(*args, **kwargs)
-    print(f'Function {func.__name__} takes {time.time() - start:.2f} seconds')
-    return result
+class timeit(ContextDecorator):
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, *exc):
+        elapsed = time.time() - self.start
+        print(f'{self.name} took {elapsed:.2f} seconds')
+        return False  # re-raise any exception that occurred in the with block
 
 
 # kill all wandb processes – sometimes required due a bug in wandb

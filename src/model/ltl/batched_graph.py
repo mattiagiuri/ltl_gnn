@@ -18,10 +18,10 @@ class BatchedGraph:
         x = torch.zeros((batch_size, max_nodes, feature_dim), dtype=torch.float)
         edge_index = torch.zeros((batch_size, 2, max_edges), dtype=torch.long)
         root_node_mask = torch.zeros((batch_size, max_nodes), dtype=torch.bool)
-        for i, tg in enumerate(graphs):
-            x[i, :tg.num_nodes, :] = tg.x
-            edge_index[i, :, :tg.num_edges] = tg.edge_index
-            edge_index[i, :, tg.num_edges:] = tg.num_nodes  # padding
+        for i, g in enumerate(graphs):
+            x[i, :g.num_nodes, :] = g.x
+            edge_index[i, :, :g.num_edges] = g.edge_index
+            edge_index[i, :, g.num_edges:] = g.num_nodes  # padding
             root_node_mask[i, 0] = True
         return x.to(device), edge_index.to(device), root_node_mask.to(device)
 

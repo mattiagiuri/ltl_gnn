@@ -8,7 +8,7 @@ from utils import to_sympy, simplify, sympy_to_str
 
 
 class LDBA:
-    def __init__(self, formula: str, propositions: set[str], simplify_labels=True):
+    def __init__(self, propositions: set[str], formula: Optional[str] = None, simplify_labels=True):
         self.formula = formula
         self.propositions: tuple[str, ...] = tuple(sorted(propositions))
         self.simplify_labels = simplify_labels

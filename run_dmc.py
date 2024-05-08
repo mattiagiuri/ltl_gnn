@@ -44,6 +44,8 @@ def main():
             '--seed', str(seed),
             '--device', args.device,
             '--num_procs', str(args.num_procs),
+            # '--pretraining_experiment', 'pretraining',
+            # '--freeze_pretrained'
         ]
         if args.log_wandb:
             command.append('--log_wandb')
@@ -57,7 +59,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name try --seed 1 --log_csv false --save false'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name try --seed 3 --log_csv false --save false'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

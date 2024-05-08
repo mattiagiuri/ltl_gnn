@@ -24,8 +24,11 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
         propositions = env.get_wrapper_attr('get_propositions')()
         impossible_assignments = env.get_wrapper_attr('get_impossible_assignments')()
         num_features = 2 ** len(propositions) - len(impossible_assignments) + 2
-        assert num_features == 7  # TODO
         self.observation_space['pos_graph'] = spaces.Graph(
+            node_space=spaces.Box(-np.inf, np.inf, shape=(num_features,)),
+            edge_space=None
+        )
+        self.observation_space['neg_graph'] = spaces.Graph(
             node_space=spaces.Box(-np.inf, np.inf, shape=(num_features,)),
             edge_space=None
         )
@@ -56,6 +59,7 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
     def complete_observation(self, obs: WrapperObsType):
         pos_graph, neg_graph = LDBAGraph.from_ldba(self.ldba, self.ldba_state)
         obs['pos_graph'] = pos_graph
+        obs['neg_graph'] = neg_graph
 
     @functools.cache
     def construct_ldba(self, formula: str) -> LDBA:

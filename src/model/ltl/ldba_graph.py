@@ -29,6 +29,7 @@ class LDBAGraph(Data):
         if not ldba.state_to_scc:
             raise ValueError('The SCCs of the LDBA must be initialised. Make sure to call '
                              '`ldba.compute_sccs()` before constructing the graph.')
+        assert ldba.formula is not None
         if (ldba.formula, current_state) in cls.CACHE:
             return cls.CACHE[(ldba.formula, current_state)]
         pos_graph = cls.construct_graph(ldba, current_state, positive=True)
@@ -83,7 +84,8 @@ class LDBAGraph(Data):
 
         root_transitions = dfs(current_state, [], {}, None)
         edges |= {(transition_to_index[st], 0) for st in root_transitions}  # add edges to root node
-        edges = torch.tensor(list(edges), dtype=torch.long).t().contiguous()
+        edges = torch.tensor([[], []], dtype=torch.long) if not edges \
+            else torch.tensor(list(edges), dtype=torch.long).t().contiguous()
         features = [[0] * (len(ldba.possible_assignments) + 2)]
         sorted_transitions = sorted(transition_to_index.keys(), key=lambda x: transition_to_index[x])
         features += [cls.get_features(t, ldba.possible_assignments) for t in sorted_transitions]
@@ -114,7 +116,4 @@ class LDBAGraph(Data):
 
     @property
     def num_edges(self):
-        return 0 if self.edge_index.shape[0] == 0 else self.edge_index.shape[1]
-
-    def is_empty(self) -> bool:
-        return self.num_nodes == 1 and self.num_edges == 0
+        return self.edge_index.shape[1]

@@ -1,3 +1,3 @@
 from .ltl_embedding import LtlEmbedding
-from .transition_graph import TransitionGraph
 from .ldba_graph import LDBAGraph
+from .ltl_pos_neg_net import LtlPosNegNet
