@@ -1,8 +1,12 @@
+#!/usr/bin/env python
 import os
 import subprocess
 import sys
 from dataclasses import dataclass
 import simple_parsing
+import wandb
+
+from utils import kill_all_wandb_processes
 
 
 @dataclass
@@ -11,7 +15,9 @@ class Args:
     seed: int | list[int]
     device: str
     num_procs: int
+    log_csv: bool = True
     log_wandb: bool = False
+    save: bool = True
 
 
 def main():
@@ -41,11 +47,21 @@ def main():
         ]
         if args.log_wandb:
             command.append('--log_wandb')
+        if not args.log_csv:
+            command.append('--no-log_csv')
+        if not args.save:
+            command.append('--no-save')
 
         subprocess.run(command, env=env)
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name local --seed 0'.split(' ')
-    main()
+        sys.argv += '--num_procs 8 --device cpu --name try --seed 0 --log_csv false --save false'.split(' ')
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Interrupted!')
+        wandb.finish()
+        kill_all_wandb_processes()
+        sys.exit(0)
