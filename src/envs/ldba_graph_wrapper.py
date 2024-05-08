@@ -6,6 +6,7 @@ import numpy as np
 from gymnasium import spaces
 from gymnasium.core import WrapperObsType, WrapperActType
 
+from envs import get_env_attr
 from ltl.automata import ltl2ldba, LDBA
 from model.ltl import LDBAGraph
 
@@ -21,8 +22,8 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
             raise ValueError('Transition graph wrapper requires dict observations')
         if 'goal' not in env.observation_space.spaces:
             raise ValueError('Transition graph wrapper requires goal in observation space')
-        propositions = env.get_wrapper_attr('get_propositions')()
-        impossible_assignments = env.get_wrapper_attr('get_impossible_assignments')()
+        propositions = get_env_attr(env, 'get_propositions')()
+        impossible_assignments = get_env_attr(env, 'get_impossible_assignments')()
         num_features = 2 ** len(propositions) - len(impossible_assignments) + 2
         self.observation_space['pos_graph'] = spaces.Graph(
             node_space=spaces.Box(-np.inf, np.inf, shape=(num_features,)),
@@ -63,11 +64,11 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
 
     @functools.cache
     def construct_ldba(self, formula: str) -> LDBA:
-        propositions = frozenset(self.env.get_wrapper_attr('get_propositions')())
+        propositions = frozenset(get_env_attr(self.env, 'get_propositions')())
         ldba = ltl2ldba(formula, propositions, simplify_labels=False)
         assert ldba.check_valid()
         ldba.complete_sink_state()
-        impossible_assignments = self.env.get_wrapper_attr('get_impossible_assignments')()
+        impossible_assignments = get_env_attr(self.env, 'get_impossible_assignments')()
         ldba.prune_impossible_transitions(impossible_assignments)
         ldba.compute_sccs()
         initial_scc = ldba.state_to_scc[ldba.initial_state]

@@ -15,7 +15,7 @@ import torch_ac
 import utils
 from ltl import EventuallySampler
 from model import build_model
-from envs import make_env
+from envs import make_env, get_env_attr
 from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
@@ -55,7 +55,7 @@ class Trainer:
             start = time.time()
             exps, logs = algo.collect_experiences()
             for env in envs:
-                ltl_sampler = env.get_wrapper_attr('ltl_sampler')
+                ltl_sampler = get_env_attr(env, 'ltl_sampler')
                 ltl_sampler.update_returns(logs['avg_goal_returns'])
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)

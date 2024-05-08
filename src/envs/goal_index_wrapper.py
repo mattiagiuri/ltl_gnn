@@ -4,6 +4,8 @@ import gymnasium
 from gymnasium import spaces
 from gymnasium.core import WrapperObsType, WrapperActType
 
+from envs import get_env_attr
+
 
 class GoalIndexWrapper(gymnasium.Wrapper):
     """
@@ -17,7 +19,7 @@ class GoalIndexWrapper(gymnasium.Wrapper):
             raise ValueError('Goal index wrapper requires dict observations')
         if 'goal' not in env.observation_space.spaces:
             raise ValueError('Goal index wrapper requires goal in observation space')
-        propositions = env.get_wrapper_attr('get_propositions')()
+        propositions = get_env_attr(env, 'get_propositions')()
         self.observation_space['goal_index'] = spaces.Discrete(len(propositions) + 1)
         self.proposition_to_index = {p: i for i, p in enumerate(propositions)}
         self.punish_termination = punish_termination
