@@ -8,7 +8,7 @@ from ltl.automata import LDBA
 
 def parse_automaton(automaton_name, propositions=None, simplify_labels=False) -> LDBA:
     hoa_text = get_resource(f'{automaton_name}.hoa')
-    parser = HOAParser(hoa_text, propositions=propositions, simplify_labels=simplify_labels)
+    parser = HOAParser(formula='', hoa_text=hoa_text, propositions=propositions, simplify_labels=simplify_labels)
     return parser.parse_hoa()
 
 

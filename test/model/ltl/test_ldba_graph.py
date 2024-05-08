@@ -15,7 +15,7 @@ def assert_edge_index_equal(edge_index1, edge_index2):
 
 
 def test_from_ldba1():
-    ldba = LDBA({'a', 'b'})
+    ldba = LDBA({'a', 'b'}, formula='')
     ldba.add_state(0, True)
     ldba.add_state(1, False)
     ldba.add_state(2, False)
@@ -24,12 +24,13 @@ def test_from_ldba1():
     ldba.add_transition(2, 2, 't', True)
     ldba.complete_sink_state()
     assert ldba.check_valid()
-    _, g = LDBAGraph.from_ldba(ldba)
-    draw_ldba_graph(g, features=False)
+    ldba.compute_sccs()
+    _, g = LDBAGraph.from_ldba(ldba, 0)
+    # draw_ldba_graph(g, features=False)
 
 
 def test_from_ldba2():
-    ldba = LDBA({'a'})
+    ldba = LDBA({'a'}, formula='')
     ldba.add_state(0, True)
     ldba.add_state(1, False)
     ldba.add_state(2, False)
@@ -39,8 +40,9 @@ def test_from_ldba2():
     ldba.add_transition(1, 1, 'a', True)
     ldba.complete_sink_state()
     assert ldba.check_valid()
-    _, g = LDBAGraph.from_ldba(ldba)
-    draw_ldba_graph(g, features=False)
+    ldba.compute_sccs()
+    _, g = LDBAGraph.from_ldba(ldba, 0)
+    # draw_ldba_graph(g, features=False)
 
 
 def test_from_ldba3():
@@ -59,9 +61,7 @@ def test_from_ldba3():
     ldba.prune_impossible_transitions(Assignment.more_than_one_true_proposition(set(ldba.propositions)))
     assert ldba.check_valid()
     ldba.compute_sccs()
-    draw_ldba(ldba, fmt='pdf', positive_label=True, self_loops=True)
     pos, neg = LDBAGraph.from_ldba(ldba, 0)
-    draw_ldba_graph(neg, features=False)
 
     # TODO: GFa & GFb & G (!a | F g)
 
@@ -71,18 +71,18 @@ def test_get_features():
     assignments = Assignment.all_possible_assignments(propositions)
     # components: {!a, !b}, {!a, b}, {a, !b}, {a, b}, eps, acc
     features = LDBAGraph.get_features(LDBATransition(0, 1, 'a & b', False, propositions), assignments)
-    assert features.tolist() == [0., 0., 0., 1., 0., 0.]
+    assert features == [0., 0., 0., 1., 0., 0.]
     features = LDBAGraph.get_features(LDBATransition(0, 1, 'a', True, propositions), assignments)
-    assert features.tolist() == [0., 0., 1., 1., 0., 1.]
+    assert features== [0., 0., 1., 1., 0., 1.]
     features = LDBAGraph.get_features(LDBATransition(0, 1, None, False, propositions), assignments)
-    assert features.tolist() == [0., 0., 0., 0., 1., 0.]
+    assert features == [0., 0., 0., 0., 1., 0.]
 
     propositions = ('a', 'b', 'c')
     assignments = Assignment.all_possible_assignments(propositions)
     # components:
     # {!a, !b, !c}, {!a, !b, c}, {!a, b, !c}, {!a, b, c}, {a, !b, !c}, {a, !b, c}, {a, b, !c}, {a, b, c}, eps, acc
     features = LDBAGraph.get_features(LDBATransition(0, 1, '!a | c', False, propositions), assignments)
-    assert features.tolist() == [1., 1., 1., 1., 0., 1., 0., 1., 0., 0.]
+    assert features == [1., 1., 1., 1., 0., 1., 0., 1., 0., 0.]
     features = LDBAGraph.get_features(
         LDBATransition(0, 1, '!a & b & !c | b & !c & a | c & a', True, propositions), assignments)
-    assert features.tolist() == [0., 0., 1., 0., 0., 1., 1., 1., 0., 1.]
+    assert features == [0., 0., 1., 0., 0., 1., 1., 1., 0., 1.]
