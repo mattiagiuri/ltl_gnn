@@ -4,7 +4,6 @@ from graphviz import Source
 
 from ltl.automata import LDBA, ltl2ldba
 from ltl.logic import Assignment
-from model.ltl import TransitionGraph
 from model.ltl.ldba_graph import LDBAGraph
 from utils import memory, timeit
 
@@ -37,41 +36,6 @@ def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=
             if transition.accepting:
                 dot += f' color="{Color.ACCEPTING}"'
             dot += ']\n'
-    dot += '}'
-    s = Source(dot, filename=filename, format=fmt)
-    s.render(view=view, cleanup=True)
-
-
-def draw_transition_graph(
-        tg: TransitionGraph,
-        filename='transition_graph',
-        fmt='pdf',
-        view=True,
-        positive_label=False,
-        features=False
-) -> None:
-    """Draw a transition graph as a graph using Graphviz. Uses labels by default, but can also use feature vectors."""
-    if positive_label and features:
-        raise ValueError('Can only visualize one of positive_label and features.')
-    dot = 'digraph "" {\n'
-    dot += 'rankdir=BT\n'
-    if positive_label:
-        nodes = tg.info.positive_labels.items()
-    elif features:
-        nodes = enumerate(tg.x.tolist())
-    else:
-        nodes = tg.info.labels.items()
-    for i, label in nodes:
-        dot += f'{i} [label="{label if label is not None else "eps"}"'
-        if i in tg.info.accepting_transitions:
-            dot += f' color="{Color.ACCEPTING}", style="filled"'
-        elif i in tg.info.epsilon_transitions:
-            dot += ' style="dashed"'
-        elif i in tg.info.sink_transitions:
-            dot += f' color="{Color.SINK}", style="filled"'
-        dot += ']\n'
-    for edge in tg.edge_index.t().tolist():
-        dot += f'{edge[0]} -> {edge[1]}\n'
     dot += '}'
     s = Source(dot, filename=filename, format=fmt)
     s.render(view=view, cleanup=True)
@@ -124,9 +88,9 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 
 if __name__ == '__main__':
     # f = '(!a U (b & (!c U d)))'
-    f = 'F a'
+    # f = 'F a'
     # f = 'F (g & G!r) & G!b'
-    # f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
+    f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
     # f = '(!a U (b & (!c U (d & (!e U f))))) & (!g U (h & (!i U j)))'
     # f = '(F(a&b) | F(a & XFc)) & G!d'
     # f = '(F(a&b) | F(a & XFb))'
@@ -152,8 +116,7 @@ if __name__ == '__main__':
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
     pos, neg = LDBAGraph.from_ldba(ldba, ldba.initial_state)
     draw_ldba_graph(pos, fmt='png', features=False)
-    print(neg.x)
-    print(neg.edge_index)
-    # tg = TransitionGraph.from_ldba(ldba)
-    # print('Constructed transition graph.')
-    # draw_transition_graph(tg, fmt='pdf', positive_label=True, features=False)
+    print(pos.num_nodes)
+    print(pos.num_edges)
+    print(neg.num_nodes)
+    print(neg.num_edges)
