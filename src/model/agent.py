@@ -8,8 +8,10 @@ class Agent:
     def __init__(self, model: Model):
         self.model = model
 
-    def get_action(self, obs: dict[str, np.ndarray | str], deterministic=False) -> np.ndarray:
-        preprocessed = preprocessing.preprocess_obss([obs])
+    def get_action(self, obs, deterministic=False) -> np.ndarray:
+        if not (isinstance(obs, list) or isinstance(obs, tuple)):
+            obs = [obs]
+        preprocessed = preprocessing.preprocess_obss(obs)
         dist, _ = self.model(preprocessed)
         action = dist.mean if deterministic else dist.sample()
-        return action.flatten().detach().numpy()
+        return action.detach().numpy()
