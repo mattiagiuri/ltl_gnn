@@ -8,6 +8,7 @@ from gymnasium.core import WrapperObsType, WrapperActType
 
 from envs import get_env_attr
 from ltl.automata import ltl2ldba, LDBA
+from ltl.logic import Assignment
 from model.ltl import LDBAGraph
 
 
@@ -39,6 +40,8 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         obs, _, terminated, truncated, info = super().step(action)
+        pos_graph = LDBAGraph.from_ldba(self.ldba, self.ldba_state)[0]
+        root_assignments = pos_graph.root_assignments
         self.ldba_state, accepting = self.ldba.get_next_state(self.ldba_state, info['propositions'])
         self.complete_observation(obs)
         reward = 0.
@@ -46,7 +49,15 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
             reward = -1.
         elif accepting:  # TODO: add check if it is a finite property (i.e. single state with accepting loop)
             reward = 1.
-            terminated = True
+            terminated = True  # TODO: properly handle this depending on the task (omega regular or not)
+        else:
+            scc = self.ldba.state_to_scc[self.ldba_state]
+            if scc.bottom and not scc.accepting:
+                reward = -1.  # TODO
+                terminated = True
+            assignment = Assignment({p: (p in info['propositions']) for p in self.ldba.propositions}).to_frozen()
+            if assignment in root_assignments:
+                reward = 1.  # TODO
         return obs, reward, terminated, truncated, info
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
@@ -64,7 +75,7 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
 
     @functools.cache
     def construct_ldba(self, formula: str) -> LDBA:
-        propositions = frozenset(get_env_attr(self.env, 'get_propositions')())
+        propositions = get_env_attr(self.env, 'get_propositions')()
         ldba = ltl2ldba(formula, propositions, simplify_labels=False)
         assert ldba.check_valid()
         ldba.complete_sink_state()

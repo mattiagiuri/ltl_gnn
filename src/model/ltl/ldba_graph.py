@@ -4,7 +4,7 @@ import torch
 from torch_geometric.data import Data
 
 from ltl.automata import LDBA, LDBATransition
-from ltl.logic import Assignment
+from ltl.logic import Assignment, FrozenAssignment
 
 
 class LDBAGraph(Data):
@@ -15,10 +15,12 @@ class LDBAGraph(Data):
             features: torch.tensor,
             edge_index: torch.tensor,
             labels: dict[int, str],
+            root_assignments: set[FrozenAssignment],
             **kwargs
     ):
         super().__init__(x=features, edge_index=edge_index, **kwargs)
         self.labels = labels
+        self.root_assignments = root_assignments
 
     @classmethod
     def from_ldba(cls, ldba: LDBA, current_state: int) -> tuple['LDBAGraph', 'LDBAGraph']:
@@ -83,6 +85,10 @@ class LDBAGraph(Data):
             return transitions
 
         root_transitions = dfs(current_state, [], {}, None)
+        if not root_transitions:
+            root_assignments = set()
+        else:
+            root_assignments = set.union(*(cls.get_assignments(t, ldba.possible_assignments) for t in root_transitions))
         edges |= {(transition_to_index[st], 0) for st in root_transitions}  # add edges to root node
         edges = torch.tensor([[], []], dtype=torch.long) if not edges \
             else torch.tensor(list(edges), dtype=torch.long).t().contiguous()
@@ -92,8 +98,8 @@ class LDBAGraph(Data):
         features = torch.tensor(features, dtype=torch.float)
         graph = LDBAGraph(features, edges, {
             0: 'root',
-            **{i + 1: transition.positive_label for i, transition in enumerate(sorted_transitions)}
-        })
+            **{i + 1: transition.positive_label for i, transition in enumerate(sorted_transitions)},
+        }, root_assignments)
         return graph
 
     @classmethod
@@ -109,6 +115,10 @@ class LDBAGraph(Data):
         features.append(int(transition.is_epsilon()))
         features.append(int(transition.accepting))
         return features
+
+    @classmethod
+    def get_assignments(cls, transition: LDBATransition, possible_assignments: list[Assignment]) -> set[FrozenAssignment]:
+        return {a.to_frozen() for a in possible_assignments if a.to_frozen() in transition.valid_assignments}
 
     @property
     def num_nodes(self):
