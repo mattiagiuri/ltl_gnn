@@ -25,8 +25,9 @@ def test_from_ldba1():
     ldba.complete_sink_state()
     assert ldba.check_valid()
     ldba.compute_sccs()
-    _, g = LDBAGraph.from_ldba(ldba, 0)
-    # draw_ldba_graph(g, features=False)
+    g, _ = LDBAGraph.from_ldba(ldba, 0)
+    draw_ldba_graph(g, features=False)
+    print(g.root_assignments)
 
 
 def test_from_ldba2():
@@ -41,8 +42,9 @@ def test_from_ldba2():
     ldba.complete_sink_state()
     assert ldba.check_valid()
     ldba.compute_sccs()
-    _, g = LDBAGraph.from_ldba(ldba, 0)
-    # draw_ldba_graph(g, features=False)
+    g, _ = LDBAGraph.from_ldba(ldba, 0)
+    draw_ldba_graph(g, features=False)
+    print(g.root_assignments)
 
 
 def test_from_ldba3():

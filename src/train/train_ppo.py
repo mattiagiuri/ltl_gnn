@@ -13,7 +13,7 @@ import preprocessing
 import torch_ac
 
 import utils
-from ltl import EventuallySampler
+from ltl import EventuallySampler, sampler_map
 from model import build_model
 from envs import make_env, get_env_attr
 from utils import torch_utils
@@ -79,8 +79,8 @@ class Trainer:
         utils.set_seed(self.args.experiment.seed)
         envs = []
         for i in range(self.args.experiment.num_procs):
-            assert self.args.experiment.ltl_sampler == 'eventually_sampler'
-            envs.append(make_env(self.args.experiment.env, EventuallySampler))
+            assert self.args.experiment.ltl_sampler in sampler_map
+            envs.append(make_env(self.args.experiment.env, sampler_map[self.args.experiment.ltl_sampler]))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
         seeds = [seed_offset + i for i in range(self.args.experiment.num_procs)]

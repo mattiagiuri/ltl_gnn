@@ -28,8 +28,8 @@ def main():
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
-            '--env', 'pretraining_ltl_point_mass',
-            '--ltl_sampler', 'eventually_sampler',
+            '--env', 'pretraining_PointLtl2-v0',
+            '--ltl_sampler', 'reach4',
             '--steps_per_process', '512',
             '--batch_size', '1024',
             '--lr', '0.001',
@@ -39,7 +39,7 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--epochs', '2',
-            '--num_steps', '1_000_000',
+            '--num_steps', '3_000_000',
             '--model_config', 'pretraining',
             '--name', args.name,
             '--seed', str(seed),
@@ -56,9 +56,9 @@ def main():
         subprocess.run(command, env=env)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # TODO: make sure that pretraining converges.
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name try_pretraining --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name try_pretraining --seed 1 --log_csv false --save false'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

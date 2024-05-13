@@ -87,10 +87,11 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 
 
 if __name__ == '__main__':
-    # f = '(!a U (b & (!c U d)))'
-    # f = 'F a'
+    # f = '!a U b'
+    f = '(!a U (b & (!c U d)))'
+    # f = 'F (a | b)'
     # f = 'F (g & G!r) & G!b'
-    f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
+    # f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
     # f = '(!a U (b & (!c U (d & (!e U f))))) & (!g U (h & (!i U j)))'
     # f = '(F(a&b) | F(a & XFc)) & G!d'
     # f = '(F(a&b) | F(a & XFb))'
@@ -114,9 +115,7 @@ if __name__ == '__main__':
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True)
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    pos, neg = LDBAGraph.from_ldba(ldba, ldba.initial_state)
-    draw_ldba_graph(pos, fmt='png', features=False)
-    print(pos.num_nodes)
-    print(pos.num_edges)
-    print(neg.num_nodes)
-    print(neg.num_edges)
+    pos, neg = LDBAGraph.from_ldba(ldba, 0)
+    draw_ldba_graph(pos, fmt='png', features=False)  # Crucial: prune paths that overlap with accepting paths!
+    draw_ldba_graph(neg, fmt='pdf')
+    print(pos.root_assignments)
