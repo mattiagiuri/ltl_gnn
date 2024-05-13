@@ -1,4 +1,4 @@
-from typing import Type, Callable
+from typing import Type, Callable, Optional
 
 from gymnasium.wrappers import FlattenObservation, TimeLimit
 
@@ -20,7 +20,12 @@ def get_env_attr(env, attr: str):
         raise AttributeError(f'Attribute {attr} not found in env.')
 
 
-def make_env(name: str, make_sampler: Callable[[list[str]], LTLSampler], render_mode: str | None = None):
+def make_env(
+        name: str,
+        make_sampler: Callable[[list[str]], LTLSampler],
+        max_steps: Optional[int] = None,  # TODO: add max_steps parameter to other environments
+        render_mode: str | None = None
+):
     if name.startswith('pretraining_'):
         underlying = name[len('pretraining_'):]
         underlying_env = make_env(underlying, make_sampler, render_mode)
@@ -28,7 +33,7 @@ def make_env(name: str, make_sampler: Callable[[list[str]], LTLSampler], render_
         impossible_assignments = get_env_attr(underlying_env, 'get_impossible_assignments')()
         return make_pretraining_env(propositions, impossible_assignments, make_sampler)
     elif is_safety_gym_env(name):
-        return make_safety_gym_env(name, make_sampler, render_mode)
+        return make_safety_gym_env(name, max_steps, make_sampler, render_mode)
     else:
         return make_dmc_env(name, make_sampler, render_mode)
 
@@ -37,7 +42,8 @@ def is_safety_gym_env(name: str) -> bool:
     return any([name.startswith(agent_name) for agent_name in ['Point', 'Car', 'Racecar', 'Doggo', 'Ant']])
 
 
-def make_safety_gym_env(name: str, ltl_sampler: Callable[[list[str]], LTLSampler], render_mode: str | None = None):
+def make_safety_gym_env(name: str, max_steps: Optional[int], ltl_sampler: Callable[[list[str]], LTLSampler],
+                        render_mode: str | None = None):
     # noinspection PyUnresolvedReferences
     import safety_gymnasium
     from envs.zones.safety_gym_wrapper import SafetyGymWrapper
@@ -48,6 +54,7 @@ def make_safety_gym_env(name: str, ltl_sampler: Callable[[list[str]], LTLSampler
     env = FlattenObservation(env)
     env = LTLGoalWrapper(env, ltl_sampler(get_env_attr(env, 'get_propositions')()))
     env = LDBAGraphWrapper(env, punish_termination=True)
+    env = TimeLimit(env, max_steps if max_steps else 1000)
     env = RemoveTruncWrapper(env)
     return env
 

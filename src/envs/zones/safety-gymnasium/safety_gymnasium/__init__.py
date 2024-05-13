@@ -120,7 +120,7 @@ def __combine(tasks, agents, max_episode_steps):
 # LTL
 # ----------------------------------------
 ltl_tasks = {'Ltl0': {}, 'Ltl1': {}, 'Ltl2': {}}
-__combine(ltl_tasks, robots, max_episode_steps=1000)
+__combine(ltl_tasks, robots, max_episode_steps=None)
 
 # ----------------------------------------
 # Safety Navigation
