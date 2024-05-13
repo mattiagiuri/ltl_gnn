@@ -6,7 +6,7 @@ from .ldba import LDBA, LDBATransition
 
 
 @memory.cache
-def ltl2ldba(formula: str, propositions: Optional[frozenset[str]] = None, simplify_labels=True) -> LDBA:
+def ltl2ldba(formula: str, propositions: list[str] = None, simplify_labels=True) -> LDBA:
     """Converts an LTL formula to an LDBA using the rabinizer tool."""
     from ltl.hoa import HOAParser
     hoa = run_rabinizer(formula)
