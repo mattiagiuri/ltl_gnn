@@ -18,3 +18,6 @@ class FixedSampler(LTLSampler):
 
     def sample(self) -> str:
         return self.formula
+
+    def update_returns(self, returns: dict[str, float]):
+        pass

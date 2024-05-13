@@ -10,7 +10,7 @@ class EventuallySampler(LTLSampler):
     def __init__(self, propositions: list[str]):
         super().__init__(propositions)
         self.temperature = 0.5
-        self.returns = None
+        self.returns = None  # TODO: sample more complicated tasks during training (or, avoid)
 
     def sample(self) -> str:
         if self.returns is None:
@@ -26,7 +26,7 @@ class EventuallySampler(LTLSampler):
         probs = torch.nn.functional.softmax(-rets / self.temperature, dim=0)
         return probs.numpy()
 
-    def update_returns(self, returns: dict[str, float]):
+    def update_returns(self, returns: dict[str, float]):  # TODO: clean this up
         if self.returns is None:
             self.returns = returns
         else:
