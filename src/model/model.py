@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from config import ModelConfig
 from model.ltl import LtlPosNegNet
+from model.ltl.rnn import LDBARNN
 from model.policy import ContinuousActor
 from model.policy import DiscreteActor
 from utils import torch_utils
@@ -27,7 +28,8 @@ class Model(nn.Module):
 
     def forward(self, obs):
         env_embedding = self.env_net(obs.features) if self.env_net is not None else obs.features
-        ltl_embedding = self.ltl_net(obs.pos_graph, obs.neg_graph)
+        # ltl_embedding = self.ltl_net(obs.pos_graph, obs.neg_graph)
+        ltl_embedding = self.ltl_net(obs.seq)
         embedding = torch.cat([env_embedding, ltl_embedding], dim=1)
 
         dist = self.actor(embedding)
@@ -52,16 +54,21 @@ def build_model(
         env_net = torch_utils.make_mlp_layers([obs_dim, *model_config.env_net.layers],
                                               activation=model_config.env_net.activation)
         env_embedding_dim = model_config.env_net.layers[-1]
-    graph_feature_dim = env.observation_space['pos_graph'].node_space.shape[0]
-    ltl_embedding_dim = 2 * model_config.gnn.embedding_dim
-    ltl_net = LtlPosNegNet(graph_feature_dim, ltl_embedding_dim,
-                           num_layers=model_config.gnn.num_layers,
-                           concat_initial_features=model_config.gnn.concat_initial_features)
-    if ltl_model_weights is not None:
-        ltl_net.load_state_dict(ltl_model_weights)
-    if freeze_ltl_model:
-        for param in ltl_net.parameters():
-            param.requires_grad = False
+    # graph_feature_dim = env.observation_space['pos_graph'].node_space.shape[0]
+    # ltl_embedding_dim = 2 * model_config.gnn.embedding_dim
+    # ltl_net = LtlPosNegNet(graph_feature_dim, ltl_embedding_dim,
+    #                        num_layers=model_config.gnn.num_layers,
+    #                        concat_initial_features=model_config.gnn.concat_initial_features)
+
+    # if ltl_model_weights is not None:
+    #     ltl_net.load_state_dict(ltl_model_weights)
+    # if freeze_ltl_model:
+    #     for param in ltl_net.parameters():
+    #         param.requires_grad = False
+
+    ltl_embedding_dim = 16
+    num_assignments = 4
+    ltl_net = LDBARNN(num_assignments, ltl_embedding_dim, num_layers=1)
 
     if isinstance(env.action_space, gymnasium.spaces.Discrete):
         actor = DiscreteActor(action_dim=action_dim,

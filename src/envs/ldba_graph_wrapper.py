@@ -37,6 +37,7 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
         self.punish_termination = punish_termination
         self.ldba = None
         self.ldba_state = None
+        self.num_success = 0
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         obs, _, terminated, truncated, info = super().step(action)
@@ -58,6 +59,8 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
             assignment = Assignment({p: (p in info['propositions']) for p in self.ldba.propositions}).to_frozen()
             if assignment in root_assignments:
                 reward = 1.  # TODO
+                self.num_success += 1
+                self.complete_observation(obs)
         return obs, reward, terminated, truncated, info
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
@@ -65,6 +68,7 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
         obs, info = super().reset(seed=seed, options=options)
         self.ldba = self.construct_ldba(obs['goal'])
         self.ldba_state = self.ldba.initial_state
+        self.num_success = 0
         self.complete_observation(obs)
         return obs, info
 
@@ -72,6 +76,19 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
         pos_graph, neg_graph = LDBAGraph.from_ldba(self.ldba, self.ldba_state)
         obs['pos_graph'] = pos_graph
         obs['neg_graph'] = neg_graph
+        seq = self.goal_to_seq(obs['goal'])
+        if self.num_success > 0:
+            seq = seq[:-self.num_success]
+        obs['seq'] = seq
+
+    def goal_to_seq(self, goal: str) -> list[str]:
+        return list(reversed(goal
+                             .replace('(', '')
+                             .replace(')', '')
+                             .replace('F', '')
+                             .replace('&', '')
+                             .strip()
+                             .split()))
 
     @functools.cache
     def construct_ldba(self, formula: str) -> LDBA:
