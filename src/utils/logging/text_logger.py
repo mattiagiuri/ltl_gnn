@@ -20,6 +20,8 @@ class TextLogger(Logger):
         self.check_keys_valid(data)
         row = ''
         for key, value in data.items():
+            if key == 'avg_goal_returns':
+                continue
             short_name = self.get_short_name(key)
             row += f'{short_name}: '
             if isinstance(value, float):

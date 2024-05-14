@@ -70,7 +70,7 @@ pretraining = ModelConfig(
     gnn=GNNConfig(
         embedding_dim=16,
         num_layers=2,
-        concat_initial_features=True
+        concat_initial_features=False
     ),
     env_net=None
 )

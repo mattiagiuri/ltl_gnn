@@ -13,5 +13,5 @@ class Agent:
             obs = [obs]
         preprocessed = preprocessing.preprocess_obss(obs)
         dist, _ = self.model(preprocessed)
-        action = dist.mean if deterministic else dist.sample()
+        action = dist.mode if deterministic else dist.sample()
         return action.detach().numpy()

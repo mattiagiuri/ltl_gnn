@@ -29,14 +29,15 @@ class AdaptiveSampler(LTLSampler):
         self.task_returns.update(task_returns)
         if self.stage == 0 and all(v >= self.threshold for v in self.task_returns.values()):
             self.stage = 1
-            new_tasks = {f'!{a} U {b}': 0.0 for a in self.propositions for b in self.propositions if a != b}
+            # new_tasks = {f'!{a} U {b}': 0.0 for a in self.propositions for b in self.propositions if a != b}
+            new_tasks = {f'F({a} & (F {b}))': 0.0 for a in self.propositions for b in self.propositions if a != b}
             self.task_returns.update(new_tasks)
-        if self.stage == 1 and (sum(self.task_returns.values()) / len(self.task_returns)) >= self.threshold:
-            self.stage = 2
-            new_tasks = {f'!{a} U ({b} & (!{c} U {d}))': 0.0
-                         for a in self.propositions
-                         for b in self.propositions
-                         for c in self.propositions
-                         for d in self.propositions
-                         if a != b and c != d and b != d and b != c and a != c and a != d}
-            self.task_returns.update(new_tasks)
+        # if self.stage == 1 and (sum(self.task_returns.values()) / len(self.task_returns)) >= self.threshold:
+        #     self.stage = 2
+        #     new_tasks = {f'!{a} U ({b} & (!{c} U {d}))': 0.0
+        #                  for a in self.propositions
+        #                  for b in self.propositions
+        #                  for c in self.propositions
+        #                  for d in self.propositions
+        #                  if a != b and c != d and b != d and b != c and a != c and a != d}
+        #     self.task_returns.update(new_tasks)

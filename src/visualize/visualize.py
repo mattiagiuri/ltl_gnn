@@ -88,7 +88,10 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 
 if __name__ == '__main__':
     # f = '!a U b'
-    f = '(!a U (b & (!c U d)))'
+    # f = 'FGa'
+    f = 'FGa | FGb'
+    # f = 'GFa & GFb & G (signal => F g)'
+    # f = '!a U (b & (!c U d))'
     # f = 'F (a | b)'
     # f = 'F (g & G!r) & G!b'
     # f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
