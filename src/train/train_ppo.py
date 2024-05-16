@@ -15,7 +15,7 @@ import torch_ac
 import utils
 from ltl import EventuallySampler, sampler_map
 from model import build_model
-from envs import make_env, get_env_attr
+from envs import make_sequence_env, get_env_attr
 from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
@@ -29,7 +29,7 @@ class Trainer:
     def __init__(self, args: argparse.Namespace):
         self.args = args
         self.text_logger = TextLogger(args)
-        self.model_store = ModelStore(args)
+        self.model_store = ModelStore.from_config(args)
 
     def train(self, log_csv: bool = True, log_wandb: bool = False):
         envs = self.make_envs()
@@ -54,9 +54,9 @@ class Trainer:
         while num_steps < self.args.experiment.num_steps:
             start = time.time()
             exps, logs = algo.collect_experiences()
-            for env in envs:
-                ltl_sampler = get_env_attr(env, 'ltl_sampler')
-                ltl_sampler.update_returns(logs['avg_goal_returns'])
+#             for env in envs:
+#                 ltl_sampler = get_env_attr(env, 'ltl_sampler')
+#                 ltl_sampler.update_returns(logs['avg_goal_returns'])
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)
             update_time = time.time() - start
@@ -79,8 +79,10 @@ class Trainer:
         utils.set_seed(self.args.experiment.seed)
         envs = []
         for i in range(self.args.experiment.num_procs):
-            assert self.args.experiment.ltl_sampler in sampler_map
-            envs.append(make_env(self.args.experiment.env, sampler_map[self.args.experiment.ltl_sampler]))
+            ltl_sampler = self.args.experiment.ltl_sampler
+            if ltl_sampler is not None and ltl_sampler not in sampler_map:
+                raise ValueError(f"Unknown sampler {ltl_sampler}.")
+            envs.append(make_sequence_env(self.args.experiment.env))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
         seeds = [seed_offset + i for i in range(self.args.experiment.num_procs)]

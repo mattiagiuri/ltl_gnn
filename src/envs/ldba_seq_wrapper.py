@@ -56,8 +56,8 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
             if scc.bottom and not scc.accepting:
                 reward = -1.  # TODO
                 terminated = True
-            assignment = Assignment({p: (p in info['propositions']) for p in self.ldba.propositions}).to_frozen()
-            if assignment in root_assignments:
+            seq = obs['seq']
+            if seq[-1][1] in info['propositions']:
                 reward = 1.  # TODO
                 self.num_success += 1
                 self.complete_observation(obs)
@@ -66,7 +66,7 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
         WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
-        self.ldba = self.construct_ldba(obs['goal'])
+        self.ldba = self.construct_ldba(obs['goal'][0])
         self.ldba_state = self.ldba.initial_state
         self.num_success = 0
         self.complete_observation(obs)
@@ -76,7 +76,7 @@ class LDBAGraphWrapper(gymnasium.Wrapper):
         pos_graph, neg_graph = LDBAGraph.from_ldba(self.ldba, self.ldba_state)
         obs['pos_graph'] = pos_graph
         obs['neg_graph'] = neg_graph
-        seq = self.goal_to_seq(obs['goal'])
+        seq = list(reversed(obs['goal'][1]))
         if self.num_success > 0:
             seq = seq[:-self.num_success]
         obs['seq'] = seq

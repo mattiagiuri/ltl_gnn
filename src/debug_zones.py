@@ -2,7 +2,7 @@ import envs
 from ltl import EventuallySampler
 from ltl.samplers import ReachAvoidSampler, ReachFourSampler
 
-env = envs.make_env('PointLtl2Debug-v0', ReachFourSampler, max_steps=2000, render_mode='human')
+env = envs.make_sequence_env('PointLtl2Debug-v0', ReachFourSampler, max_steps=2000, render_mode='human')
 
 observation = env.reset(seed=32)
 print(f'Goal: {observation["goal"]}')

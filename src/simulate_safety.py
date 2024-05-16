@@ -1,7 +1,7 @@
 import torch
 from tqdm import trange
 
-from envs import make_env
+from envs import make_sequence_env
 from ltl import EventuallySampler, ReachFourSampler
 from ltl.samplers import ReachAvoidSampler
 from ltl.samplers.fixed_sampler import FixedSampler
@@ -9,21 +9,16 @@ from ltl.samplers.loop_sampler import LoopSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
+from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
-exp = 'depth2'
-seed = 1
+exp = 'seq'
+seed = 2
 
-# sampler = FixedSampler.partial_from_formula('F ((green | yellow) & (F (blue | magenta)))')
-# sampler = FixedSampler.partial_from_formula('F (green & F (blue & (F magenta & (F yellow))))')
-# sampler = FixedSampler.partial_from_formula('F (magenta & F (yellow & F (blue & F green)))')
-# sampler = FixedSampler.partial_from_formula('(!magenta U (yellow & (!blue U green)))')
-# sampler = ReachFourSampler
-# sampler = LoopSampler
-sampler = ReachAvoidSampler.partial_from_depth(2)
-env = make_env(env_name, sampler, render_mode='human', max_steps=1000)
+env = make_sequence_env(env_name, render_mode='human', max_steps=1000)
 config = model_configs['default']
-training_status = torch.load(f'experiments/ppo/{env_name}/{exp}/{seed}/status.pth', map_location='cpu')
+model_store = ModelStore(env_name, exp, seed, None)
+training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config, None, False)
 agent = Agent(model)
 
@@ -42,6 +37,9 @@ for i in trange(num_episodes):
         action = agent.get_action(obs, deterministic=True)
         action = action.flatten()
         obs, reward, done, info = env.step(action)
+        if reward > 0:
+            print(reward)
+            print(obs['goal'])
         ret += reward
         if done:
             rets.append(ret)

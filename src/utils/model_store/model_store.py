@@ -1,18 +1,30 @@
 import argparse
+import json
 import os
 
 import torch
 
 import utils
+from preprocessing import VOCAB
 
 
 class ModelStore:
-    def __init__(self, config: argparse.Namespace):
-        self.path = utils.get_experiment_path(config)
-        self.pretraining_experiment_path = utils.get_pretraining_experiment_path(config)
+    def __init__(self, env: str, name: str, seed: int, pretraining_experiment: str | None):  # TODO: add constructor without config
+        self.path = utils.get_experiment_path(env, name, seed)
+        if pretraining_experiment:
+            self.pretraining_experiment_path = utils.get_pretraining_experiment_path(env, pretraining_experiment, seed)
+        else:
+            self.pretraining_experiment_path = None
+
+    @classmethod
+    def from_config(cls, config: argparse.Namespace) -> 'ModelStore':
+        exp = config.experiment
+        return cls(exp.env, exp.name, exp.seed, config.pretraining_experiment)
 
     def save_training_status(self, status: dict[str, any]):
         torch.save(status, f'{self.path}/status.pth')
+        with open(f'{self.path}/vocab.json', 'w+') as f:
+            json.dump(VOCAB, f, indent=4)
 
     def save_ltl_net(self, ltl_net: dict[str, any]):
         torch.save(ltl_net, f'{self.path}/ltl_net.pth')
@@ -20,12 +32,17 @@ class ModelStore:
     def save_best_model(self, status: dict[str, any]):
         torch.save(status, f'{self.path}/best_model.pth')
 
-    def load_training_status(self) -> dict[str, any]:
+    def load_training_status(self, map_location=None) -> dict[str, any]:
         if not os.path.exists(f'{self.path}/status.pth'):
             raise FileNotFoundError(f'No training status found at {self.path}/status.pth')
-        return torch.load(f'{self.path}/status.pth')
+        VOCAB.clear()
+        with open(f'{self.path}/vocab.json', 'r') as f:
+            VOCAB.update(json.load(f))
+        return torch.load(f'{self.path}/status.pth', map_location=map_location)
 
     def load_pretrained(self) -> dict[str, any]:
+        if not self.pretraining_experiment_path:
+            raise ValueError('No pretraining experiment provided.')
         if not os.path.exists(f'{self.pretraining_experiment_path}/ltl_net.pth'):
             raise FileNotFoundError(f'No pretrained model found at {self.pretraining_experiment_path}/ltl_net.pth')
         return torch.load(f'{self.pretraining_experiment_path}/ltl_net.pth')

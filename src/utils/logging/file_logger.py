@@ -18,7 +18,7 @@ class FileLogger(Logger):
 
     def __init__(self, config: argparse.Namespace, resuming: bool = False):
         super().__init__(config)
-        self.log_path = utils.get_experiment_path(config)
+        self.log_path = utils.get_experiment_path_from_config(config)
         self.log_file = f'{self.log_path}/log.csv'
         if resuming:
             if not os.path.exists(self.log_file):

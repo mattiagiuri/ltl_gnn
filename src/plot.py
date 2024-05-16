@@ -9,11 +9,11 @@ sns.set_theme(font_scale=.8)
 
 
 def main():
-    env = 'ltl_point_mass'
-    experiments = ['pre', 'cat']
+    env = 'PointLtl2-v0'
+    experiments = ['seq']
     name_mapping = {'pre': 'pretraining', 'cat': 'standard'}
     df = process_logs(env, experiments, name_mapping)
-    ax = sns.relplot(df, x='num_steps', y='return_smooth', kind='line', errorbar=('ci', 95), hue='experiment')
+    ax = sns.relplot(df, x='num_steps', y='return_smooth', kind='line', errorbar='sd', hue='experiment')
     ax.set(ylabel='success rate')
     plt.savefig(os.path.expanduser('~/tmp/plot.png'))
     plt.show()

@@ -1,1 +1,1 @@
-from .env_utils import make_env, get_env_attr
+from .env_utils import make_sequence_env, make_ltl_env, get_env_attr

@@ -19,7 +19,7 @@ class WandbLogger(Logger):
         self.project_name = project_name
         self.run_id = None
         if resuming:
-            wandb_id_file = f'{utils.get_experiment_path(config)}/{self.WANDB_FILE_NAME}'
+            wandb_id_file = f'{utils.get_experiment_path_from_config(config)}/{self.WANDB_FILE_NAME}'
             if not os.path.exists(wandb_id_file):
                 raise FileNotFoundError(f'Trying to resume, but no wandb_id.txt file found in {wandb_id_file}.')
             with open(wandb_id_file, 'r') as f:
@@ -37,7 +37,7 @@ class WandbLogger(Logger):
                 project=self.project_name,
                 config=vars(self.config),
             )
-            wandb_id_file = f'{utils.get_experiment_path(self.config)}/{self.WANDB_FILE_NAME}'
+            wandb_id_file = f'{utils.get_experiment_path_from_config(self.config)}/{self.WANDB_FILE_NAME}'
             with open(wandb_id_file, 'w') as f:
                 f.write(run.id)
 

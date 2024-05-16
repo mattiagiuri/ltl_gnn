@@ -66,7 +66,7 @@ def build_model(
     #     for param in ltl_net.parameters():
     #         param.requires_grad = False
 
-    ltl_embedding_dim = 16
+    ltl_embedding_dim = 32
     num_assignments = 4
     ltl_net = LDBARNN(num_assignments, ltl_embedding_dim, num_layers=1)
 

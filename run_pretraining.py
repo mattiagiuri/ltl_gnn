@@ -31,7 +31,7 @@ def main():
         command = [
             'python', 'src/train/train_ppo.py',
             '--env', 'pretraining_PointLtl2-v0',
-            '--ltl_sampler', 'reach4',
+            '--ltl_sampler', 'reach_avoid2',
             '--steps_per_process', '512',
             '--batch_size', '1024',
             '--lr', '0.001',
@@ -59,15 +59,13 @@ def main():
         subprocess.run(command, env=env)
 
 
-if __name__ == '__main__':  # TODO: make sure that pretraining converges.
+if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name rnn4 --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name seq --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
         print('Interrupted!')
         wandb.finish()
         kill_all_wandb_processes()
-        # with open('vocab.json', 'w+') as f:
-        #     json.dump(BatchedSequence.VOCAB, f, indent=2)
         sys.exit(0)

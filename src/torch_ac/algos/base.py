@@ -171,6 +171,7 @@ class BaseAlgo(ABC):
 
                     ret = self.log_episode_return[j].item()
                     goal = self.obss[i][j]['goal']
+                    goal = tuple(goal)
                     self.goal_returns[goal] += ret
                     self.goal_counts[goal] += 1
 
@@ -231,7 +232,7 @@ class BaseAlgo(ABC):
             "return_per_episode": self.log_return[-keep:],
             "num_steps_per_episode": self.log_num_steps[-keep:],
             "num_steps": self.num_steps,
-            "avg_goal_returns": {k: v / self.goal_counts[k] for k, v in self.goal_returns.items()},
+            # "avg_goal_returns": {k: v / self.goal_counts[k] for k, v in self.goal_returns.items()},
         }
 
         self.log_done_counter = 0

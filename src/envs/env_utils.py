@@ -20,40 +20,57 @@ def get_env_attr(env, attr: str):
         raise AttributeError(f'Attribute {attr} not found in env.')
 
 
-def make_env(
+def make_ltl_env(
         name: str,
         make_sampler: Callable[[list[str]], LTLSampler],
         max_steps: Optional[int] = None,  # TODO: add max_steps parameter to other environments
         render_mode: str | None = None
 ):
+    if is_safety_gym_env(name):
+        return make_safety_gym_env(name, max_steps, render_mode, make_sampler, ltl=True)
+    else:
+        return make_dmc_env(name, make_sampler, render_mode, ltl=True)
+
+
+def make_sequence_env(
+        name: str,
+        max_steps: Optional[int] = None,  # TODO: add max_steps parameter to other environments
+        render_mode: str | None = None
+):
     if name.startswith('pretraining_'):
         underlying = name[len('pretraining_'):]
-        underlying_env = make_env(underlying, make_sampler, render_mode)
+        underlying_env = make_sequence_env(underlying, max_steps, render_mode)
         propositions = get_env_attr(underlying_env, 'get_propositions')()
         impossible_assignments = get_env_attr(underlying_env, 'get_impossible_assignments')()
-        return make_pretraining_env(propositions, impossible_assignments, make_sampler)
+        return make_pretraining_env(propositions, impossible_assignments)
     elif is_safety_gym_env(name):
-        return make_safety_gym_env(name, max_steps, make_sampler, render_mode)
+        return make_safety_gym_env(name, max_steps, render_mode)
     else:
-        return make_dmc_env(name, make_sampler, render_mode)
+        # return make_dmc_env(name, make_sampler, render_mode)
+        raise NotImplementedError('DMC environments with sequences.')
 
 
 def is_safety_gym_env(name: str) -> bool:
     return any([name.startswith(agent_name) for agent_name in ['Point', 'Car', 'Racecar', 'Doggo', 'Ant']])
 
 
-def make_safety_gym_env(name: str, max_steps: Optional[int], ltl_sampler: Callable[[list[str]], LTLSampler],
-                        render_mode: str | None = None):
+def make_safety_gym_env(name: str, max_steps: Optional[int], render_mode: str | None = None,
+                        ltl_sampler: Callable[[list[str]], LTLSampler] | None = None, ltl: bool = False):
     # noinspection PyUnresolvedReferences
     import safety_gymnasium
     from envs.zones.safety_gym_wrapper import SafetyGymWrapper
-    from envs.ldba_graph_wrapper import LDBAGraphWrapper
+    from envs.seq_wrapper import SequenceWrapper
 
+    if ltl:
+        assert ltl_sampler is not None
     env = safety_gymnasium.make(name, render_mode=render_mode)
     env = SafetyGymWrapper(env)
     env = FlattenObservation(env)
-    env = LTLGoalWrapper(env, ltl_sampler(get_env_attr(env, 'get_propositions')()))
-    env = LDBAGraphWrapper(env, punish_termination=True)
+    if ltl:
+        propositions = get_env_attr(env, 'get_propositions')()
+        env = LTLGoalWrapper(env, ltl_sampler(propositions))
+    else:
+        env = SequenceWrapper(env)
     env = TimeLimit(env, max_steps if max_steps else 1000)
     env = RemoveTruncWrapper(env)
     return env
@@ -61,11 +78,11 @@ def make_safety_gym_env(name: str, max_steps: Optional[int], ltl_sampler: Callab
 
 def make_dmc_env(name: str, ltl_sampler: Callable[[list[str]], LTLSampler], render_mode: str | None = None):
     # noinspection PyUnresolvedReferences
-    from dm_control import suite, viewer
+    from dm_control import suite, viewer   # TODO: adapt to sequences
     import envs.dmc as dmc
     dmc.register_with_suite()
     from envs.dmc.dmc_gym_wrapper.dmc_gym_wrapper import DMCGymWrapper
-    from envs.ldba_graph_wrapper import LDBAGraphWrapper
+    from envs.ldba_seq_wrapper import LDBAGraphWrapper
 
     env = suite.load(domain_name=name, task_name='ltl', visualize_reward=False)
     env = DMCGymWrapper(env, render_mode=render_mode)
@@ -86,14 +103,12 @@ def make_dmc_env(name: str, ltl_sampler: Callable[[list[str]], LTLSampler], rend
 def make_pretraining_env(
         propositions: set[str],
         impossible_assignments: set[FrozenAssignment],
-        ltl_sampler: Callable[[list[str]], LTLSampler]
 ):
     from envs.pretraining.pretraining_env import PretrainingEnv
-    from envs.ldba_graph_wrapper import LDBAGraphWrapper
+    from envs.seq_wrapper import SequenceWrapper
 
     env = PretrainingEnv(propositions, impossible_assignments)
-    env = LTLGoalWrapper(env, ltl_sampler(get_env_attr(env, 'get_propositions')()))
-    env = LDBAGraphWrapper(env, punish_termination=True)
+    env = SequenceWrapper(env)
     env = TimeLimit(env, max_episode_steps=100)
     env = RemoveTruncWrapper(env)
     return env
