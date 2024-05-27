@@ -14,7 +14,7 @@ class SafetyGymWrapper(gymnasium.Wrapper):
     A wrapper from safety gymnasium LTL environments to the gymnasium API.
     """
 
-    def __init__(self, env: Any):
+    def __init__(self, env: Any, wall_sensor=True):
         super().__init__(env)
         self.render_parameters.camera_name = 'track'
         self.render_parameters.width = 256
@@ -27,14 +27,17 @@ class SafetyGymWrapper(gymnasium.Wrapper):
                 color = key.split('_')[0]
                 self.colors.add(color)
         self.observation_space = spaces.Dict(env.observation_space)  # copy the observation space
-        self.observation_space['wall_sensor'] = Box(low=0.0, high=1.0, shape=(4,), dtype=np.float64)
+        if wall_sensor:
+            self.observation_space['wall_sensor'] = Box(low=0.0, high=1.0, shape=(4,), dtype=np.float64)
         self.last_dist = None
 
     def step(self, action: ActType):
         obs, reward, cost, terminated, truncated, info = super().step(action)
-        obs['wall_sensor'] = info['wall_sensor']
+        if 'wall_sensor' in info:
+            obs['wall_sensor'] = info['wall_sensor']
         info['propositions'] = {c for c in self.colors if info[f'cost_zones_{c}'] > 0}
-        terminated = terminated or info['cost_ltl_walls'] > 0
+        if 'cost_ltl_walls' in info:
+            terminated = terminated or info['cost_ltl_walls'] > 0
         return obs, reward, terminated, truncated, info
 
     def reset(

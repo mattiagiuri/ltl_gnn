@@ -21,17 +21,18 @@ from safety_gymnasium.bases.base_task import BaseTask
 class LtlBaseTask(BaseTask):
     """Base task for LTL tasks."""
 
-    def __init__(self, config, zone_size: float) -> None:
+    def __init__(self, config, zone_size: float, walls=True) -> None:
         super().__init__(config=config)
         self.zone_size = zone_size
         self.placements_conf.extents = [-2.5, -2.5, 2.5, 2.5]
-        self.lidar_conf.num_bins = 8
+        self.lidar_conf.num_bins = 16
         self.lidar_conf.max_dist = None
         self.lidar_conf.exp_gain = 0.5
-        self.lidar_conf.alias = False
+        self.lidar_conf.alias = True
         self.cost_conf.constrain_indicator = False
         self.observation_flatten = False
-        self._add_geoms(LtlWalls())
+        if walls:
+            self._add_geoms(LtlWalls())
 
     def calculate_reward(self):
         return 0

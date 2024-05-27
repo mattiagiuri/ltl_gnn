@@ -19,10 +19,7 @@ from safety_gymnasium.tasks.ltl.ltl_base_task import LtlBaseTask
 
 
 class LtlLevel0(LtlBaseTask):
-    """Three large blue and three large yellow zones."""
+    """No zones."""
 
     def __init__(self, config) -> None:
-        super().__init__(config=config, zone_size=0.5)
-
-        self._add_geoms(Zones(color='green', size=self.zone_size, num=1))
-        self._add_geoms(Zones(color='yellow', size=self.zone_size, num=1))
+        super().__init__(config=config, zone_size=0.5, walls=False)
