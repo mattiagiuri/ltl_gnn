@@ -157,6 +157,10 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
         self._seed = np.random.randint(2**32, dtype='int64') if seed is None else seed
         self.task.random_generator.set_random_seed(self._seed)
 
+    @property
+    def robot_pos(self):
+        return self.task.agent.pos
+
     def reset(
         self,
         *,
