@@ -31,7 +31,6 @@ def main():
         command = [
             'python', 'src/train/train_ppo.py',
             '--env', 'pretraining_PointLtl2-v0',
-            '--ltl_sampler', 'reach_avoid2',
             '--steps_per_process', '512',
             '--batch_size', '1024',
             '--lr', '0.001',
@@ -61,7 +60,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name seq --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name seq --seed 1 --log_csv false --save'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

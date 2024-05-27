@@ -107,7 +107,7 @@ class BaseAlgo(ABC):
         self.log_return = [0] * self.num_procs
         self.log_num_steps = [0] * self.num_procs
 
-        self.goal_returns = defaultdict(float)
+        self.goal_success = defaultdict(int)
         self.goal_counts = defaultdict(int)
 
     def collect_experiences(self):
@@ -170,9 +170,9 @@ class BaseAlgo(ABC):
                     self.log_num_steps.append(self.log_episode_num_steps[j].item())
 
                     ret = self.log_episode_return[j].item()
-                    goal = self.obss[i][j]['goal']
+                    goal = self.obss[i][j]['initial_goal']
                     goal = tuple(goal)
-                    self.goal_returns[goal] += ret
+                    self.goal_success[goal] += ret
                     self.goal_counts[goal] += 1
 
             self.log_episode_return *= self.mask
@@ -232,13 +232,13 @@ class BaseAlgo(ABC):
             "return_per_episode": self.log_return[-keep:],
             "num_steps_per_episode": self.log_num_steps[-keep:],
             "num_steps": self.num_steps,
-            # "avg_goal_returns": {k: v / self.goal_counts[k] for k, v in self.goal_returns.items()},
-        }
+            "avg_goal_success": {k: float(v) / self.goal_counts[k] for k, v in self.goal_success.items()},
+        }  # TODO: print mean and std of goal success!!!
 
         self.log_done_counter = 0
         self.log_return = self.log_return[-self.num_procs:]
         self.log_num_steps = self.log_num_steps[-self.num_procs:]
-        self.goal_returns = defaultdict(float)
+        self.goal_success = defaultdict(int)
         self.goal_counts = defaultdict(int)
 
         return exps, logs

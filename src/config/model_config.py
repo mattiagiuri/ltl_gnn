@@ -57,6 +57,30 @@ default_model_config = ModelConfig(
     )
 )
 
+big = ModelConfig(
+    actor=ActorConfig(
+        layers=[512, 1024, 256],
+        activation=dict(
+            hidden=nn.ReLU,
+            output=nn.Tanh
+        ),
+        state_dependent_std=True
+    ),
+    critic=StandardNetConfig(
+        layers=[512, 1024, 256],
+        activation=nn.Tanh
+    ),
+    gnn=GNNConfig(
+        embedding_dim=16,
+        num_layers=2,
+        concat_initial_features=True
+    ),
+    env_net=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.Tanh
+    )
+)
+
 pretraining = ModelConfig(
     actor=ActorConfig(
         layers=[],

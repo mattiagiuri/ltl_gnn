@@ -54,9 +54,10 @@ class Trainer:
         while num_steps < self.args.experiment.num_steps:
             start = time.time()
             exps, logs = algo.collect_experiences()
-#             for env in envs:
-#                 ltl_sampler = get_env_attr(env, 'ltl_sampler')
-#                 ltl_sampler.update_returns(logs['avg_goal_returns'])
+            for env in envs:
+                seq_sampler = get_env_attr(env, 'seq_sampler')
+                if seq_sampler.is_adaptive:
+                    seq_sampler.update_returns(logs['avg_goal_success'])
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)
             update_time = time.time() - start

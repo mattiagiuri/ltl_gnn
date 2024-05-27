@@ -13,6 +13,7 @@ class ReachAvoidSampler(LTLSampler):
 
     def __init__(self, propositions: list[str], depth: int = 1):
         super().__init__(propositions)
+        self.combinations = ReachAvoidSampler.get_possible_combinations(propositions, depth)
         self.tasks = [
             ReachAvoidSampler.create_task(combination)
             for combination in ReachAvoidSampler.get_possible_combinations(propositions, depth)
@@ -41,7 +42,11 @@ class ReachAvoidSampler(LTLSampler):
         return result
 
     def sample(self) -> str:
-        return random.choice(self.tasks)
+        i = random.randint(0, len(self.combinations) - 1)
+        return self.tasks[i], self.combinations[i]
+
+    def update_returns(self, returns):
+        pass
 
 
 if __name__ == '__main__':

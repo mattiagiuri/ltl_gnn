@@ -37,13 +37,13 @@ def main():
             '--log_interval', '1',
             '--save_interval', '2',
             '--epochs', '10',
-            '--num_steps', '5_000_000',
+            '--num_steps', '10_000_000',
             '--model_config', 'default',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
             '--num_procs', str(args.num_procs),
-            '--pretraining_experiment', 'seq',
+            # '--pretraining_experiment', 'seq',  # Try with frozen weights
         ]
         if args.log_wandb:
             command.append('--log_wandb')

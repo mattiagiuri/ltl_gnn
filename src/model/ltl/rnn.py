@@ -15,7 +15,8 @@ class LDBARNN(nn.Module):
         super().__init__()
         if embedding_dim % 2 != 0:
             raise ValueError("Embedding dimension must be even.")
-        self.embedding = nn.Embedding(num_embeddings=num_assignments + 1, embedding_dim=embedding_dim // 2, padding_idx=0)
+        # + padding + empty
+        self.embedding = nn.Embedding(num_embeddings=num_assignments + 2, embedding_dim=embedding_dim // 2, padding_idx=0)
         self.rnn = nn.GRU(input_size=embedding_dim, hidden_size=embedding_dim, num_layers=1, batch_first=True)
 
     def forward(self, seq: tuple[torch.tensor, torch.tensor, torch.tensor] | BatchedSequence) -> torch.tensor:

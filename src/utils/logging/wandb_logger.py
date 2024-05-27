@@ -44,6 +44,7 @@ class WandbLogger(Logger):
     def log(self, data: dict[str, float | list[float]]):
         data = self.aggregate(data)
         self.check_keys_valid(data)
+        del data['avg_goal_success']
         wandb.log(data)
 
     def finish(self):
