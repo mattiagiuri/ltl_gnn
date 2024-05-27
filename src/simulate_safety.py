@@ -12,10 +12,11 @@ from config import model_configs
 from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
-exp = 'seq'
+exp = 'lidar'
 seed = 2
 
-env = make_sequence_env(env_name, render_mode='human', max_steps=1000)
+render = True
+env = make_sequence_env(env_name, render_mode='human' if render else None, max_steps=1000)
 config = model_configs['default']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
@@ -30,22 +31,27 @@ rets = []
 
 for i in trange(num_episodes):
     obs = env.reset()
-    print(obs['goal'])
+    if render:
+        print(obs['goal'])
     done = False
     ret = 0
     while not done:
-        action = agent.get_action(obs, deterministic=True)
+        action = agent.get_action(obs, deterministic=False)
         action = action.flatten()
         obs, reward, done, info = env.step(action)
-        if reward > 0:
+        if reward > 0 and render:
             print(reward)
             print(obs['goal'])
         ret += reward
         if done:
             rets.append(ret)
-            if ret > 0:
+            if ret >= 1.0:
                 num_successes += 1
+                assert 'violation' not in info, 'Success and violation at the same time.'
             if ret < 0:
+                assert 'violation' in info, 'Violation without negative reward.'
+                num_violations += 1
+            elif 'violation' in info:
                 num_violations += 1
             print(f'Success rate: {num_successes / (i + 1)}')
 
