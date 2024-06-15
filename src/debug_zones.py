@@ -1,6 +1,9 @@
 import envs
+from envs import make_env
+from sequence import RandomSequenceSampler
 
-env = envs.make_sequence_env('PointLtl2Debug-v0', max_steps=2000, render_mode='human')
+sampler = RandomSequenceSampler.partial(length=2, unique=True)
+env = make_env('PointLtl2Debug-v0', sampler, ltl=False, render_mode='human', max_steps=2000, eval_mode=True)
 
 observation = env.reset(seed=1)
 print(f'Goal: {observation["goal"]}')

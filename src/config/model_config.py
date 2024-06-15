@@ -1,8 +1,36 @@
+from abc import abstractmethod, ABC
 from typing import Type, Optional
 
 from dataclasses import dataclass
 
 from torch import nn
+
+from model.env import ConvEnvNet, StandardEnvNet
+
+
+class AbstractModelConfig(ABC):
+    @abstractmethod
+    def build(self, input_shape: tuple[int, ...]) -> nn.Module:
+        pass
+
+
+@dataclass
+class StandardNetConfig(AbstractModelConfig):
+    layers: list[int]
+    activation: Optional[Type[nn.Module]]
+
+    def build(self, input_shape: tuple[int,]) -> nn.Module:
+        return StandardEnvNet(input_shape[0], self.layers, self.activation)
+
+
+@dataclass
+class ConvNetConfig(AbstractModelConfig):
+    channels: list[int]
+    kernel_size: tuple[int, int]
+    activation: Type[nn.Module]
+
+    def build(self, input_shape: tuple[int, int, int]) -> nn.Module:
+        return ConvEnvNet(input_shape, self.channels, self.kernel_size, self.activation)
 
 
 @dataclass
@@ -20,20 +48,14 @@ class GNNConfig:
 
 
 @dataclass
-class StandardNetConfig:
-    layers: list[int]
-    activation: Optional[Type[nn.Module]]
-
-
-@dataclass
 class ModelConfig:
     actor: ActorConfig
     critic: StandardNetConfig
     gnn: GNNConfig
-    env_net: Optional[StandardNetConfig]
+    env_net: Optional[AbstractModelConfig]
 
 
-default_model_config = ModelConfig(
+default = ModelConfig(
     actor=ActorConfig(
         layers=[64, 64, 64],
         activation=dict(
@@ -57,17 +79,13 @@ default_model_config = ModelConfig(
     )
 )
 
-big = ModelConfig(
+letter = ModelConfig(
     actor=ActorConfig(
-        layers=[512, 1024, 256],
-        activation=dict(
-            hidden=nn.ReLU,
-            output=nn.Tanh
-        ),
-        state_dependent_std=True
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
     ),
     critic=StandardNetConfig(
-        layers=[512, 1024, 256],
+        layers=[64, 64],
         activation=nn.Tanh
     ),
     gnn=GNNConfig(
@@ -75,9 +93,10 @@ big = ModelConfig(
         num_layers=2,
         concat_initial_features=True
     ),
-    env_net=StandardNetConfig(
-        layers=[128, 64],
-        activation=nn.Tanh
+    env_net=ConvNetConfig(
+        channels=[16, 32, 64],
+        kernel_size=(2, 2),
+        activation=nn.ReLU
     )
 )
 

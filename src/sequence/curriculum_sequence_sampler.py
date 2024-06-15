@@ -1,16 +1,24 @@
 import random
 from dataclasses import dataclass
 from pprint import pprint
-from typing import Literal
+from typing import Literal, Callable
 
 import numpy as np
 import torch
+
+from sequence import RandomSequenceSampler
+from utils import memory
 
 Task = list[tuple[str, str]]
 FrozenTask = tuple[tuple[str, str]]
 
 
 class CurriculumSequenceSampler:  # TODO: rewrite using assignments instead of simply propositions
+
+    @classmethod
+    def partial(cls, stage=1) -> Callable[[list[str]], 'CurriculumSequenceSampler']:
+        return lambda propositions: cls(propositions, stage)
+
     def __init__(self, propositions: list[str], stage: int = 1):
         self.propositions = sorted(propositions)
         self.curriculum = [
@@ -31,8 +39,11 @@ class CurriculumSequenceSampler:  # TODO: rewrite using assignments instead of s
             ),
             CurriculumStage(
                 goals=self.reach_avoid_goals(2),
+                threshold=0.9,
+                threshold_type='mean'
             ),
         ]
+        self.next_sampler = RandomSequenceSampler(self.propositions, 3, True)
         self.stage = stage - 1
         self.goal_success = None
         self.temperature = 0.5
@@ -71,8 +82,14 @@ class CurriculumSequenceSampler:  # TODO: rewrite using assignments instead of s
                         result.append([(a, b)] + task)
         return sorted(result)
 
+    def __call__(self):
+        return self.sample()
+
     def sample(self) -> Task:
-        if self.goal_success is None:
+        if self.stage >= len(self.curriculum):
+            length = random.randint(1, 3)
+            return self.next_sampler.sample_unique(length)  # TODO: clean up
+        if self.goal_success is None or len(self.goals) > 500:
             return random.choice(self.goals)
         assert len(self.goal_success) == len(self.goals)
         probs = self.compute_sampling_prob()
@@ -85,7 +102,9 @@ class CurriculumSequenceSampler:  # TODO: rewrite using assignments instead of s
         probs = torch.nn.functional.softmax(-success / self.temperature, dim=0)
         return probs.numpy()
 
-    def update_returns(self, goal_success: dict[FrozenTask, float]):
+    def update_goal_success(self, goal_success: dict[FrozenTask, float]):
+        if self.stage >= len(self.curriculum):
+            return
         if self.goal_success is None:
             self.goal_success = {k: v for k, v in goal_success.items() if list(k) in self.goals}
             for g in self.goals:
@@ -115,7 +134,7 @@ class CurriculumStage:
 if __name__ == '__main__':
     sampler = CurriculumSequenceSampler(['a', 'b', 'c', 'd'])
     pprint(sampler.goals)
-    sampler.update_returns({
+    sampler.update_goal_success({
         (('a', 'empty'),): 0.9,
         (('b', 'empty'),): 0.84,
         (('c', 'empty'),): 0.8,
