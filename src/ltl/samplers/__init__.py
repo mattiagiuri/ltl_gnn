@@ -14,7 +14,6 @@ sampler_map = {
     'reach4': ReachFourSampler,
     'reach2': ReachTwoSampler,
     'partial': FixedSampler.partial_from_formula('F (magenta & F (yellow))'),
-    # TODO: try curriculum where we start with eventually and then move to safety. Could also incorporate G!r.
 }
 
 __all__ = ['LTLSampler', 'EventuallySampler', 'FixedSampler', 'ReachFourSampler', 'sampler_map']

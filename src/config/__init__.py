@@ -3,7 +3,8 @@ from .ppo_config import *
 from .model_config import *
 
 model_configs = {
-    'default': default_model_config,
+    'default': default,
+    'letter': letter,
     'pretraining': pretraining,
 }
 
