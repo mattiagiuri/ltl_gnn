@@ -94,6 +94,7 @@ class BaseAlgo(ABC):
         self.masks = torch.zeros(*shape, device=self.device)
         self.actions = torch.zeros(*act_shape, device=self.device)  # , dtype=torch.int)
         self.values = torch.zeros(*shape, device=self.device)
+        self.qs = torch.zeros(*shape, device=self.device)
         self.rewards = torch.zeros(*shape, device=self.device)
         self.advantages = torch.zeros(*shape, device=self.device)
         self.log_probs = torch.zeros(*act_shape, device=self.device)
@@ -106,6 +107,8 @@ class BaseAlgo(ABC):
         self.log_done_counter = 0
         self.log_return = [0] * self.num_procs
         self.log_num_steps = [0] * self.num_procs
+        self.log_success = [0] * self.num_procs
+        self.log_violation = [0] * self.num_procs
 
         self.goal_success = defaultdict(int)
         self.goal_counts = defaultdict(int)
@@ -142,7 +145,7 @@ class BaseAlgo(ABC):
                     dist, value = self.model(preprocessed_obs)
             action = dist.sample()
 
-            obs, reward, done, _ = self.env.step(action.cpu().numpy())
+            obs, reward, done, info = self.env.step(action.cpu().numpy())
 
             # Update experiences values
 
@@ -155,6 +158,7 @@ class BaseAlgo(ABC):
             self.mask = 1 - torch.tensor(done, device=self.device, dtype=torch.float)
             self.actions[i] = action
             self.values[i] = value
+
             self.rewards[i] = torch.tensor(reward, device=self.device)
             self.log_probs[i] = dist.log_prob(action)
 
@@ -168,11 +172,13 @@ class BaseAlgo(ABC):
                     self.log_done_counter += 1
                     self.log_return.append(self.log_episode_return[j].item())
                     self.log_num_steps.append(self.log_episode_num_steps[j].item())
+                    self.log_success.append(int('success' in info[j]))
+                    self.log_violation.append(int('violation' in info[j]))
+                    assert not (('success' in info[j]) and ('violation' in info[j]))
 
-                    ret = self.log_episode_return[j].item()
                     goal = self.obss[i][j]['initial_goal']
                     goal = tuple(goal)
-                    self.goal_success[goal] += ret
+                    self.goal_success[goal] += int('success' in info[j])
                     self.goal_counts[goal] += 1
 
             self.log_episode_return *= self.mask
@@ -194,6 +200,7 @@ class BaseAlgo(ABC):
 
             delta = self.rewards[i] + self.discount * next_value * next_mask - self.values[i]
             self.advantages[i] = delta + self.discount * self.gae_lambda * next_advantage * next_mask
+            self.qs[i] = self.rewards[i] + self.discount * next_value * next_mask
 
         # Define experiences:
         #   the whole experience is the concatenation of the experience
@@ -215,6 +222,7 @@ class BaseAlgo(ABC):
         # for all tensors below, T x P -> P x T -> P * T
         exps.action = self.actions.transpose(0, 1).reshape((-1,) + self.action_space_shape)
         exps.value = self.values.transpose(0, 1).reshape(-1)
+        exps.qs = self.qs.transpose(0, 1).reshape(-1)
         exps.reward = self.rewards.transpose(0, 1).reshape(-1)
         exps.advantage = self.advantages.transpose(0, 1).reshape(-1)
         exps.returnn = exps.value + exps.advantage
@@ -231,6 +239,8 @@ class BaseAlgo(ABC):
         logs = {
             "return_per_episode": self.log_return[-keep:],
             "num_steps_per_episode": self.log_num_steps[-keep:],
+            "success_per_episode": self.log_success[-keep:],
+            "violation_per_episode": self.log_violation[-keep:],
             "num_steps": self.num_steps,
             "avg_goal_success": {k: float(v) / self.goal_counts[k] for k, v in self.goal_success.items()},
         }  # TODO: print mean and std of goal success!!!

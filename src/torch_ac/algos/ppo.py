@@ -38,6 +38,7 @@ class PPO(BaseAlgo):
             log_values = []
             log_policy_losses = []
             log_value_losses = []
+            log_q_losses = []
             log_grad_norms = []
 
             for inds in self._get_batches_starting_indexes():
@@ -47,6 +48,7 @@ class PPO(BaseAlgo):
                 batch_value = 0
                 batch_policy_loss = 0
                 batch_value_loss = 0
+                batch_q_loss = 0
                 batch_loss = 0
 
                 # Initialize memory
@@ -82,7 +84,10 @@ class PPO(BaseAlgo):
                     surr2 = (value_clipped - sb.returnn).pow(2)
                     value_loss = torch.max(surr1, surr2).mean()
 
-                    loss = policy_loss - self.entropy_coef * entropy + self.value_loss_coef * value_loss
+                    q = self.model.forward_q(sb.obs, sb.action)
+                    q_loss = (q - sb.qs).pow(2).mean()
+
+                    loss = policy_loss - self.entropy_coef * entropy + self.value_loss_coef * value_loss + self.value_loss_coef * q_loss
 
                     # Update batch values
 
@@ -90,6 +95,7 @@ class PPO(BaseAlgo):
                     batch_value += value.mean().item()
                     batch_policy_loss += policy_loss.item()
                     batch_value_loss += value_loss.item()
+                    batch_q_loss += q_loss.item()
                     batch_loss += loss
 
                     # Update memories for next epoch
@@ -103,6 +109,7 @@ class PPO(BaseAlgo):
                 batch_value /= self.recurrence
                 batch_policy_loss /= self.recurrence
                 batch_value_loss /= self.recurrence
+                batch_q_loss /= self.recurrence
                 batch_loss /= self.recurrence
 
                 # Update actor-critic
@@ -121,6 +128,7 @@ class PPO(BaseAlgo):
                 log_values.append(batch_value)
                 log_policy_losses.append(batch_policy_loss)
                 log_value_losses.append(batch_value_loss)
+                log_q_losses.append(batch_q_loss)
                 log_grad_norms.append(grad_norm)
 
         # Log some values
@@ -130,6 +138,7 @@ class PPO(BaseAlgo):
             "value": numpy.mean(log_values),
             "policy_loss": numpy.mean(log_policy_losses),
             "value_loss": numpy.mean(log_value_losses),
+            "q_loss": numpy.mean(log_q_losses),
             "grad_norm": numpy.mean(log_grad_norms)
         }
 
