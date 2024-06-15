@@ -41,6 +41,14 @@ class TextLogger(Logger):
             return 'sμ'
         elif key == 'num_steps_per_episode_std':
             return 'sσ'
+        elif key == 'success_per_episode_mean':
+            return 'Pμ'
+        elif key == 'success_per_episode_std':
+            return 'Pσ'
+        elif key == 'violation_per_episode_mean':
+            return 'Vμ'
+        elif key == 'violation_per_episode_std':
+            return 'Vσ'
         elif key == 'duration':
             return 't'
         else:

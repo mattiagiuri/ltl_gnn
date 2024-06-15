@@ -37,7 +37,7 @@ def main():
             '--log_interval', '1',
             '--save_interval', '2',
             '--epochs', '10',
-            '--num_steps', '10_000_000',
+            '--num_steps', '15_000_000',
             '--model_config', 'default',
             '--name', args.name,
             '--seed', str(seed),
@@ -57,7 +57,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name asd --seed 1 --log_csv false --save false'.split(' ')
+        sys.argv += '--num_procs 2 --device cpu --name asd --seed 1 --log_csv false --save false'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

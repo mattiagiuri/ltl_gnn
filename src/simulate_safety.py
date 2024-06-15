@@ -1,7 +1,10 @@
-import torch
-from tqdm import trange
+import random
 
-from envs import make_sequence_env
+import numpy as np
+import torch
+from tqdm import trange, tqdm
+
+from envs import make_env
 from ltl import EventuallySampler, ReachFourSampler
 from ltl.samplers import ReachAvoidSampler
 from ltl.samplers.fixed_sampler import FixedSampler
@@ -9,14 +12,25 @@ from ltl.samplers.loop_sampler import LoopSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
+from sequence import RandomSequenceSampler
+from sequence.fixed_sequence_sampler import FixedSequenceSampler
+from sequence.reach_sequence_sampler import ReachSequenceSampler
 from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
-exp = 'lidar'
-seed = 2
+exp = '15mil'
+seed = 2  # TODO: shielding, save best model
+shielding = False
 
-render = True
-env = make_sequence_env(env_name, render_mode='human' if render else None, max_steps=1000)
+random.seed(seed)
+np.random.seed(seed)
+torch.random.manual_seed(seed)
+
+render = False
+sampler = RandomSequenceSampler.partial(length=2, unique=True)
+# sampler = ReachSequenceSampler.partial(length=4, unique=True)
+# sampler = FixedSequenceSampler.partial([('green', 'yellow')])
+env = make_env(env_name, sampler, ltl=False, render_mode='human' if render else None, max_steps=1000, eval_mode=True)
 config = model_configs['default']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
@@ -27,36 +41,52 @@ num_episodes = 1000
 
 num_successes = 0
 num_violations = 0
+steps = []
 rets = []
+success_mask = []
 
-for i in trange(num_episodes):
+env.reset(seed=seed)
+
+pbar = range(num_episodes)
+if not render:
+    pbar = tqdm(pbar)
+for i in pbar:
     obs = env.reset()
     if render:
         print(obs['goal'])
     done = False
-    ret = 0
+    num_steps = 0
     while not done:
-        action = agent.get_action(obs, deterministic=False)
+        # action = env.action_space.sample()
+        action = agent.get_action(obs, deterministic=True, shielding=shielding)
         action = action.flatten()
         obs, reward, done, info = env.step(action)
         if reward > 0 and render:
             print(reward)
             print(obs['goal'])
-        ret += reward
+        num_steps += 1
         if done:
-            rets.append(ret)
-            if ret >= 1.0:
+            if 'success' in info:
                 num_successes += 1
-                assert 'violation' not in info, 'Success and violation at the same time.'
-            if ret < 0:
-                assert 'violation' in info, 'Violation without negative reward.'
-                num_violations += 1
+                final_reward = 1
+                steps.append(num_steps)
             elif 'violation' in info:
                 num_violations += 1
-            print(f'Success rate: {num_successes / (i + 1)}')
+                final_reward = -1
+            else:
+                final_reward = 0
+            rets.append(final_reward * 0.998 ** (num_steps - 1))
+            success_mask.append('success' in info)
+            if not render:
+                pbar.set_postfix({'success': num_successes / (i + 1), 'violation': num_violations / (i + 1), 'ADR(t)': np.mean(rets),
+                                  'ADR(s)': np.mean(np.array(rets)[success_mask]), 'AS': np.mean(steps)})
 
 env.close()
 print(f'Success rate: {num_successes / num_episodes}')
 print(f'Violation rate: {num_violations / num_episodes}')
 print(f'Num total: {num_episodes}')
-print('Average return:', sum(rets) / len(rets))
+print(f'ADR (total): {np.mean(rets):.3f}')
+print(f'ADR (successful): {np.mean(np.array(rets)[success_mask]):.3f}')
+print(f'AS: {np.mean(steps):.3f}')
+
+print(f'{num_successes / num_episodes:.3f},{num_violations / num_episodes:.3f},{np.mean(rets):.3f},{np.mean(np.array(rets)[success_mask]):.3f},{np.mean(steps):.3f}')
