@@ -13,9 +13,9 @@ import preprocessing
 import torch_ac
 
 import utils
-from ltl import EventuallySampler, sampler_map
-from model import build_model
-from envs import make_sequence_env, get_env_attr
+from model.model import build_model
+from envs import make_env, get_env_attr
+from sequence import CurriculumSequenceSampler
 from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
@@ -35,8 +35,7 @@ class Trainer:
         envs = self.make_envs()
         training_status, resuming = self.get_training_status()
         pretrained_model = self.load_pretrained_model()
-        model = build_model(envs[0], training_status, model_configs[self.args.model_config], pretrained_model,
-                            self.args.freeze_pretrained)
+        model = build_model(envs[0], training_status, model_configs[self.args.model_config])
         model.to(self.args.experiment.device)
         print(model.ltl_net)
         algo = torch_ac.PPO(envs, model, self.args.experiment.device, self.args.ppo,
@@ -55,9 +54,9 @@ class Trainer:
             start = time.time()
             exps, logs = algo.collect_experiences()
             for env in envs:
-                seq_sampler = get_env_attr(env, 'seq_sampler')
+                seq_sampler = get_env_attr(env, 'sample_sequence')
                 if seq_sampler.is_adaptive:
-                    seq_sampler.update_returns(logs['avg_goal_success'])
+                    seq_sampler.update_goal_success(logs['avg_goal_success'])
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)
             update_time = time.time() - start
@@ -80,10 +79,11 @@ class Trainer:
         utils.set_seed(self.args.experiment.seed)
         envs = []
         for i in range(self.args.experiment.num_procs):
-            ltl_sampler = self.args.experiment.ltl_sampler
-            if ltl_sampler is not None and ltl_sampler not in sampler_map:
-                raise ValueError(f"Unknown sampler {ltl_sampler}.")
-            envs.append(make_sequence_env(self.args.experiment.env))
+            # ltl_sampler = self.args.experiment.ltl_sampler
+            # if ltl_sampler is not None and ltl_sampler not in sampler_map:
+            #     raise ValueError(f"Unknown sampler {ltl_sampler}.")
+            sampler = CurriculumSequenceSampler.partial()
+            envs.append(make_env(self.args.experiment.env, sampler, ltl=False))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
         seeds = [seed_offset + i for i in range(self.args.experiment.num_procs)]
