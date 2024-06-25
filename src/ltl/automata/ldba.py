@@ -19,7 +19,7 @@ class LDBA:
         self.state_to_incoming_transitions: dict[int, list[LDBATransition]] = {}
         self.sink_state: Optional[int] = None
         self.complete = False
-        self.impossible_assignments: set[FrozenAssignment] = set()
+        self.possible_assignments: Optional[list[Assignment]] = None
         self.state_to_scc = {}
 
     def add_state(self, state: int, initial=False):
@@ -47,7 +47,7 @@ class LDBA:
     def contains_state(self, state: int) -> bool:
         return state <= self.num_states
 
-    def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool):
+    def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool) -> 'LDBATransition':
         if source < 0 or source >= self.num_states:
             raise ValueError('Source state must be a valid state index.')
         if target < 0 or target >= self.num_states:
@@ -61,6 +61,7 @@ class LDBA:
                 raise ValueError('There can only be a single transition between two states. Consider merging labels.')
         self.state_to_transitions[source].append(transition)
         self.state_to_incoming_transitions[target].append(transition)
+        return transition
 
     def check_valid(self) -> bool:
         """Checks that the LDBA satisfies the following conditions:
@@ -131,21 +132,26 @@ class LDBA:
         if self.complete:
             return
         sink_state = self.num_states
-        all_assignments = set([a.to_frozen() for a in Assignment.all_possible_assignments(tuple(self.propositions))])
+        if self.possible_assignments:
+            all_assignments = set([a.to_frozen() for a in self.possible_assignments])
+        else:
+            all_assignments = set([a.to_frozen() for a in Assignment.all_possible_assignments(tuple(self.propositions))])
         for state in range(self.num_states):
             covered_assignments = set() if not self.state_to_transitions[state] else set.union(
                 *[t.valid_assignments for t in self.state_to_transitions[state]]
             )
-            if len(covered_assignments) != 2 ** len(self.propositions):
+            if len(covered_assignments) != len(all_assignments):
                 # missing transitions - need to add sink state
                 if not self.has_sink_state():
                     self.sink_state = sink_state
                     self.add_state(sink_state)
-                    self.add_transition(sink_state, sink_state, 't', False)
+                    t = self.add_transition(sink_state, sink_state, 't', False)
+                    t._valid_assignments = all_assignments
                     assert self.has_sink_state()
                 sink_assignments = all_assignments - covered_assignments
                 sink_label = self.valid_assignments_to_label(sink_assignments)
-                self.add_transition(state, sink_state, sink_label, False)
+                t = self.add_transition(state, sink_state, sink_label, False)
+                t._valid_assignments = sink_assignments
         self.complete = True
 
     def has_sink_state(self) -> bool:
@@ -159,33 +165,25 @@ class LDBA:
         simplified = simplify(to_sympy(formula))
         return sympy_to_str(simplified)
 
-    def prune_impossible_transitions(self, impossible_assignments: set[FrozenAssignment]):
+    def prune(self, possible_assignments: list[Assignment]):
         """Prunes transitions that involve impossible assignments. Impossible assignments may be derived from knowledge
            of the underlying MDP."""
-        self.impossible_assignments = impossible_assignments
+        self.possible_assignments = possible_assignments
         to_remove = set()
         for transitions in self.state_to_transitions.values():
             for t in transitions:
                 if t.is_epsilon():
                     continue
-                valid = t.valid_assignments
-                remaining = valid - impossible_assignments
-                if not remaining:
+                t._valid_assignments = {a.to_frozen() for a in possible_assignments if a.satisfies(t.label)}
+                if t.valid_assignments:
+                    t.label = self.valid_assignments_to_label(t.valid_assignments)
+                else:
                     to_remove.add(t)
-                elif remaining != valid:
-                    t.label = self.valid_assignments_to_label(remaining)
-                    t._valid_assignments = remaining
         self.num_transitions -= len(to_remove)
         for state in range(self.num_states):
             self.state_to_transitions[state] = [t for t in self.state_to_transitions[state] if t not in to_remove]
             self.state_to_incoming_transitions[state] = [t for t in self.state_to_incoming_transitions[state]
                                                          if t not in to_remove]
-
-    @functools.cached_property
-    def possible_assignments(self) -> list[Assignment]:
-        assignments = [a for a in Assignment.all_possible_assignments(self.propositions)
-                       if a.to_frozen() not in self.impossible_assignments]
-        return assignments
 
     def compute_sccs(self) -> None:
         """Computes the strongly connected components of the LDBA using Tarjan's algorithm."""

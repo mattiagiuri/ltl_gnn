@@ -1,16 +1,18 @@
 import enum
+from pprint import pprint
 
 from graphviz import Source
 
 from ltl.automata import LDBA, ltl2ldba
+from ltl.automata import LDBAGraph
 from ltl.logic import Assignment
-from model.ltl.ldba_graph import LDBAGraph
 from utils import memory, timeit
 
 
 class Color(enum.Enum):
     SINK = 'tomato'
     ACCEPTING = 'lightskyblue'
+    ROOT = '#ffcc00'
 
     def __str__(self):
         return self.value
@@ -41,7 +43,7 @@ def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=
     s.render(view=view, cleanup=True)
 
 
-def draw_ldba_graph(
+def draw_old_ldba_graph(
         g: LDBAGraph,
         filename='ldba_graph',
         fmt='pdf',
@@ -67,21 +69,37 @@ def draw_ldba_graph(
     s.render(view=view, cleanup=True)
 
 
-@memory.cache
+def draw_ldba_graph(
+        g: LDBAGraph,
+        filename='ldba_graph',
+        fmt='pdf',
+        view=True,
+) -> None:
+    dot = 'digraph "" {\n'
+    dot += 'rankdir=BT\n'
+    for node in graph.nodes:
+        dot += f'{node.id} [label="({node.pos_label}, {node.neg_label if node.neg_label else "-"})"'
+        if node.id in g.root_nodes:
+            dot += f' color="{Color.ROOT}" style="filled"'
+        dot += ']\n'
+    for edge in g.edges:
+        dot += f'{edge[0]} -> {edge[1]}\n'
+    dot += '}'
+    s = Source(dot, filename=filename, format=fmt)
+    s.render(view=view, cleanup=True)
+
+
+# @memory.cache
 def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = True) -> LDBA:
     ldba = ltl2ldba(formula, simplify_labels=simplify_labels)
     print('Constructed LDBA.')
-    assert ldba.check_valid()
-    print('Checked valid.')
+    # assert ldba.check_valid()
+    # print('Checked valid.')
+    if prune:
+        ldba.prune(Assignment.zero_or_one_propositions(set(ldba.propositions)))
+        print('Pruned impossible transitions.')
     ldba.complete_sink_state()
     print('Added sink state.')
-    if prune:
-        ldba.prune_impossible_transitions(Assignment.more_than_one_true_proposition(set(ldba.propositions)))
-        # ldba.prune_impossible_transitions({
-        #     Assignment(b=True, r=True, a=False).to_frozen(),
-        #     Assignment(b=True, r=True, a=True).to_frozen(),
-        # })
-        print('Pruned impossible transitions.')
     ldba.compute_sccs()
     return ldba
 
@@ -89,12 +107,15 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 if __name__ == '__main__':
     # f = '!a U b'
     # f = 'FGa'
-    f = 'FGa | FGb'
     # f = 'GFa & GFb & G (signal => F g)'
+    # f = '(F (g & F (f & F (d & F (g & F (a & F (h & F (b & F (j & F (f & F (g & F (i & F (b & F (c & F (f & F h)))))))))))))))'
     # f = '!a U (b & (!c U d))'
+    # f = '!a U (b & (!c U (d & (!e U f))))'
+    f = 'GF a & GF b & G (c => (!d U a))'  # TODO: here in state 4 => need to prune based on loops rather than just sequences
     # f = 'F (a | b)'
     # f = 'F (g & G!r) & G!b'
-    # f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h)))'
+    # f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h))) & (!i U (j & (!k U l)))'
+    # f = 'F (b & F (d & F f)) & F (h & F (j & F l))'
     # f = '(!a U (b & (!c U (d & (!e U f))))) & (!g U (h & (!i U j)))'
     # f = '(F(a&b) | F(a & XFc)) & G!d'
     # f = '(F(a&b) | F(a & XFb))'
@@ -118,7 +139,7 @@ if __name__ == '__main__':
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True)
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    pos, neg = LDBAGraph.from_ldba(ldba, 0)
-    draw_ldba_graph(pos, fmt='png', features=False)  # Crucial: prune paths that overlap with accepting paths!
-    draw_ldba_graph(neg, fmt='pdf')
-    print(pos.root_assignments)
+    graph = LDBAGraph.from_ldba(ldba, 0)  # try other states!
+    draw_ldba_graph(graph, fmt='png')  # Crucial: prune paths that overlap with accepting paths!
+    # draw_ldba_graph(neg, fmt='pdf')
+    # print(pos.root_assignments)

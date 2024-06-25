@@ -1,7 +1,6 @@
 import functools
+import re
 from typing import MutableMapping
-
-from utils import to_sympy
 
 
 class Assignment(MutableMapping):
@@ -32,9 +31,32 @@ class Assignment(MutableMapping):
             if len([v for v in a.values() if v]) > 1
         }
 
+    @staticmethod
+    def zero_or_one_propositions(propositions: set[str]) -> list['Assignment']:
+        assignments = []
+        for p in propositions:
+            mapping = {p: True} | {q: False for q in propositions if q != p}
+            assignments.append(Assignment(mapping))
+        assignments.append(Assignment({p: False for p in propositions}))
+        return assignments
+
     def satisfies(self, label: str) -> bool:
-        formula = to_sympy(label)
-        return formula.subs(self) == True  # TODO: speed this up?
+        formula = self.formula_to_python_syntax(label)
+        formula = self.replace_variables(formula)
+        return eval(formula)
+
+    def replace_variables(self, formula: str) -> str:
+        if formula == 't':
+            return 'True'
+        for variable, value in self.mapping.items():
+            formula = re.sub(r'\b' + str(variable) + r'\b', str(value), formula)
+        return formula
+
+    def formula_to_python_syntax(self, formula: str) -> str:
+        formula = formula.replace('!', 'not ')
+        formula = formula.replace('&', 'and')
+        formula = formula.replace('|', 'or')
+        return formula
 
     def to_frozen(self) -> 'FrozenAssignment':
         return FrozenAssignment(self)
@@ -62,6 +84,9 @@ class Assignment(MutableMapping):
 
     def __or__(self, other):
         return Assignment({**self.mapping, **other.mapping})
+
+    def __eq__(self, other):
+        return self.mapping == other.mapping
 
 
 class FrozenAssignment:
