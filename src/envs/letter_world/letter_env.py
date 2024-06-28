@@ -4,8 +4,6 @@ from typing import Any, Literal
 import numpy as np
 import gymnasium as gym
 import pygame
-import scipy
-import sklearn
 from gymnasium import spaces
 from gymnasium.core import ObsType, ActType, RenderFrame
 from gymnasium.wrappers import TimeLimit
@@ -175,8 +173,8 @@ class LetterEnv(gym.Env):
     def get_propositions(self) -> list[str]:
         return self.letter_types
 
-    def get_impossible_assignments(self) -> set[FrozenAssignment]:
-        return Assignment.more_than_one_true_proposition(set(self.get_propositions()))
+    def get_possible_assignments(self) -> list[Assignment]:
+        return Assignment.zero_or_one_propositions(set(self.get_propositions()))
 
 
 def _is_valid_map(map, grid_size, actions):

@@ -51,5 +51,5 @@ class SafetyGymWrapper(gymnasium.Wrapper):
     def get_propositions(self) -> list[str]:
         return sorted(self.colors)
 
-    def get_impossible_assignments(self) -> set[FrozenAssignment]:
-        return Assignment.more_than_one_true_proposition(set(self.get_propositions()))
+    def get_possible_assignments(self) -> list[Assignment]:
+        return Assignment.zero_or_one_propositions(set(self.get_propositions()))

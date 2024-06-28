@@ -10,17 +10,35 @@ from model.model import Model
 class Agent:
     def __init__(self, model: Model):
         self.model = model
+        self.sequence = None
 
     def get_action(self, obs, deterministic=False, shielding=False) -> np.ndarray:
+        if not 'changed' in obs:
+            self.sequence = obs['goal']
+        else:
+            if obs['changed']:
+                seq_to_value = {}
+                for seq in obs['sequences']:
+                    obs['goal'] = seq
+                    seq_to_value[tuple(seq)] = self.get_value(obs, deterministic, shielding)
+                self.sequence = max(seq_to_value, key=seq_to_value.get)
+        assert self.sequence is not None
+        obs['goal'] = self.sequence
+        return self.get_action_value(obs, deterministic, shielding)[0]
+
+    def get_value(self, obs, deterministic=False, shielding=False) -> float:
+        return self.get_action_value(obs, deterministic, shielding)[1]
+
+    def get_action_value(self, obs, deterministic=False, shielding=False) -> tuple[np.ndarray, float]:
         if not (isinstance(obs, list) or isinstance(obs, tuple)):
             obs = [obs]
         preprocessed = preprocessing.preprocess_obss(obs)
-        dist, _ = self.model(preprocessed)
+        dist, value = self.model(preprocessed)
         if shielding:
             action = self.get_shielded_action(obs, dist, deterministic)
         else:
             action = dist.mode if deterministic else dist.sample()
-        return action.detach().numpy()
+        return action.detach().numpy(), value.item()
 
     def get_shielded_action(self, obs, dist, deterministic, max_tries=100, threshold=1):
         assert len(obs) == 1
@@ -50,4 +68,3 @@ class Agent:
         #     tries += 1
         # print(f"Shielding failed.")
         return dist.mode if deterministic else dist.sample()
-

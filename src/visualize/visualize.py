@@ -1,12 +1,10 @@
 import enum
-from pprint import pprint
 
 from graphviz import Source
 
 from ltl.automata import LDBA, ltl2ldba
 from ltl.automata import LDBAGraph
 from ltl.logic import Assignment
-from utils import memory, timeit
 
 
 class Color(enum.Enum):
@@ -38,32 +36,6 @@ def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=
             if transition.accepting:
                 dot += f' color="{Color.ACCEPTING}"'
             dot += ']\n'
-    dot += '}'
-    s = Source(dot, filename=filename, format=fmt)
-    s.render(view=view, cleanup=True)
-
-
-def draw_old_ldba_graph(
-        g: LDBAGraph,
-        filename='ldba_graph',
-        fmt='pdf',
-        view=True,
-        features=False
-) -> None:
-    """Draw an LDBA graph as a graph using Graphviz. Uses labels by default, but can also use feature vectors."""
-    dot = 'digraph "" {\n'
-    dot += 'rankdir=BT\n'
-    if features:
-        nodes = enumerate(g.x.tolist())
-    else:
-        nodes = g.labels.items()
-    for i, label in nodes:
-        dot += f'{i} [label="{label}"'
-        dot += ']\n'
-    for edge in g.edge_index.t().tolist():
-        if not edge:
-            continue
-        dot += f'{edge[0]} -> {edge[1]}\n'
     dot += '}'
     s = Source(dot, filename=filename, format=fmt)
     s.render(view=view, cleanup=True)
@@ -111,7 +83,7 @@ if __name__ == '__main__':
     # f = '(F (g & F (f & F (d & F (g & F (a & F (h & F (b & F (j & F (f & F (g & F (i & F (b & F (c & F (f & F h)))))))))))))))'
     # f = '!a U (b & (!c U d))'
     # f = '!a U (b & (!c U (d & (!e U f))))'
-    f = 'GF a & GF b & G (c => (!d U a))'  # TODO: here in state 4 => need to prune based on loops rather than just sequences
+    # f = 'GF a & GF b & G (c => (!d U a))'
     # f = 'F (a | b)'
     # f = 'F (g & G!r) & G!b'
     # f = '(!a U (b & (!c U d))) & (!e U (f & (!g U h))) & (!i U (j & (!k U l)))'
@@ -122,7 +94,7 @@ if __name__ == '__main__':
     # f = 'F((a&b)&FGb)'
     # f = 'GFa & GFb & G!c'
     # f = 'F a | F (b & F c)'
-    # f = 'GFa & GFb & G (!a | F g)'
+    # f = 'GFa & GFb & G (a => F g)'
     # f = '!r U g'
     # f = 'F (g & G!r)'
     # f = 'F g & G!r'
@@ -136,10 +108,12 @@ if __name__ == '__main__':
     # f = 'r & !(Xg) & G(!y | (X g))'
     # f = 'F ((blue | yellow) & F red)'
     # f = 'GF a | G (!b | F c)'
+    # f = '(!h U (k & (!b U (c & (!i U e)))))'
+    # f = '(F (a & (F d))) | (F (b & (F (c & (F d)))))'
+    f = '(!a U (k & (!i U (c & (!b U (h & (!j U (g & (!f U (d & (!l U e)))))))))))'
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True)
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    graph = LDBAGraph.from_ldba(ldba, 0)  # try other states!
-    draw_ldba_graph(graph, fmt='png')  # Crucial: prune paths that overlap with accepting paths!
-    # draw_ldba_graph(neg, fmt='pdf')
-    # print(pos.root_assignments)
+    graph = LDBAGraph.from_ldba(ldba, 0)
+    draw_ldba_graph(graph, fmt='png')
+    print(f'Num sequences: {len(graph.paths)}')

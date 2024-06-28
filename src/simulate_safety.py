@@ -5,10 +5,6 @@ import torch
 from tqdm import trange, tqdm
 
 from envs import make_env
-from ltl import EventuallySampler, ReachFourSampler
-from ltl.samplers import ReachAvoidSampler
-from ltl.samplers.fixed_sampler import FixedSampler
-from ltl.samplers.loop_sampler import LoopSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
@@ -19,7 +15,7 @@ from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
 exp = '15mil'
-seed = 2  # TODO: shielding, save best model
+seed = 2  # TODO: save best model
 shielding = False
 
 random.seed(seed)
@@ -27,14 +23,14 @@ np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = False
-sampler = RandomSequenceSampler.partial(length=2, unique=True)
-# sampler = ReachSequenceSampler.partial(length=4, unique=True)
+# sampler = RandomSequenceSampler.partial(length=2, unique=True)
+sampler = ReachSequenceSampler.partial(length=4, unique=True)
 # sampler = FixedSequenceSampler.partial([('green', 'yellow')])
-env = make_env(env_name, sampler, ltl=False, render_mode='human' if render else None, max_steps=1000, eval_mode=True)
+env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=2000, eval_mode=False)
 config = model_configs['default']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
-model = build_model(env, training_status, config, None, False)
+model = build_model(env, training_status, config)
 agent = Agent(model)
 
 num_episodes = 1000
@@ -58,7 +54,7 @@ for i in pbar:
     num_steps = 0
     while not done:
         # action = env.action_space.sample()
-        action = agent.get_action(obs, deterministic=True, shielding=shielding)
+        action = agent.get_action(obs, deterministic=False, shielding=shielding)
         action = action.flatten()
         obs, reward, done, info = env.step(action)
         if reward > 0 and render:

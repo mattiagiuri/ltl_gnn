@@ -69,4 +69,3 @@ if __name__ == '__main__':
     # TODO: improve performance of reset() - this is the bottleneck!
     # TODO: reduce number of channels in env_net - policy network can be simpler!
     # TODO: match number of params of LTL2Action
-    # TODO: implement shielding

@@ -76,8 +76,9 @@ def build_model(
     #     for param in ltl_net.parameters():
     #         param.requires_grad = False
 
-    ltl_embedding_dim = 64
+    # ltl_embedding_dim = 32
     # num_assignments = 4
+    ltl_embedding_dim = 64
     num_assignments = 12
     ltl_net = LDBARNN(num_assignments, ltl_embedding_dim, num_layers=1)  # TODO: careful, parameterise this!
     print(torch_utils.get_number_of_params(ltl_net))

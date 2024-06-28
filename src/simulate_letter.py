@@ -1,3 +1,4 @@
+import copy
 import random
 import time
 
@@ -7,10 +8,8 @@ import torch
 from tqdm import trange
 
 from envs import make_env
-from ltl import EventuallySampler, ReachFourSampler
-from ltl.samplers import ReachAvoidSampler
-from ltl.samplers.fixed_sampler import FixedSampler
-from ltl.samplers.loop_sampler import LoopSampler
+from ltl import PartiallyOrderedSampler
+from ltl.samplers.avoid_sampler import AvoidSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
@@ -19,8 +18,8 @@ from sequence.fixed_sequence_sampler import FixedSequenceSampler
 from utils.model_store import ModelStore
 
 env_name = 'LetterEnv-v0'
-exp = 'q'  # best so far: 64_emb_4_epochs_2_layers
-seed = 1
+exp = '64_emb_4_epochs_2_layers'  # best so far: 64_emb_4_epochs_2_layers
+seed = 2
 render_modes = [None, 'human', 'path']
 render = render_modes[0]
 
@@ -28,12 +27,15 @@ random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-sampler = RandomSequenceSampler.partial(length=2, unique=True)
+# sampler = RandomSequenceSampler.partial(length=2, unique=True)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
+# sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=True)
+# sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
+sampler = AvoidSampler.partial(depth=3, num_conjuncts=1)
 deterministic = False
 shielding = False
 
-env = make_env(env_name, sampler, ltl=False, max_steps=75, render_mode=render, eval_mode=True)
+env = make_env(env_name, sampler, max_steps=225, render_mode=render, eval_mode=True)
 config = model_configs['letter']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
@@ -47,6 +49,7 @@ num_violations = 0
 rets = []
 success_mask = []
 steps = []
+props = []
 
 env.reset(seed=seed)
 
@@ -60,11 +63,12 @@ for i in pbar:
     done = False
     num_steps = 0
     while not done:
-        # TODO: reduce epsilon over training. Using shielding should hopefully help a lot to essentially have a deterministic policy that has a high success rate (does not get stuck in loops -> this is the real problem)
         action = agent.get_action(obs, deterministic=deterministic, shielding=shielding)
         action = action.flatten()[0]
         actions.append(action)
         obs, reward, done, info = env.step(action)
+        if len(info['propositions']) > 0:
+            props.append(list(info['propositions'])[0])
         if render == 'human':
             print(reward)
             finish = env.wait_for_input()
@@ -87,6 +91,18 @@ for i in pbar:
             if render == 'path':
                 print(final_reward)
                 env.render_path(actions)
+                print(props)
+                props = []
+
+                # test_goals = [
+                #     [('i', 'a'), ('a', 'b')],
+                #     [('a', 'b')],
+                # ]
+                # for goal in test_goals:
+                #     modified_obs = copy.deepcopy(obs)
+                #     modified_obs['goal'] = goal
+                #     print(f'Goal: {goal}, Value: {agent.get_value(modified_obs)}')
+
                 finish = env.wait_for_input()
             elif not render:
                 pbar.set_postfix({'success': num_successes / (i + 1), 'ADR(t)': np.mean(rets),

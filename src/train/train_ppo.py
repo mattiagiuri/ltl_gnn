@@ -83,7 +83,7 @@ class Trainer:
             # if ltl_sampler is not None and ltl_sampler not in sampler_map:
             #     raise ValueError(f"Unknown sampler {ltl_sampler}.")
             sampler = CurriculumSequenceSampler.partial()
-            envs.append(make_env(self.args.experiment.env, sampler, ltl=False))
+            envs.append(make_env(self.args.experiment.env, sampler))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
         seeds = [seed_offset + i for i in range(self.args.experiment.num_procs)]
