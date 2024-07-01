@@ -31,7 +31,7 @@ torch.random.manual_seed(seed)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=True)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
-sampler = AvoidSampler.partial(depth=3, num_conjuncts=1)
+sampler = AvoidSampler.partial(depth=2, num_conjuncts=3)
 deterministic = False
 shielding = False
 
@@ -58,12 +58,14 @@ pbar = range(num_episodes) if render else trange(num_episodes)
 for i in pbar:
     actions = []
     obs = env.reset()
+    agent.reset()
+    info = {'ldba_state_changed': True}
     if render:
         print(obs['goal'])
     done = False
     num_steps = 0
     while not done:
-        action = agent.get_action(obs, deterministic=deterministic, shielding=shielding)
+        action = agent.get_action(obs, info, deterministic=deterministic, shielding=shielding)
         action = action.flatten()[0]
         actions.append(action)
         obs, reward, done, info = env.step(action)

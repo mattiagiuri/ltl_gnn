@@ -25,11 +25,18 @@ class LDBAWrapper(gymnasium.Wrapper):
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = super().step(action)
-        self.ldba_state, accepting = self.ldba.get_next_state(self.ldba_state, info['propositions'])
+        new_ldba_state, accepting = self.ldba.get_next_state(self.ldba_state, info['propositions'])
+        if new_ldba_state != self.ldba_state:
+            self.ldba_state = new_ldba_state
+            info['ldba_state_changed'] = True
         self.complete_observation(obs)
         if self.terminate_on_acceptance and accepting:
             terminated = True
             info['success'] = True
+        scc = self.ldba.state_to_scc[self.ldba_state]
+        if scc.bottom and not scc.accepting:
+            terminated = True
+            info['violation'] = True
         info['accepting'] = accepting
         return obs, reward, terminated, truncated, info
 
@@ -39,6 +46,7 @@ class LDBAWrapper(gymnasium.Wrapper):
         self.ldba = self.construct_ldba(obs['goal'])
         self.ldba_state = self.ldba.initial_state
         self.complete_observation(obs)
+        info['ldba_state_changed'] = True
         return obs, info
 
     def complete_observation(self, obs: WrapperObsType):

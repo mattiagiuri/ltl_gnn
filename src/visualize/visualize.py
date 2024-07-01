@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # f = 'FGa'
     # f = 'GFa & GFb & G (signal => F g)'
     # f = '(F (g & F (f & F (d & F (g & F (a & F (h & F (b & F (j & F (f & F (g & F (i & F (b & F (c & F (f & F h)))))))))))))))'
-    # f = '!a U (b & (!c U d))'
+    f = '!a U (b & (!c U d))'
     # f = '!a U (b & (!c U (d & (!e U f))))'
     # f = 'GF a & GF b & G (c => (!d U a))'
     # f = 'F (a | b)'

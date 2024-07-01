@@ -5,23 +5,33 @@ import torch
 
 import preprocessing
 from model.model import Model
+from sequence.ldba_sequence_search import LDBASequenceSearch
 
 
 class Agent:
     def __init__(self, model: Model):
         self.model = model
         self.sequence = None
+        self.search = LDBASequenceSearch(model, 3)
+        self.state_to_visited_states = {}
+        self.previous_state = None
 
-    def get_action(self, obs, deterministic=False, shielding=False) -> np.ndarray:
-        if not 'changed' in obs:
-            self.sequence = obs['goal']
-        else:
-            if obs['changed']:
-                seq_to_value = {}
-                for seq in obs['sequences']:
-                    obs['goal'] = seq
-                    seq_to_value[tuple(seq)] = self.get_value(obs, deterministic, shielding)
-                self.sequence = max(seq_to_value, key=seq_to_value.get)
+    def reset(self):
+        self.state_to_visited_states.clear()
+        self.previous_state = None
+
+    def get_action(self, obs, info, deterministic=False, shielding=False) -> np.ndarray:
+        state = obs['ldba_state']
+        if 'ldba_state_changed' in info:
+            if self.previous_state is None:
+                self.state_to_visited_states[state] = set()
+            else:
+                if state not in self.state_to_visited_states:
+                    self.state_to_visited_states[state] = copy.deepcopy(self.state_to_visited_states[self.previous_state])
+                    self.state_to_visited_states[state].add(self.previous_state)
+            self.previous_state = state
+            self.sequence = self.search(obs['ldba'], obs['ldba_state'], self.state_to_visited_states[state], obs)
+            # print(f'Selected sequence: {self.sequence}')
         assert self.sequence is not None
         obs['goal'] = self.sequence
         return self.get_action_value(obs, deterministic, shielding)[0]

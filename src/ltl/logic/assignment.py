@@ -110,3 +110,6 @@ class FrozenAssignment:
 
     def __repr__(self):
         return repr(self.assignment)
+
+    def __iter__(self):
+        return iter(self.assignment)

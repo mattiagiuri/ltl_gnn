@@ -52,7 +52,7 @@ def make_env(
         # env = PartiallyOrderedWrapper(env, sample_task)
         env = LTLWrapper(env, sample_task)
         env = LDBAWrapper(env, terminate_on_acceptance)
-        env = LDBAToSequenceWrapper(env)
+        # env = LDBAToSequenceWrapper(env)
     else:
         env = SequenceWrapper(env, sample_task, False)
     env = TimeLimit(env, max_episode_steps=max_steps)
