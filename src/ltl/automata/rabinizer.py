@@ -13,3 +13,9 @@ def run_rabinizer(formula: str) -> str:
     if run.stderr != '':
         raise RuntimeError(f'Rabinizer call `{" ".join(command)}` resulted in an error.\nError: {run.stderr}.')
     return run.stdout
+
+
+if __name__ == '__main__':
+    f = 'FG a'
+    ldba = run_rabinizer(f)
+    print(ldba)

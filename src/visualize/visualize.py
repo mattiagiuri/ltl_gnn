@@ -2,7 +2,7 @@ import enum
 
 from graphviz import Source
 
-from ltl.automata import LDBA, ltl2ldba
+from ltl.automata import LDBA, ltl2ldba, ltl2nba
 from ltl.automata import LDBAGraph
 from ltl.logic import Assignment
 
@@ -62,8 +62,9 @@ def draw_ldba_graph(
 
 
 # @memory.cache
-def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = True) -> LDBA:
-    ldba = ltl2ldba(formula, simplify_labels=simplify_labels)
+def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = True, ldba: bool=True) -> LDBA:
+    fun = ltl2ldba if ldba else ltl2nba
+    ldba = fun(formula, simplify_labels=simplify_labels)
     print('Constructed LDBA.')
     # assert ldba.check_valid()
     # print('Checked valid.')
@@ -81,8 +82,8 @@ if __name__ == '__main__':
     # f = 'FGa'
     # f = 'GFa & GFb & G (signal => F g)'
     # f = '(F (g & F (f & F (d & F (g & F (a & F (h & F (b & F (j & F (f & F (g & F (i & F (b & F (c & F (f & F h)))))))))))))))'
-    f = '!a U (b & (!c U d))'
-    # f = '!a U (b & (!c U (d & (!e U f))))'
+    # f = '!a U (b & (!c U d))'
+    f = '!a U (b & (!c U (d & (!e U f))))'
     # f = 'GF a & GF b & G (c => (!d U a))'
     # f = 'F (a | b)'
     # f = 'F (g & G!r) & G!b'
@@ -110,10 +111,10 @@ if __name__ == '__main__':
     # f = 'GF a | G (!b | F c)'
     # f = '(!h U (k & (!b U (c & (!i U e)))))'
     # f = '(F (a & (F d))) | (F (b & (F (c & (F d)))))'
-    f = '(!a U (k & (!i U (c & (!b U (h & (!j U (g & (!f U (d & (!l U e)))))))))))'
+    # f = '(!a U (k & (!i U (c & (!b U (h & (!j U (g & (!f U (d & (!l U e)))))))))))'
 
-    ldba = construct_ldba(f, simplify_labels=False, prune=True)
+    ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    graph = LDBAGraph.from_ldba(ldba, 0)
-    draw_ldba_graph(graph, fmt='png')
-    print(f'Num sequences: {len(graph.paths)}')
+    # graph = LDBAGraph.from_ldba(ldba, 0)
+    # draw_ldba_graph(graph, fmt='png')
+    # print(f'Num sequences: {len(graph.paths)}')
