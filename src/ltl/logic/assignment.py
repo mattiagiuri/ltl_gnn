@@ -1,6 +1,7 @@
 import functools
-import re
 from typing import MutableMapping
+
+from ltl.logic.boolean_parser import parse
 
 
 class Assignment(MutableMapping):
@@ -41,22 +42,10 @@ class Assignment(MutableMapping):
         return assignments
 
     def satisfies(self, label: str) -> bool:
-        formula = self.formula_to_python_syntax(label)
-        formula = self.replace_variables(formula)
-        return eval(formula)
-
-    def replace_variables(self, formula: str) -> str:
-        if formula == 't':
-            return 'True'
-        for variable, value in self.mapping.items():
-            formula = re.sub(r'\b' + str(variable) + r'\b', str(value), formula)
-        return formula
-
-    def formula_to_python_syntax(self, formula: str) -> str:
-        formula = formula.replace('!', 'not ')
-        formula = formula.replace('&', 'and')
-        formula = formula.replace('|', 'or')
-        return formula
+        if label == 't':
+            return True
+        ast = parse(label)
+        return ast.evaluate(self.mapping)
 
     def to_frozen(self) -> 'FrozenAssignment':
         return FrozenAssignment(self)
