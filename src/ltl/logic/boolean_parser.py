@@ -82,7 +82,7 @@ class VarNode:
     def __init__(self, name):
         self.name = name
 
-    def evaluate(self, context):
+    def evaluate(self, context):  # TODO: implement lexer, longer identifiers, and implication parsing. write tests
         return context[self.name]
 
 
@@ -92,7 +92,7 @@ def parse(expression):
 
 
 if __name__ == '__main__':
-    expression = '!b & (a | c)'
+    expression = 'a => c'
     parser = Parser(expression)
     ast = parser.parse()
 

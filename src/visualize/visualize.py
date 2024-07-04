@@ -70,6 +70,14 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
     # print('Checked valid.')
     if prune:
         ldba.prune(Assignment.zero_or_one_propositions(set(ldba.propositions)))
+        # ldba.prune([
+        #     Assignment(dict(a=False, b=False, r=False)),
+        #     Assignment(dict(a=False, b=False, r=True)),
+        #     Assignment(dict(a=False, b=True, r=False)),
+        #     Assignment(dict(a=False, b=True, r=True)),
+        #     Assignment(dict(a=True, b=False, r=False)),
+        #     Assignment(dict(a=True, b=False, r=True)),
+        # ])
         print('Pruned impossible transitions.')
     ldba.complete_sink_state()
     print('Added sink state.')
@@ -80,10 +88,11 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 if __name__ == '__main__':
     # f = '!a U b'
     # f = 'FGa'
-    # f = 'GFa & GFb & G (signal => F g)'
+    f = 'GF a & GF b & G (!s | F g)'
     # f = '(F (g & F (f & F (d & F (g & F (a & F (h & F (b & F (j & F (f & F (g & F (i & F (b & F (c & F (f & F h)))))))))))))))'
     # f = '!a U (b & (!c U d))'
-    f = '!a U (b & (!c U (d & (!e U f))))'
+    # f = '!a U (b & (!c U (d & (!e U f))))'
+    # f = '(s => F r) U g'
     # f = 'GF a & GF b & G (c => (!d U a))'
     # f = 'F (a | b)'
     # f = 'F (g & G!r) & G!b'
@@ -112,9 +121,11 @@ if __name__ == '__main__':
     # f = '(!h U (k & (!b U (c & (!i U e)))))'
     # f = '(F (a & (F d))) | (F (b & (F (c & (F d)))))'
     # f = '(!a U (k & (!i U (c & (!b U (h & (!j U (g & (!f U (d & (!l U e)))))))))))'
+    # f = 'F (r & (a | b))'
+    f = '!(a | b) U c'
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    # graph = LDBAGraph.from_ldba(ldba, 0)
-    # draw_ldba_graph(graph, fmt='png')
-    # print(f'Num sequences: {len(graph.paths)}')
+    graph = LDBAGraph.from_ldba(ldba, 0)
+    draw_ldba_graph(graph, fmt='png')
+    print(f'Num sequences: {len(graph.paths)}')

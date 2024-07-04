@@ -21,7 +21,7 @@ env_name = 'LetterEnv-v0'
 exp = '64_emb_4_epochs_2_layers'  # best so far: 64_emb_4_epochs_2_layers
 seed = 2
 render_modes = [None, 'human', 'path']
-render = render_modes[0]
+render = render_modes[2]
 
 random.seed(seed)
 np.random.seed(seed)
@@ -31,18 +31,20 @@ torch.random.manual_seed(seed)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=True)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
-sampler = AvoidSampler.partial(depth=2, num_conjuncts=3)
+sampler = AvoidSampler.partial(depth=6, num_conjuncts=1)
 deterministic = False
 shielding = False
+
+# TODO: crucial: paths need to have all other assignments in avoid! think of signal example.
 
 env = make_env(env_name, sampler, max_steps=225, render_mode=render, eval_mode=True)
 config = model_configs['letter']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
-agent = Agent(model)
+agent = Agent(model, depth=3, verbose=render is not None)
 
-num_episodes = 1000
+num_episodes = 500
 
 num_successes = 0
 num_violations = 0
@@ -113,8 +115,8 @@ for i in pbar:
         break
 
 env.close()
-print(f'Success rate: {num_successes / num_episodes}')
-print(f'Violation rate: {num_violations / num_episodes}')
+print(f'Success rate: {num_successes / num_episodes:.3f}')
+print(f'Violation rate: {num_violations / num_episodes:.3f}')
 print(f'Num total: {num_episodes}')
 print(f'ADR (total): {np.mean(rets):.3f}')
 print(f'ADR (successful): {np.mean(np.array(rets)[success_mask]):.3f}')

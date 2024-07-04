@@ -5,33 +5,66 @@ import torch
 
 import preprocessing
 from model.model import Model
-from sequence.ldba_sequence_search import LDBASequenceSearch
+from sequence.ldba_dijkstra_search import LDBASequenceSearch
+from sequence.ldba_greedy_search import LDBAGreedySearch
 
 
 class Agent:
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, depth: int, verbose=False):
         self.model = model
         self.sequence = None
-        self.search = LDBASequenceSearch(model, 3)
-        self.state_to_visited_states = {}
-        self.previous_state = None
+        self.search = LDBAGreedySearch(model, depth)
+        self.index = 0
+        self.verbose = verbose
 
     def reset(self):
-        self.state_to_visited_states.clear()
-        self.previous_state = None
+        self.sequence = None
+        self.index = 0
+
+    # def get_action(self, obs, info, deterministic=False, shielding=False) -> np.ndarray:
+    #     state = obs['ldba_state']
+    #     if 'ldba_state_changed' in info:
+    #         if self.sequence is None:
+    #             self.sequence = self.get_sequence(obs['goal'])
+    #         else:
+    #             props = info['propositions']
+    #             reach, avoid = self.sequence[self.index]
+    #             if reach in props:
+    #                 self.index += 1
+    #             else:
+    #                 if avoid in props:
+    #                     self.index -= 1
+    #         # print(f'Selected sequence: {self.sequence[self.index:]}')
+    #     assert self.sequence is not None
+    #     obs['goal'] = self.sequence[self.index:]
+    #     return self.get_action_value(obs, deterministic, shielding)[0]
+    #
+    # def get_sequence(self, f):
+    #     seq = []
+    #     collect = []
+    #     for c in f:
+    #         if 'a' <= c <= 'z':
+    #             collect.append(c)
+    #         if len(collect) == 2:
+    #             seq.append((collect[1], collect[0]))
+    #             collect = []
+    #     return seq
 
     def get_action(self, obs, info, deterministic=False, shielding=False) -> np.ndarray:
-        state = obs['ldba_state']
         if 'ldba_state_changed' in info:
-            if self.previous_state is None:
-                self.state_to_visited_states[state] = set()
+            if self.sequence is None:
+                self.sequence = self.search(obs['ldba'], obs['ldba_state'], obs)
             else:
-                if state not in self.state_to_visited_states:
-                    self.state_to_visited_states[state] = copy.deepcopy(self.state_to_visited_states[self.previous_state])
-                    self.state_to_visited_states[state].add(self.previous_state)
-            self.previous_state = state
-            self.sequence = self.search(obs['ldba'], obs['ldba_state'], self.state_to_visited_states[state], obs)
-            # print(f'Selected sequence: {self.sequence}')
+                # props = info['propositions']
+                # reach, avoid = self.sequence[0]
+                # if reach in props:
+                #     self.sequence.pop(0)
+                #     if len(self.sequence) == 0:
+                #         self.sequence = None
+                # else:
+                self.sequence = self.search(obs['ldba'], obs['ldba_state'], obs)
+            if self.verbose:
+                print(f'Selected sequence: {self.sequence}')
         assert self.sequence is not None
         obs['goal'] = self.sequence
         return self.get_action_value(obs, deterministic, shielding)[0]

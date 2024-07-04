@@ -21,7 +21,8 @@ def make_env(
         max_steps: Optional[int] = None,
         render_mode: str | None = None,
         eval_mode: bool = False,
-        terminate_on_acceptance: bool = True
+        terminate_on_acceptance: bool = True,
+        sequence=False
 ):
     from envs.pretraining.pretraining_env import PretrainingEnv
     from envs.seq_wrapper import SequenceWrapper
@@ -48,13 +49,13 @@ def make_env(
 
     propositions = get_env_attr(env, 'get_propositions')()
     sample_task = sampler(propositions)
-    if eval_mode:
+    if not sequence:
         # env = PartiallyOrderedWrapper(env, sample_task)
         env = LTLWrapper(env, sample_task)
         env = LDBAWrapper(env, terminate_on_acceptance)
         # env = LDBAToSequenceWrapper(env)
     else:
-        env = SequenceWrapper(env, sample_task, False)
+        env = SequenceWrapper(env, sample_task, eval_mode)
     env = TimeLimit(env, max_episode_steps=max_steps)
     env = RemoveTruncWrapper(env)
     return env
