@@ -16,14 +16,12 @@ class Model(nn.Module):
     def __init__(self,
                  actor: nn.Module,
                  critic: nn.Module,
-                 q_net: nn.Module,
                  ltl_net: nn.Module,
                  env_net: Optional[nn.Module],
                  ):
         super().__init__()
         self.actor = actor
         self.critic = critic
-        self.q_net = q_net
         self.ltl_net = ltl_net
         self.env_net = env_net
         self.recurrent = False
@@ -39,14 +37,6 @@ class Model(nn.Module):
         dist = self.actor(embedding)
         value = self.critic(embedding).squeeze(1)
         return dist, value
-
-    def forward_q(self, obs, action):
-        embedding = self.compute_embedding(obs)
-        # TODO: split into continuous and discrete module
-        action = torch.nn.functional.one_hot(action.long(), num_classes=4)
-        embedding = torch.cat([embedding, action], dim=1)
-        q_value = self.q_net(embedding).squeeze(1)
-        return q_value
 
 
 def build_model(
@@ -64,20 +54,9 @@ def build_model(
         assert len(obs_shape) == 1
         env_net = None
         env_embedding_dim = obs_shape[0]
-    # graph_feature_dim = env.observation_space['pos_graph'].node_space.shape[0]
-    # ltl_embedding_dim = 2 * model_config.gnn.embedding_dim
-    # ltl_net = LtlPosNegNet(graph_feature_dim, ltl_embedding_dim,
-    #                        num_layers=model_config.gnn.num_layers,
-    #                        concat_initial_features=model_config.gnn.concat_initial_features)
-
-    # if ltl_model_weights is not None:
-    #     ltl_net.load_state_dict(ltl_model_weights)
-    # if freeze_ltl_model:
-    #     for param in ltl_net.parameters():
-    #         param.requires_grad = False
 
     # ltl_embedding_dim = 32
-    # num_assignments = 4
+    # num_assignments = 4  # TODO: fix this
     ltl_embedding_dim = 64
     num_assignments = 12
     ltl_net = LDBARNN(num_assignments, ltl_embedding_dim, num_layers=1)  # TODO: careful, parameterise this!
@@ -97,11 +76,7 @@ def build_model(
                                          activation=model_config.critic.activation,
                                          final_layer_activation=False)
 
-    q_net = torch_utils.make_mlp_layers([env_embedding_dim + ltl_net.embedding_size + action_dim, *model_config.critic.layers, 1],
-                                         activation=model_config.critic.activation,
-                                         final_layer_activation=False)
-
-    model = Model(actor, critic, q_net, ltl_net, env_net)
+    model = Model(actor, critic, ltl_net, env_net)
 
     if "model_state" in training_status:
         updated_training_status = copy.deepcopy(training_status)
@@ -110,10 +85,5 @@ def build_model(
                 weights = training_status["model_state"][key]
                 del updated_training_status["model_state"][key]
                 updated_training_status["model_state"][f"env_net.mlp.{key[len('env_net.'):]}"] = weights
-        q_keys = ["q_net.0.weight", "q_net.0.bias", "q_net.2.weight", "q_net.2.bias", "q_net.4.weight", "q_net.4.bias"]
-        current_state_dict = model.state_dict()
-        for key in q_keys:
-            if key not in training_status["model_state"]:
-                updated_training_status["model_state"][key] = current_state_dict[key]
         model.load_state_dict(updated_training_status["model_state"])
     return model
