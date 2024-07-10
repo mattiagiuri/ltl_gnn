@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import simple_parsing
 import wandb
 
-from model.ltl.batched_sequence import BatchedSequence
+from preprocessing.batched_sequence import BatchedSequence
 from src.utils.utils import kill_all_wandb_processes
 
 

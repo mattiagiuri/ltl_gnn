@@ -5,7 +5,6 @@ import os
 import torch
 
 import utils
-from preprocessing import VOCAB
 
 
 class ModelStore:
@@ -23,8 +22,8 @@ class ModelStore:
 
     def save_training_status(self, status: dict[str, any]):
         torch.save(status, f'{self.path}/status.pth')
-        with open(f'{self.path}/vocab.json', 'w+') as f:
-            json.dump(VOCAB, f, indent=4)
+        # with open(f'{self.path}/vocab.json', 'w+') as f:
+        #     json.dump(VOCAB, f, indent=4)
 
     def save_ltl_net(self, ltl_net: dict[str, any]):
         torch.save(ltl_net, f'{self.path}/ltl_net.pth')
@@ -35,9 +34,9 @@ class ModelStore:
     def load_training_status(self, map_location=None) -> dict[str, any]:
         if not os.path.exists(f'{self.path}/status.pth'):
             raise FileNotFoundError(f'No training status found at {self.path}/status.pth')
-        VOCAB.clear()
-        with open(f'{self.path}/vocab.json', 'r') as f:
-            VOCAB.update(json.load(f))
+        #  VOCAB.clear()
+        #  with open(f'{self.path}/vocab.json', 'r') as f:
+        #      VOCAB.update(json.load(f))
         return torch.load(f'{self.path}/status.pth', map_location=map_location)
 
     def load_pretrained(self) -> dict[str, any]:

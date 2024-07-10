@@ -1,4 +1,3 @@
-import copy
 from typing import Any, Optional
 
 import gymnasium
@@ -6,7 +5,8 @@ import torch
 import torch.nn as nn
 
 from config import ModelConfig
-from model.ltl.rnn import LDBARNN
+from model.ltl.ltl_net import LTLNet
+from preprocessing.vocab import VOCAB
 from model.policy import ContinuousActor
 from model.policy import DiscreteActor
 from utils import torch_utils
@@ -28,7 +28,6 @@ class Model(nn.Module):
 
     def compute_embedding(self, obs):
         env_embedding = self.env_net(obs.features) if self.env_net is not None else obs.features
-        # ltl_embedding = self.ltl_net(obs.pos_graph, obs.neg_graph)
         ltl_embedding = self.ltl_net(obs.seq)
         return torch.cat([env_embedding, ltl_embedding], dim=1)
 
@@ -55,35 +54,26 @@ def build_model(
         env_net = None
         env_embedding_dim = obs_shape[0]
 
-    # ltl_embedding_dim = 32
-    # num_assignments = 4  # TODO: fix this
-    ltl_embedding_dim = 64
-    num_assignments = 12
-    ltl_net = LDBARNN(num_assignments, ltl_embedding_dim, num_layers=1)  # TODO: careful, parameterise this!
-    print(torch_utils.get_number_of_params(ltl_net))
+    embedding = nn.Embedding(len(VOCAB), model_config.ltl_embedding_dim, padding_idx=VOCAB['PAD'])
+    ltl_net = LTLNet(embedding, model_config.num_gnn_layers, model_config.num_rnn_layers)
+    print(f'Number of LTL net params: {torch_utils.get_number_of_params(ltl_net)}')
 
     if isinstance(env.action_space, gymnasium.spaces.Discrete):
         actor = DiscreteActor(action_dim=action_dim,
-                              layers=[env_embedding_dim + ltl_net.embedding_size, *model_config.actor.layers],
+                              layers=[env_embedding_dim + ltl_net.embedding_dim, *model_config.actor.layers],
                               activation=model_config.actor.activation)
     else:
         actor = ContinuousActor(action_dim=action_dim,
-                                layers=[env_embedding_dim + ltl_net.embedding_size, *model_config.actor.layers],
+                                layers=[env_embedding_dim + ltl_net.embedding_dim, *model_config.actor.layers],
                                 activation=model_config.actor.activation,
                                 state_dependent_std=model_config.actor.state_dependent_std)
 
-    critic = torch_utils.make_mlp_layers([env_embedding_dim + ltl_net.embedding_size, *model_config.critic.layers, 1],
+    critic = torch_utils.make_mlp_layers([env_embedding_dim + ltl_net.embedding_dim, *model_config.critic.layers, 1],
                                          activation=model_config.critic.activation,
                                          final_layer_activation=False)
 
     model = Model(actor, critic, ltl_net, env_net)
 
     if "model_state" in training_status:
-        updated_training_status = copy.deepcopy(training_status)
-        for key in training_status["model_state"]:
-            if key.startswith("env_net") and not (key.startswith("env_net.mlp") or key.startswith("env_net.conv")):
-                weights = training_status["model_state"][key]
-                del updated_training_status["model_state"][key]
-                updated_training_status["model_state"][f"env_net.mlp.{key[len('env_net.'):]}"] = weights
-        model.load_state_dict(updated_training_status["model_state"])
+        model.load_state_dict(training_status["model_state"])
     return model

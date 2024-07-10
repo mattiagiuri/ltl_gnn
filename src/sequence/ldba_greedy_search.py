@@ -2,44 +2,25 @@ from dataclasses import dataclass
 
 from torch import nn
 
-from ltl.automata import LDBA, LDBATransition
+from ltl.automata import LDBA, LDBATransition, LDBASequence
 from ltl.logic import FrozenAssignment
 from preprocessing import preprocessing
 
 
 @dataclass(eq=True, frozen=True)
 class Path:
-    path: tuple[tuple[frozenset[FrozenAssignment], frozenset[FrozenAssignment]], ...]  # (valid assignments, avoid)
+    sequence: LDBASequence  # (valid assignments, avoid)
     ldba_states: tuple[int, ...]
     accepting: tuple[bool, ...]
 
     def extend(self, reach: set[FrozenAssignment], avoid: set[FrozenAssignment], state: int, accepting: bool) -> 'Path':
-        path = self.path + ((frozenset(reach), frozenset(avoid)),)
+        path = self.sequence + ((frozenset(reach), frozenset(avoid)),)
         states = self.ldba_states + (state,)
         acc = self.accepting + (accepting,)
         return Path(path, states, acc)
 
-    def to_sequence(self) -> list[tuple[str, str]]:
-        seq = []
-        for reach, avoid in self.path:
-            assert len(reach) == 1
-            reach = list(reach)[0]
-            positive = [t[0] for t in reach if t[1]]
-            assert len(positive) == 1
-            reach = positive[0]
-            assert len(avoid) <= 1
-            if len(avoid) == 1:
-                avoid = list(avoid)[0]
-                positive = [t[0] for t in avoid if t[1]]
-                assert len(positive) == 1
-                avoid = positive[0]
-            else:
-                avoid = 'empty'
-            seq.append((reach, avoid))
-        return seq
-
     def __repr__(self):
-        return str(self.to_sequence())
+        return self.sequence.__repr__()
 
 
 @dataclass(eq=True, frozen=True)
@@ -53,10 +34,10 @@ class LDBAGreedySearch:
         self.model = model
         self.depth = depth
 
-    def __call__(self, ldba: LDBA, ldba_state: int, obs):
+    def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:
         path = self.search(ldba, ldba_state, obs)
         path = self.augment_path(ldba, path)
-        return path.to_sequence()
+        return path.sequence
 
     def search(self, ldba: LDBA, ldba_state: int, obs) -> Path:
         states_on_path: set[int] = set()
@@ -84,6 +65,9 @@ class LDBAGreedySearch:
                     continue
                 new_path = path.extend(t.valid_assignments, avoid, t.target, t.accepting)
                 paths.update(dfs(t.target, new_path, depth + 1, new_states_on_current_path))
+
+            # TODO: implement pruning!!!
+
             return paths
 
         path = Path((), (ldba_state,), ())  # TODO: implement backtracking
@@ -100,7 +84,7 @@ class LDBAGreedySearch:
                     path = best_accepting_path
                     continue
             next_state = best_path.ldba_states[index + 1]
-            path = path.extend(*best_path.path[index], next_state, best_path.accepting[index])
+            path = path.extend(*best_path.sequence[index], next_state, best_path.accepting[index])
             states_on_path.add(next_state)
             index += 1
         return path
@@ -117,7 +101,7 @@ class LDBAGreedySearch:
         return avoid
 
     def get_value(self, path: Path, obs) -> float:
-        obs['goal'] = path.to_sequence()
+        obs['goal'] = path.sequence
         if not (isinstance(obs, list) or isinstance(obs, tuple)):
             obs = [obs]
         preprocessed = preprocessing.preprocess_obss(obs)
@@ -131,7 +115,7 @@ class LDBAGreedySearch:
             avoid = set()
             visited.add(state)
             for t in ldba.state_to_transitions[state]:
-                if t.valid_assignments == path.path[i][0]:
+                if t.valid_assignments == path.sequence[i][0]:
                     continue
                 if t.source == t.target:
                     continue
@@ -141,7 +125,7 @@ class LDBAGreedySearch:
                         continue
                     avoid.update(frozenset(t.valid_assignments))
                     continue
-            augmented_path.append((path.path[i][0], frozenset(avoid)))
+            augmented_path.append((path.sequence[i][0], frozenset(avoid)))
         return Path(tuple(augmented_path), path.ldba_states, path.accepting)
 
     def only_non_accepting_loops(self, ldba: LDBA, state: int, visited: set[int]) -> bool:

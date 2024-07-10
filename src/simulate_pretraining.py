@@ -1,13 +1,9 @@
 import json
-from pprint import pprint
 
 import numpy as np
 import torch
 
 from envs import make_sequence_env, get_env_attr
-from ltl import EventuallySampler, ReachFourSampler
-from ltl.samplers.fixed_sampler import FixedSampler
-from model.ltl.batched_sequence import BatchedSequence
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs

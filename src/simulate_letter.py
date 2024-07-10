@@ -15,11 +15,13 @@ from model.agent import Agent
 from config import model_configs
 from sequence import RandomSequenceSampler
 from sequence.fixed_sequence_sampler import FixedSequenceSampler
+from sequence.ldba_dijkstra_search import LDBADijkstraSearch
+from sequence.ldba_greedy_search import LDBAGreedySearch
 from utils.model_store import ModelStore
 
 env_name = 'LetterEnv-v0'
-exp = '64_emb_4_epochs_2_layers'  # best so far: 64_emb_4_epochs_2_layers
-seed = 2
+exp = 'novel'  # best so far: 64_emb_4_epochs_2_layers
+seed = 1
 render_modes = [None, 'human', 'path']
 render = render_modes[2]
 
@@ -31,18 +33,17 @@ torch.random.manual_seed(seed)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=True)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
-sampler = AvoidSampler.partial(depth=6, num_conjuncts=1)
+sampler = AvoidSampler.partial(depth=2, num_conjuncts=3)
 deterministic = False
-shielding = False
 
 # TODO: crucial: paths need to have all other assignments in avoid! think of signal example.
 
-env = make_env(env_name, sampler, max_steps=225, render_mode=render, eval_mode=True)
+env = make_env(env_name, sampler, max_steps=75, render_mode=render)
 config = model_configs['letter']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
-agent = Agent(model, depth=3, verbose=render is not None)
+agent = Agent(model, depth=2, search_cls=LDBAGreedySearch, verbose=render is not None)
 
 num_episodes = 500
 
@@ -67,7 +68,7 @@ for i in pbar:
     done = False
     num_steps = 0
     while not done:
-        action = agent.get_action(obs, info, deterministic=deterministic, shielding=shielding)
+        action = agent.get_action(obs, info, deterministic=deterministic)
         action = action.flatten()[0]
         actions.append(action)
         obs, reward, done, info = env.step(action)

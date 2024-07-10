@@ -6,10 +6,10 @@ from sequence.ldba_greedy_search import LDBAGreedySearch
 
 
 class Agent:
-    def __init__(self, model: Model, depth: int, verbose=False):
+    def __init__(self, model: Model, depth: int, search_cls, verbose=False):
         self.model = model
         self.sequence = None
-        self.search = LDBAGreedySearch(model, depth)
+        self.search = search_cls(model, depth)
         self.verbose = verbose
 
     def reset(self):

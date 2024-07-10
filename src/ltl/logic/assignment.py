@@ -41,6 +41,10 @@ class Assignment(MutableMapping):
         assignments.append(Assignment({p: False for p in propositions}))
         return assignments
 
+    @staticmethod
+    def single_proposition(p: str, propositions: set[str]) -> 'Assignment':
+        return Assignment({p: True} | {q: False for q in propositions if q != p})
+
     def satisfies(self, label: str) -> bool:
         if label == 't':
             return True
@@ -98,7 +102,8 @@ class FrozenAssignment:
         return str(self.assignment)
 
     def __repr__(self):
-        return repr(self.assignment)
+        active = set(t[0] for t in self.assignment if t[1])
+        return ' | '.join(active)
 
     def __iter__(self):
         return iter(self.assignment)

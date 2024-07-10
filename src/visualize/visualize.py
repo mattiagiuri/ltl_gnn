@@ -71,12 +71,10 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
     if prune:
         ldba.prune(Assignment.zero_or_one_propositions(set(ldba.propositions)))
         # ldba.prune([
-        #     Assignment(dict(a=False, b=False, r=False)),
-        #     Assignment(dict(a=False, b=False, r=True)),
-        #     Assignment(dict(a=False, b=True, r=False)),
-        #     Assignment(dict(a=False, b=True, r=True)),
-        #     Assignment(dict(a=True, b=False, r=False)),
-        #     Assignment(dict(a=True, b=False, r=True)),
+        #     Assignment(dict(a=False, r=False)),
+        #     Assignment(dict(a=False, r=True)),
+        #     Assignment(dict(a=True, r=False)),
+        #     Assignment(dict(a=True, r=True)),
         # ])
         print('Pruned impossible transitions.')
     ldba.complete_sink_state()
@@ -122,7 +120,10 @@ if __name__ == '__main__':
     # f = '(F (a & (F d))) | (F (b & (F (c & (F d)))))'
     # f = '(!a U (k & (!i U (c & (!b U (h & (!j U (g & (!f U (d & (!l U e)))))))))))'
     # f = 'F (r & (a | b))'
-    f = '!(a | b) U c'
+    # f = '!(a | b) U c'
+    # f = 'F (a & !r)'
+    # f = '(F a) U b'
+    f = '(!e U (i & (!j U d))) & (!c U (h & (!b U f))) & (!g U (a & (!l U k)))'
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)

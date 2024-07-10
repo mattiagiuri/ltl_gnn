@@ -1,10 +1,10 @@
 import torch
 from torch import nn
 
-from model.ltl.batched_sequence import BatchedSequence
+from preprocessing.batched_sequence import BatchedSequence
 
 
-class LDBARNN(nn.Module):
+class ReachAvoidRNN(nn.Module):
     def __init__(
             self,
             num_assignments: int,

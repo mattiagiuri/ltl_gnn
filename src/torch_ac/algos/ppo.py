@@ -109,9 +109,10 @@ class PPO(BaseAlgo):
 
                 self.optimizer.zero_grad()
                 batch_loss.backward()
+                # p.grad can be None if the GNN is not used (e.g. because all assignments only involve a single proposition)
                 grad_norm = sum(
-                    p.grad.data.norm(2).item() ** 2 for p in self.model.parameters() if p.requires_grad) ** 0.5
-                torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad],
+                    p.grad.data.norm(2).item() ** 2 for p in self.model.parameters() if p.requires_grad and p.grad is not None) ** 0.5
+                torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad and p.grad is not None],
                                                self.max_grad_norm)
                 self.optimizer.step()
 

@@ -23,17 +23,17 @@ class SearchNode:
         return self.ldba_state > other.ldba_state  # arbitrary way to break ties
 
 
-class LDBASequenceSearch:
+class LDBADijkstraSearch:
     def __init__(self, model: nn.Module, depth: int):
         self.model = model
         self.depth = depth
 
-    def __call__(self, ldba: LDBA, ldba_state: int, visited_ldba_states: set[int], obs):
-        path = self.dijkstra(ldba, ldba_state, visited_ldba_states, obs)
+    def __call__(self, ldba: LDBA, ldba_state: int, obs):
+        path = self.dijkstra(ldba, ldba_state, obs)
         path = self.augment_path(ldba, path)
-        return self.to_sequence(path)
+        return path
 
-    def dijkstra(self, ldba: LDBA, ldba_state: int, visited_ldba_states: set[int], obs) -> list[LDBATransition]:
+    def dijkstra(self, ldba: LDBA, ldba_state: int, obs) -> list[LDBATransition]:
         pq = PriorityQueue()
         pq.push(SearchNode(ldba_state, ()), 0)
         visited = set()
@@ -44,7 +44,7 @@ class LDBASequenceSearch:
                 break
             node, cost = pq.pop()
             visited.add(node.ldba_state)
-            avoid_transitions = self.collect_avoid_transitions(ldba, node.ldba_state, visited_ldba_states)
+            avoid_transitions = self.collect_avoid_transitions(ldba, node.ldba_state)
             avoid_assignments = frozenset()
             if len(avoid_transitions) > 0:
                 avoid_assignments = frozenset(set.union(*[avoid.valid_assignments for avoid in avoid_transitions]))
@@ -74,13 +74,13 @@ class LDBASequenceSearch:
         return path
 
     @staticmethod
-    def collect_avoid_transitions(ldba: LDBA, state: int, visited_ldba_states: set[int]) -> set[LDBATransition]:
+    def collect_avoid_transitions(ldba: LDBA, state: int) -> set[LDBATransition]:
         avoid = set()
         for transition in ldba.state_to_transitions[state]:
             if transition.source == transition.target:
                 continue
             scc = ldba.state_to_scc[transition.target]
-            if scc.bottom and not scc.accepting or transition.target in visited_ldba_states:
+            if scc.bottom and not scc.accepting:
                 avoid.add(transition)
         return avoid
 
@@ -94,42 +94,12 @@ class LDBASequenceSearch:
         return cost
 
     def get_value(self, obs, path) -> float:
-        obs['goal'] = self.to_sequence(path)
+        obs['goal'] = path
         if not (isinstance(obs, list) or isinstance(obs, tuple)):
             obs = [obs]
         preprocessed = preprocessing.preprocess_obss(obs)
         _, value = self.model(preprocessed)
         return max(1e-8, min(1.0, value.item()))
-
-    def debug(self, obs, seq):
-        obs['goal'] = seq
-        if not (isinstance(obs, list) or isinstance(obs, tuple)):
-            obs = [obs]
-        preprocessed = preprocessing.preprocess_obss(obs)
-        _, value = self.model(preprocessed)
-        return value
-
-    @staticmethod
-    def to_sequence(path):
-        seq = []
-        for reach, avoid in path:
-            # if len(reach) == 13:  # TODO
-            #     continue
-            assert len(reach) == 1
-            reach = list(reach)[0]
-            positive = [t[0] for t in reach if t[1]]
-            assert len(positive) == 1
-            reach = positive[0]
-            assert len(avoid) <= 1
-            if len(avoid) == 1:
-                avoid = list(avoid)[0]
-                positive = [t[0] for t in avoid if t[1]]
-                assert len(positive) == 1
-                avoid = positive[0]
-            else:
-                avoid = 'empty'
-            seq.append((reach, avoid))
-        return seq
 
     def augment_path(self, ldba: LDBA, path: list[LDBATransition]):
         augmented_path = []

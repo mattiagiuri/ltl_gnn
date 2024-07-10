@@ -41,17 +41,12 @@ class ActorConfig:
 
 
 @dataclass
-class GNNConfig:
-    embedding_dim: int
-    num_layers: int
-    concat_initial_features: bool = True
-
-
-@dataclass
 class ModelConfig:
     actor: ActorConfig
     critic: StandardNetConfig
-    gnn: GNNConfig
+    ltl_embedding_dim: int
+    num_rnn_layers: int
+    num_gnn_layers: int
     env_net: Optional[AbstractModelConfig]
 
 
@@ -68,11 +63,9 @@ default = ModelConfig(
         layers=[64, 64],
         activation=nn.Tanh
     ),
-    gnn=GNNConfig(
-        embedding_dim=16,
-        num_layers=2,
-        concat_initial_features=True
-    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    num_gnn_layers=2,
     env_net=StandardNetConfig(
         layers=[128, 64],
         activation=nn.Tanh
@@ -88,11 +81,9 @@ letter = ModelConfig(
         layers=[64, 64],
         activation=nn.Tanh
     ),
-    gnn=GNNConfig(
-        embedding_dim=16,
-        num_layers=2,
-        concat_initial_features=True
-    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    num_gnn_layers=2,
     env_net=ConvNetConfig(
         channels=[16, 32, 64],
         kernel_size=(2, 2),
@@ -110,10 +101,8 @@ pretraining = ModelConfig(
         layers=[],
         activation=None
     ),
-    gnn=GNNConfig(
-        embedding_dim=16,
-        num_layers=2,
-        concat_initial_features=False
-    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    num_gnn_layers=2,
     env_net=None
 )

@@ -4,6 +4,7 @@ import gymnasium
 from gymnasium.wrappers import FlattenObservation, TimeLimit
 
 from envs.remove_trunc_wrapper import RemoveTruncWrapper
+from preprocessing.vocab import init_vocab
 
 
 def get_env_attr(env, attr: str):
@@ -20,14 +21,11 @@ def make_env(
         sampler: Callable[[list[str]], Callable],
         max_steps: Optional[int] = None,
         render_mode: str | None = None,
-        eval_mode: bool = False,
         terminate_on_acceptance: bool = True,
         sequence=False
 ):
     from envs.pretraining.pretraining_env import PretrainingEnv
     from envs.seq_wrapper import SequenceWrapper
-    from envs.partially_ordered_wrapper import PartiallyOrderedWrapper
-    from envs.ldba_to_seq_wrapper import LDBAToSequenceWrapper
     from envs.ldba_wrapper import LDBAWrapper
     from envs.ltl_wrapper import LTLWrapper
 
@@ -48,6 +46,7 @@ def make_env(
         raise NotImplementedError('DMC environments not implemented yet.')
 
     propositions = get_env_attr(env, 'get_propositions')()
+    init_vocab(propositions)
     sample_task = sampler(propositions)
     if not sequence:
         # env = PartiallyOrderedWrapper(env, sample_task)
@@ -55,7 +54,7 @@ def make_env(
         env = LDBAWrapper(env, terminate_on_acceptance)
         # env = LDBAToSequenceWrapper(env)
     else:
-        env = SequenceWrapper(env, sample_task, eval_mode)
+        env = SequenceWrapper(env, sample_task)
     env = TimeLimit(env, max_episode_steps=max_steps)
     env = RemoveTruncWrapper(env)
     return env

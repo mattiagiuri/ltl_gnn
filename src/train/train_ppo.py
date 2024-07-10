@@ -16,6 +16,7 @@ import utils
 from model.model import build_model
 from envs import make_env, get_env_attr
 from sequence import CurriculumSequenceSampler
+from sequence.random_curriculum_sampler import RandomCurriculumSampler
 from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
@@ -79,10 +80,8 @@ class Trainer:
         utils.set_seed(self.args.experiment.seed)
         envs = []
         for i in range(self.args.experiment.num_procs):
-            # ltl_sampler = self.args.experiment.ltl_sampler
-            # if ltl_sampler is not None and ltl_sampler not in sampler_map:
-            #     raise ValueError(f"Unknown sampler {ltl_sampler}.")
-            sampler = CurriculumSequenceSampler.partial()
+            # sampler = CurriculumSequenceSampler.partial()
+            sampler = RandomCurriculumSampler.partial()
             envs.append(make_env(self.args.experiment.env, sampler, sequence=True))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
