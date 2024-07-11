@@ -16,6 +16,3 @@ class CurriculumSampler:
 
     def __call__(self):
         return self.curriculum.sample(self.propositions)
-
-    def update_task_success(self, goal_success: dict[LDBASequence, float]):
-        self.curriculum.update_task_success(goal_success, verbose=True)

@@ -54,9 +54,8 @@ class Trainer:
         while num_steps < self.args.experiment.num_steps:
             start = time.time()
             exps, logs = algo.collect_experiences()
-            for env in envs:
-                seq_sampler = get_env_attr(env, 'sample_sequence')
-                seq_sampler.update_task_success(logs['avg_goal_success'])
+            curriculum = get_env_attr(envs[0], 'sample_sequence').curriculum
+            curriculum.update_task_success(logs['avg_goal_success'], verbose=True)
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)
             update_time = time.time() - start
@@ -80,7 +79,8 @@ class Trainer:
         envs = []
         for i in range(self.args.experiment.num_procs):
             # sampler = CurriculumSequenceSampler.partial()
-            sampler = CurriculumSampler.partial(LETTER_CURRICULUM)  # TODO: make parameter
+            sampler = CurriculumSampler.partial(
+                LETTER_CURRICULUM)  # TODO: make parameter. important that all share same curriculum
             # sampler = RandomCurriculumSampler.partial()
             envs.append(make_env(self.args.experiment.env, sampler, sequence=True))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
