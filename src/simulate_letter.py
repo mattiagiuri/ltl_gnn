@@ -1,22 +1,17 @@
-import copy
 import random
-import time
 
 import numpy as np
-import pygame
 import torch
 from tqdm import trange
 
 from envs import make_env
-from ltl import PartiallyOrderedSampler
+from ltl.samplers.avoid_multiple_sampler import AvoidMultipleSampler
 from ltl.samplers.avoid_sampler import AvoidSampler
+from ltl.samplers.fixed_sampler import FixedSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
-from sequence import RandomSequenceSampler
-from sequence.fixed_sequence_sampler import FixedSequenceSampler
-from sequence.ldba_dijkstra_search import LDBADijkstraSearch
-from sequence.ldba_greedy_search import LDBAGreedySearch
+from sequence.search import BFS, DijkstraSearch
 from utils.model_store import ModelStore
 
 env_name = 'LetterEnv-v0'
@@ -24,6 +19,12 @@ exp = 'novel'  # best so far: 64_emb_4_epochs_2_layers
 seed = 1
 render_modes = [None, 'human', 'path']
 render = render_modes[2]
+# TODO: manual benchmark to test avoid capability
+# TODO: prevent cycling back and forth between non-accepting LDBA states
+# TODO: evaluate on reach-avoid 2 / 6 with perfect path
+# TODO: look at small examples to see if (i) reach multiple propositions are working (ii) avoid multiple are working
+# TODO: I need a heuristic in the search that tells me what the remaining cost might be. One potential idea: Max Prokop!
+# TODO: experiments with much fewer letters where all paths can be enumerated. compare to baselines.
 
 random.seed(seed)
 np.random.seed(seed)
@@ -33,9 +34,13 @@ torch.random.manual_seed(seed)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=True)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
-sampler = AvoidSampler.partial(depth=2, num_conjuncts=3)
-deterministic = False
+# sampler = AvoidSampler.partial(depth=1, num_conjuncts=1)
+# sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
+sampler = FixedSampler.partial('!a U j')
 
+deterministic = True
+
+# TODO: partially ordered tasks i.i.d.
 # TODO: crucial: paths need to have all other assignments in avoid! think of signal example.
 
 env = make_env(env_name, sampler, max_steps=75, render_mode=render)
@@ -43,7 +48,7 @@ config = model_configs['letter']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
-agent = Agent(model, depth=2, search_cls=LDBAGreedySearch, verbose=render is not None)
+agent = Agent(model, search_cls=BFS, verbose=render is not None, depth=1)
 
 num_episodes = 500
 
@@ -110,8 +115,13 @@ for i in pbar:
 
                 finish = env.wait_for_input()
             elif not render:
-                pbar.set_postfix({'success': num_successes / (i + 1), 'ADR(t)': np.mean(rets),
-                                  'ADR(s)': np.mean(np.array(rets)[success_mask]), 'AS': np.mean(steps)})
+                pbar.set_postfix({
+                    's': num_successes / (i + 1),
+                    'v': num_violations / (i + 1),
+                    'ADR(t)': np.mean(rets),
+                    'ADR(s)': np.mean(np.array(rets)[success_mask]),
+                    'AS': np.mean(steps)
+                })
     if finish:
         break
 
@@ -123,4 +133,5 @@ print(f'ADR (total): {np.mean(rets):.3f}')
 print(f'ADR (successful): {np.mean(np.array(rets)[success_mask]):.3f}')
 print(f'AS: {np.mean(steps):.3f}')
 
-print(f'{num_successes / num_episodes:.3f},{num_violations / num_episodes:.3f},{np.mean(rets):.3f},{np.mean(np.array(rets)[success_mask]):.3f},{np.mean(steps):.3f}')
+print(
+    f'{num_successes / num_episodes:.3f},{num_violations / num_episodes:.3f},{np.mean(rets):.3f},{np.mean(np.array(rets)[success_mask]):.3f},{np.mean(steps):.3f}')

@@ -1,4 +1,5 @@
 import random
+from pprint import pprint
 
 
 class AvoidSampler:
@@ -11,29 +12,31 @@ class AvoidSampler:
         self.propositions = sorted(propositions)
         self.depth = depth
         self.num_conjuncts = num_conjuncts
-        if 2 * self.depth * self.num_conjuncts > len(self.propositions):
-            raise ValueError('Not enough propositions to sample from')
+        # if 2 * self.depth * self.num_conjuncts > len(self.propositions):
+        #     raise ValueError('Not enough propositions to sample from')
 
     def __call__(self) -> str:
-        num_props = 2 * self.depth * self.num_conjuncts
+        d = self.depth if isinstance(self.depth, int) else random.randint(*self.depth)
+        n = self.num_conjuncts if isinstance(self.num_conjuncts, int) else random.randint(*self.num_conjuncts)
+        num_props = 2 * d * n
         props = random.sample(self.propositions, num_props)
         formula = ''
-        for i in range(self.num_conjuncts):
+        for i in range(n):
             conjunct = f'!{props.pop()} U {props.pop()}'
-            for _ in range(self.depth - 1):
+            for _ in range(d - 1):
                 conjunct = f'!{props.pop()} U ({props.pop()} & ({conjunct}))'
             formula += f'({conjunct})'
-            if i < self.num_conjuncts - 1:
+            if i < n - 1:
                 formula += ' & '
         return formula
 
 
 if __name__ == '__main__':
     props = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']
-    depth = 6
-    num_conjuncts = 1
+    depth = (1, 3)
+    num_conjuncts = (1, 2)
     sampler = AvoidSampler(props, depth, num_conjuncts)
 
-    seqs = [sampler() for _ in range(2)]
-    print(seqs)
+    seqs = [sampler() for _ in range(5)]
+    pprint(seqs)
 
