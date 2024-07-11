@@ -2,14 +2,13 @@ import numpy as np
 
 import preprocessing
 from model.model import Model
-from sequence.ldba_greedy_search import LDBAGreedySearch
 
 
 class Agent:
-    def __init__(self, model: Model, depth: int, search_cls, verbose=False):
+    def __init__(self, model: Model, search_cls, verbose=False, **search_kwargs):
         self.model = model
         self.sequence = None
-        self.search = search_cls(model, depth)
+        self.search = search_cls(model, **search_kwargs)
         self.verbose = verbose
 
     def reset(self):

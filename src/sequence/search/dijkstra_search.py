@@ -4,8 +4,7 @@ from typing import Optional
 
 from torch import nn
 
-from ltl.automata import LDBA, LDBATransition
-from ltl.logic import FrozenAssignment
+from ltl.automata import LDBA, LDBATransition, LDBASequence
 from preprocessing import preprocessing
 from utils import PriorityQueue
 
@@ -13,7 +12,7 @@ from utils import PriorityQueue
 @dataclass(eq=True, frozen=True)
 class SearchNode:
     ldba_state: int
-    path: tuple[tuple[frozenset[FrozenAssignment], frozenset[FrozenAssignment]], ...]  # (valid assignments, avoid)
+    path: LDBASequence
     prev: Optional['SearchNode'] = field(default=None, compare=False)
     prev_transition: Optional[LDBATransition] = field(default=None, compare=False)
 
@@ -23,7 +22,7 @@ class SearchNode:
         return self.ldba_state > other.ldba_state  # arbitrary way to break ties
 
 
-class LDBADijkstraSearch:
+class DijkstraSearch:
     def __init__(self, model: nn.Module, depth: int):
         self.model = model
         self.depth = depth
@@ -84,8 +83,7 @@ class LDBADijkstraSearch:
                 avoid.add(transition)
         return avoid
 
-    def compute_transition_cost(self, path: tuple[tuple[set[FrozenAssignment], set[FrozenAssignment]], ...],
-                                obs) -> float:
+    def compute_transition_cost(self, path: LDBASequence, obs) -> float:
         if len(path) == 1:
             cost = -math.log(self.get_value(obs, path))
         else:
@@ -115,8 +113,6 @@ class LDBADijkstraSearch:
                     continue
                 scc = ldba.state_to_scc[t2.target]
                 if (scc.bottom and not scc.accepting) or self.only_non_accepting_loops(ldba, t2.target, visited):
-                    if len(avoid) >= 1:
-                        continue
                     avoid.update(t2.valid_assignments)
                     continue
             augmented_path.append((t.valid_assignments, avoid))

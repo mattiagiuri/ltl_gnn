@@ -29,7 +29,7 @@ class SearchNode:
     path: Path
 
 
-class LDBAGreedySearch:
+class GreedySearch:
     def __init__(self, model: nn.Module, depth: int):
         self.model = model
         self.depth = depth
