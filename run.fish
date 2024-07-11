@@ -1,6 +1,9 @@
 #!/usr/bin/env fish
 
 conda activate deepltl
-PYTHONPATH=src/ ./run_letter.py --num_procs 16 --device cpu --name novel --seed 1 --log_wandb
-PYTHONPATH=src/ ./run_letter.py --num_procs 16 --device cpu --name novel --seed 2 --log_wandb
-PYTHONPATH=src/ ./run_letter.py --num_procs 16 --device cpu --name novel --seed 3 --log_wandb
+set device cpu
+set name stage3_09
+set num_procs 16
+PYTHONPATH=src/ ./run_letter.py --num_procs $num_procs --device $device --name $name --seed 1 --log_wandb
+PYTHONPATH=src/ ./run_letter.py --num_procs $num_procs --device $device --name $name --seed 2 --log_wandb
+PYTHONPATH=src/ ./run_letter.py --num_procs $num_procs --device $device --name $name --seed 3 --log_wandb
