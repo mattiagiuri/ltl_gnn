@@ -22,10 +22,11 @@ class ProcessedSequences:
     batched: torch.tensor  # (batch_size, max_len) -> contains the vocab_ids of non-graph elements
     graph_indices: torch.tensor  # (batch_size, max_len) -> contains 1 if the element is a graph node
     graphs: list[list[ASTNode]]  # contains the graphs of each sequence
+    device: str
 
     @classmethod
     def from_seqs(cls, seqs: list[list[tuple[ASTNode, ASTNode]]], device=None):
-        lens = torch.tensor([len(seq) for seq in seqs], dtype=torch.long)
+        lens = torch.tensor([len(seq) for seq in seqs], dtype=torch.long)  # needs to be on CPU
         max_len = lens.max().item()
         batch_size = len(seqs)
         return cls(
@@ -33,6 +34,7 @@ class ProcessedSequences:
             torch.zeros((batch_size, max_len), dtype=torch.long).to(device),
             torch.zeros((batch_size, max_len), dtype=torch.bool).to(device),
             [],
+            device
         )
 
     def process_node(self, node: ASTNode, i: int, j: int):
@@ -50,7 +52,7 @@ class ProcessedSequences:
 
     def __getitem__(self, index):
         graphs = [g for i in index for g in self.graphs[i]]
-        batched_graph = ProcessedSequences.asts_to_batched_graph(graphs)
+        batched_graph = ProcessedSequences.asts_to_batched_graph(graphs, self.device)
         return BatchedSequences(
             self.lens[index],
             self.batched[index],
@@ -62,7 +64,7 @@ class ProcessedSequences:
         return self[range(len(self.batched))]
 
     @staticmethod
-    def asts_to_batched_graph(asts: list[ASTNode]) -> Data:
+    def asts_to_batched_graph(asts: list[ASTNode], device=None) -> Data:
         nodes = []
         edges = []
         root_indices = []
@@ -78,7 +80,7 @@ class ProcessedSequences:
             x=torch.tensor(nodes, dtype=torch.long),
             edge_index=torch.tensor(edges, dtype=torch.long).t().contiguous(),
             root_indices=torch.tensor(root_indices, dtype=torch.long)
-        )
+        ).to(device)
 
     @staticmethod
     def ast_to_graph(ast: ASTNode, start_index: int = 0) -> tuple[list, list]:
