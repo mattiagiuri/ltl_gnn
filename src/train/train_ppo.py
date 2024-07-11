@@ -15,8 +15,8 @@ import torch_ac
 import utils
 from model.model import build_model
 from envs import make_env, get_env_attr
-from sequence import CurriculumSequenceSampler
-from sequence.random_curriculum_sampler import RandomCurriculumSampler
+
+from sequence.samplers import CurriculumSampler, LETTER_CURRICULUM
 from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
@@ -56,8 +56,7 @@ class Trainer:
             exps, logs = algo.collect_experiences()
             for env in envs:
                 seq_sampler = get_env_attr(env, 'sample_sequence')
-                if seq_sampler.is_adaptive:
-                    seq_sampler.update_goal_success(logs['avg_goal_success'])
+                seq_sampler.update_task_success(logs['avg_goal_success'])
             update_logs = algo.update_parameters(exps)
             logs.update(update_logs)
             update_time = time.time() - start
@@ -81,7 +80,8 @@ class Trainer:
         envs = []
         for i in range(self.args.experiment.num_procs):
             # sampler = CurriculumSequenceSampler.partial()
-            sampler = RandomCurriculumSampler.partial()
+            sampler = CurriculumSampler.partial(LETTER_CURRICULUM)  # TODO: make parameter
+            # sampler = RandomCurriculumSampler.partial()
             envs.append(make_env(self.args.experiment.env, sampler, sequence=True))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
