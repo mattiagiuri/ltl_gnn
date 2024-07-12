@@ -16,7 +16,7 @@ import utils
 from model.model import build_model
 from envs import make_env, get_env_attr
 
-from sequence.samplers import CurriculumSampler, LETTER_CURRICULUM
+from sequence.samplers import CurriculumSampler, curricula
 from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
@@ -78,10 +78,8 @@ class Trainer:
         utils.set_seed(self.args.experiment.seed)
         envs = []
         for i in range(self.args.experiment.num_procs):
-            # sampler = CurriculumSequenceSampler.partial()
-            sampler = CurriculumSampler.partial(
-                LETTER_CURRICULUM)  # TODO: make parameter. important that all share same curriculum
-            # sampler = RandomCurriculumSampler.partial()
+            curriculum = curricula[self.args.curriculum]
+            sampler = CurriculumSampler.partial(curriculum)
             envs.append(make_env(self.args.experiment.env, sampler, sequence=True))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
@@ -145,6 +143,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_arguments(config.PPOConfig, dest="ppo")
     parser.add_argument("--model_config", type=str, default="default", choices=model_configs.keys(),
                         required=True)
+    parser.add_argument("--curriculum", type=str, choices=curricula.keys(), required=True)
     parser.add_argument("--pretraining_experiment", type=str, default=None)
     parser.add_argument("--freeze_pretrained", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--log_csv", action=argparse.BooleanOptionalAction, default=True)

@@ -39,6 +39,7 @@ def main():
             '--save_interval', '20',
             '--num_steps', '20_000_000',
             '--model_config', 'letter',
+            '--curriculum', 'letter',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
