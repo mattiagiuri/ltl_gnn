@@ -16,17 +16,11 @@ from sequence.search import BFS, DijkstraSearch
 from utils.model_store import ModelStore
 
 env_name = 'LetterEnv-v0'
-exp = 'stage3_095'  # best so far: 64_emb_4_epochs_2_layers
+exp = 'stage3_095'
 seed = 1
 render_modes = [None, 'human', 'path']
-render = render_modes[0]
+render = render_modes[2]
 render_on_fail = False
-# TODO: manual benchmark to test avoid capability
-# TODO: prevent cycling back and forth between non-accepting LDBA states
-# TODO: evaluate on reach-avoid 2 / 6 with perfect path
-# TODO: look at small examples to see if (i) reach multiple propositions are working (ii) avoid multiple are working
-# TODO: I need a heuristic in the search that tells me what the remaining cost might be. One potential idea: Max Prokop!
-# TODO: experiments with much fewer letters where all paths can be enumerated. compare to baselines.
 
 random.seed(seed)
 np.random.seed(seed)
@@ -34,17 +28,14 @@ torch.random.manual_seed(seed)
 
 # sampler = RandomSequenceSampler.partial(length=2, unique=True)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
-sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=False)
+# sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=False)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
 # sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
-# sampler = AvoidSampler.partial(depth=6, num_conjuncts=1)
+# sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
-# sampler = FixedSampler.partial('F h & (!h U a)')
+sampler = FixedSampler.partial('F (a & (!b U c))')
 
-deterministic = False
-
-# TODO: partially ordered tasks i.i.d.
-# TODO: crucial: paths need to have all other assignments in avoid! think of signal example.
+deterministic = True
 
 env = make_env(env_name, sampler, max_steps=75, render_mode=render)
 config = model_configs['letter']

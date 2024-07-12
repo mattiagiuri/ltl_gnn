@@ -3,6 +3,10 @@ import os
 
 
 def get_experiment_path(env: str, name: str, seed: int) -> str:
+    if '.' in env:
+        # '.' is used to indicate alternative versions of the environment, e.g. fixed letters in LetterEnv. This is
+        # only used for evaluation, and thus the same models as for the original environment should be loaded.
+        env = env.split('.')[0]
     path = f'experiments/ppo/{env}/{name}/{seed}'
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)

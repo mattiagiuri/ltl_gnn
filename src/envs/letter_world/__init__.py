@@ -12,7 +12,7 @@ register(
 )
 
 register(
-    id='LetterEnvNonMyopic-v0',
+    id='LetterEnv-v0.non_myopic',
     entry_point='envs.letter_world.letter_env:LetterEnv',
     kwargs=dict(
         grid_size=7,
@@ -20,16 +20,33 @@ register(
         use_fixed_map=True,
         use_agent_centric_view=True,
         map={
-            (3, 0): 'a',
             (0, 2): 'a',
-            (4, 0): 'b'
+            (0, 3): 'b',
+            (0, 3): 'b',
+            (3, 3): 'c',
+            (5, 2): 'a',
+        }
+    )
+)
+
+register(
+    id='LetterEnv-v0.fixed',
+    entry_point='envs.letter_world.letter_env:LetterEnv',
+    kwargs=dict(
+        grid_size=7,
+        letters="abcdefghijkl",
+        use_fixed_map=True,
+        use_agent_centric_view=True,
+        map={
+            (3, 0): 'b',
+            (0, 1): 'a',
         }
     )
 )
 
 
 register(
-    id='LetterEnvTry-v0',
+    id='LetterEnv-v0.multi_avoid',
     entry_point='envs.letter_world.letter_env:LetterEnv',
     kwargs=dict(
         grid_size=7,
@@ -37,8 +54,12 @@ register(
         use_fixed_map=True,
         use_agent_centric_view=True,
         map={
-            (1, 0): 'a',
-            (0, 2): 'b',
+            (3, 1): 'a',
+            (1, 3): 'b',
+            (5, 3): 'a',
+            (2, 2): 'b',
+            (3, 5): 'b',
+            (3, 3): 'c'
         }
     )
 )
