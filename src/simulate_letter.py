@@ -5,6 +5,7 @@ import torch
 from tqdm import trange
 
 from envs import make_env
+from ltl import PartiallyOrderedSampler
 from ltl.samplers.avoid_multiple_sampler import AvoidMultipleSampler
 from ltl.samplers.avoid_sampler import AvoidSampler
 from ltl.samplers.fixed_sampler import FixedSampler
@@ -15,10 +16,11 @@ from sequence.search import BFS, DijkstraSearch
 from utils.model_store import ModelStore
 
 env_name = 'LetterEnv-v0'
-exp = 'novel'  # best so far: 64_emb_4_epochs_2_layers
+exp = 'stage3_095'  # best so far: 64_emb_4_epochs_2_layers
 seed = 1
 render_modes = [None, 'human', 'path']
-render = render_modes[2]
+render = render_modes[0]
+render_on_fail = False
 # TODO: manual benchmark to test avoid capability
 # TODO: prevent cycling back and forth between non-accepting LDBA states
 # TODO: evaluate on reach-avoid 2 / 6 with perfect path
@@ -32,13 +34,14 @@ torch.random.manual_seed(seed)
 
 # sampler = RandomSequenceSampler.partial(length=2, unique=True)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
-# sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=True)
+sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=False)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
-# sampler = AvoidSampler.partial(depth=1, num_conjuncts=1)
+# sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
+# sampler = AvoidSampler.partial(depth=6, num_conjuncts=1)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
-sampler = FixedSampler.partial('!a U j')
+# sampler = FixedSampler.partial('F h & (!h U a)')
 
-deterministic = True
+deterministic = False
 
 # TODO: partially ordered tasks i.i.d.
 # TODO: crucial: paths need to have all other assignments in avoid! think of signal example.
@@ -99,6 +102,8 @@ for i in pbar:
             success_mask.append('success' in info)
 
             if render == 'path':
+                if render_on_fail and final_reward != -1:
+                    continue
                 print(final_reward)
                 env.render_path(actions)
                 print(props)

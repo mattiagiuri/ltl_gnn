@@ -76,6 +76,7 @@ class Curriculum:
         self.stage_index = 0
         if stages[-1].threshold is not None:
             raise ValueError('The last stage in the curriculum should not have a threshold.')
+        self.num_updates = 0
 
     @property
     def current_stage(self) -> CurriculumStage:
@@ -91,6 +92,8 @@ class Curriculum:
     def update_task_success(self, task_success: dict[LDBASequence, float], verbose=False) -> None:
         if self.finished:
             return
+        self.num_updates += 1
+        self.num_updates %= 100
         self.current_stage.update_task_success(task_success)
         aggr = np.mean if self.current_stage.threshold_type == 'mean' else np.min
         if aggr(list(task_success.values())) >= self.current_stage.threshold:
@@ -99,22 +102,27 @@ class Curriculum:
                 print(f"Stage {self.stage_index + 1} completed.")
                 print('=' * 80)
             self.stage_index += 1
+        else:
+            if verbose and self.num_updates % 100 == 0:
+                print(f"Stage {self.stage_index + 1} not completed.")
+                print(f'MEAN: {np.mean(list(task_success.values()))}, THRESHOLD: {self.current_stage.threshold}')
 
 
 LETTER_CURRICULUM = Curriculum([
     ExplicitCurriculumStage(
         task_fn=all_reach_avoid_tasks(1),
-        threshold=0.9,
-        threshold_type='min',
+        temperature=0.1,
+        threshold=0.95,
+        threshold_type='mean',
     ),
     RandomCurriculumStage(
         sampler=sample_reach_avoid(1, (1, 2), (0, 2)),
-        threshold=0.9,
+        threshold=0.95,
         threshold_type='mean'
     ),
     RandomCurriculumStage(
         sampler=sample_reach_avoid(2, (1, 2), (1, 2)),
-        threshold=0.85,
+        threshold=0.95,
         threshold_type='mean'
     ),
     RandomCurriculumStage(

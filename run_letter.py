@@ -56,16 +56,14 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 2 --device cpu --name asd --seed 1 --log_csv false --save false'.split(' ')
+        sys.argv += '--num_procs 2 --device cpu --name tmp --seed 1 --log_csv false --save false'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
         print('Interrupted!')
         wandb.finish()
-        kill_all_wandb_processes()
+        # kill_all_wandb_processes()
         sys.exit(0)
 
-    # TODO: implement random goal sampling and more stages
     # TODO: improve performance of reset() - this is the bottleneck!
     # TODO: reduce number of channels in env_net - policy network can be simpler!
-    # TODO: match number of params of LTL2Action

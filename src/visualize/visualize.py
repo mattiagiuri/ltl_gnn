@@ -123,7 +123,9 @@ if __name__ == '__main__':
     # f = '!(a | b) U c'
     # f = 'F (a & !r)'
     # f = '(F a) U b'
-    f = '(!e U (i & (!j U d))) & (!c U (h & (!b U f))) & (!g U (a & (!l U k)))'
+    # f = '(!e U (i & (!j U d))) & (!c U (h & (!b U f))) & (!g U (a & (!l U k)))'
+    # f = 'F a & (!h U a)'
+    f = 'F (i & F (b & F d)) & F (e & F ((k | f) & F c)) & F (j & F (e & F g))'
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
