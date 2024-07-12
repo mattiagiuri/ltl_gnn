@@ -2,13 +2,14 @@ import numpy as np
 
 import preprocessing
 from model.model import Model
+from sequence.search import SequenceSearch
 
 
 class Agent:
-    def __init__(self, model: Model, search_cls, verbose=False, **search_kwargs):
+    def __init__(self, model: Model, search: SequenceSearch, verbose=False):
         self.model = model
         self.sequence = None
-        self.search = search_cls(model, **search_kwargs)
+        self.search = search
         self.verbose = verbose
 
     def reset(self):

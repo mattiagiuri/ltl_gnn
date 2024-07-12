@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 from torch import nn
 
-from ltl.automata import LDBA, LDBATransition, LDBASequence
+from ltl.automata import LDBA, LDBASequence
 from ltl.logic import FrozenAssignment
-from preprocessing import preprocessing
+from sequence.search import SequenceSearch
 
 
 @dataclass(eq=True, frozen=True)
@@ -29,15 +29,16 @@ class SearchNode:
     path: Path
 
 
-class GreedySearch:
+class GreedySearch(SequenceSearch):
     def __init__(self, model: nn.Module, depth: int):
+        super().__init__(model)
         self.model = model
         self.depth = depth
 
     def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:
         path = self.search(ldba, ldba_state, obs)
-        path = self.augment_path(ldba, path)
-        return path.sequence
+        sequence = self.augment_sequence(ldba, ldba_state, path.sequence)
+        return sequence
 
     def search(self, ldba: LDBA, ldba_state: int, obs) -> Path:
         states_on_path: set[int] = set()
@@ -85,64 +86,3 @@ class GreedySearch:
             states_on_path.add(next_state)
             index += 1
         return path
-
-    @staticmethod
-    def collect_avoid_transitions(ldba: LDBA, state: int, visited_ldba_states: set[int]) -> set[LDBATransition]:
-        avoid = set()
-        for transition in ldba.state_to_transitions[state]:
-            if transition.source == transition.target:
-                continue
-            scc = ldba.state_to_scc[transition.target]
-            if scc.bottom and not scc.accepting or transition.target in visited_ldba_states:
-                avoid.add(transition)
-        return avoid
-
-    def get_value(self, path: Path, obs) -> float:
-        obs['goal'] = path.sequence
-        if not (isinstance(obs, list) or isinstance(obs, tuple)):
-            obs = [obs]
-        preprocessed = preprocessing.preprocess_obss(obs)
-        _, value = self.model(preprocessed)
-        return value.item()
-
-    def augment_path(self, ldba: LDBA, path: Path):
-        augmented_path = []
-        visited = set()
-        for i, state in enumerate(path.ldba_states[:-1]):
-            avoid = set()
-            visited.add(state)
-            for t in ldba.state_to_transitions[state]:
-                if t.valid_assignments == path.sequence[i][0]:
-                    continue
-                if t.source == t.target:
-                    continue
-                scc = ldba.state_to_scc[t.target]
-                if (scc.bottom and not scc.accepting) or self.only_non_accepting_loops(ldba, t.target, visited):
-                    if len(avoid) >= 1:
-                        continue
-                    avoid.update(frozenset(t.valid_assignments))
-                    continue
-            augmented_path.append((path.sequence[i][0], frozenset(avoid)))
-        return Path(tuple(augmented_path), path.ldba_states, path.accepting)
-
-    def only_non_accepting_loops(self, ldba: LDBA, state: int, visited: set[int]) -> bool:
-        if state in visited:
-            return True
-        stack = [state]
-        marked = set()
-        while stack:
-            state = stack.pop()
-            for t in ldba.state_to_transitions[state]:
-                if t.target in marked:
-                    continue
-                scc = ldba.state_to_scc[t.target]
-                if scc.bottom and not scc.accepting:
-                    continue
-                if t.target in visited:
-                    continue
-                if t.accepting:
-                    return False
-                stack.append(t.target)
-            marked.add(state)
-        visited.update(marked)
-        return True

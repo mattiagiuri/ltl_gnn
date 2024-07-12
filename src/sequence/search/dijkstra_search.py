@@ -5,7 +5,7 @@ from typing import Optional
 from torch import nn
 
 from ltl.automata import LDBA, LDBATransition, LDBASequence
-from preprocessing import preprocessing
+from sequence.search import SequenceSearch
 from utils import PriorityQueue
 
 
@@ -22,9 +22,9 @@ class SearchNode:
         return self.ldba_state > other.ldba_state  # arbitrary way to break ties
 
 
-class DijkstraSearch:
+class DijkstraSearch(SequenceSearch):
     def __init__(self, model: nn.Module, depth: int):
-        self.model = model
+        super().__init__(model)
         self.depth = depth
 
     def __call__(self, ldba: LDBA, ldba_state: int, obs):
@@ -72,17 +72,6 @@ class DijkstraSearch:
         path.reverse()
         return path
 
-    @staticmethod
-    def collect_avoid_transitions(ldba: LDBA, state: int) -> set[LDBATransition]:
-        avoid = set()
-        for transition in ldba.state_to_transitions[state]:
-            if transition.source == transition.target:
-                continue
-            scc = ldba.state_to_scc[transition.target]
-            if scc.bottom and not scc.accepting:
-                avoid.add(transition)
-        return avoid
-
     def compute_transition_cost(self, path: LDBASequence, obs) -> float:
         if len(path) == 1:
             cost = -math.log(self.get_value(obs, path))
@@ -92,12 +81,8 @@ class DijkstraSearch:
         return cost
 
     def get_value(self, obs, path) -> float:
-        obs['goal'] = path
-        if not (isinstance(obs, list) or isinstance(obs, tuple)):
-            obs = [obs]
-        preprocessed = preprocessing.preprocess_obss(obs)
-        _, value = self.model(preprocessed)
-        return max(1e-8, min(1.0, value.item()))
+        value = super().get_value(path, obs)
+        return max(1e-8, min(1.0, value))
 
     def augment_path(self, ldba: LDBA, path: list[LDBATransition]):
         augmented_path = []
@@ -117,25 +102,3 @@ class DijkstraSearch:
                     continue
             augmented_path.append((t.valid_assignments, avoid))
         return augmented_path
-
-    def only_non_accepting_loops(self, ldba: LDBA, state: int, visited: set[int]) -> bool:
-        if state in visited:
-            return True
-        stack = [state]
-        marked = set()
-        while stack:
-            state = stack.pop()
-            for t in ldba.state_to_transitions[state]:
-                if t.target in marked:
-                    continue
-                scc = ldba.state_to_scc[t.target]
-                if scc.bottom and not scc.accepting:
-                    continue
-                if t.target in visited:
-                    continue
-                if t.accepting:
-                    return False
-                stack.append(t.target)
-            marked.add(state)
-        visited.update(marked)
-        return True

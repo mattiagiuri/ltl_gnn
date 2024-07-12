@@ -42,7 +42,9 @@ config = model_configs['letter']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
-agent = Agent(model, search_cls=BFS, verbose=render is not None, depth=1)
+
+search = BFS(model)
+agent = Agent(model, search=search, verbose=render is not None)
 
 num_episodes = 500
 
