@@ -3,8 +3,8 @@ import enum
 from graphviz import Source
 
 from ltl.automata import LDBA, ltl2ldba, ltl2nba
-from ltl.automata import LDBAGraph
 from ltl.logic import Assignment
+from sequence.search import ExhaustiveSearch
 
 
 class Color(enum.Enum):
@@ -41,28 +41,8 @@ def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=
     s.render(view=view, cleanup=True)
 
 
-def draw_ldba_graph(
-        g: LDBAGraph,
-        filename='ldba_graph',
-        fmt='pdf',
-        view=True,
-) -> None:
-    dot = 'digraph "" {\n'
-    dot += 'rankdir=BT\n'
-    for node in graph.nodes:
-        dot += f'{node.id} [label="({node.pos_label}, {node.neg_label if node.neg_label else "-"})"'
-        if node.id in g.root_nodes:
-            dot += f' color="{Color.ROOT}" style="filled"'
-        dot += ']\n'
-    for edge in g.edges:
-        dot += f'{edge[0]} -> {edge[1]}\n'
-    dot += '}'
-    s = Source(dot, filename=filename, format=fmt)
-    s.render(view=view, cleanup=True)
-
-
 # @memory.cache
-def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = True, ldba: bool=True) -> LDBA:
+def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = True, ldba: bool = True) -> LDBA:
     fun = ltl2ldba if ldba else ltl2nba
     ldba = fun(formula, simplify_labels=simplify_labels)
     print('Constructed LDBA.')
@@ -84,7 +64,7 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 
 
 if __name__ == '__main__':
-    # f = '!a U b'
+    f = '!a U b'
     # f = 'FGa'
     # f = 'GF a & GF b & G (!s | F g)'
     # f = '(F (g & F (f & F (d & F (g & F (a & F (h & F (b & F (j & F (f & F (g & F (i & F (b & F (c & F (f & F h)))))))))))))))'
@@ -125,10 +105,11 @@ if __name__ == '__main__':
     # f = '(F a) U b'
     # f = '(!e U (i & (!j U d))) & (!c U (h & (!b U f))) & (!g U (a & (!l U k)))'
     # f = 'F a & (!h U a)'
-    f = 'F (i & F (b & F d)) & F (e & F ((k | f) & F c)) & F (j & F (e & F g))'
+    # f = 'F (i & F (b & F d)) & F (e & F ((k | f) & F c)) & F (j & F (e & F g))'
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
+    print(f'Finite: {ldba.is_finite_specification()}')
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    graph = LDBAGraph.from_ldba(ldba, 0)
-    draw_ldba_graph(graph, fmt='png')
-    print(f'Num sequences: {len(graph.paths)}')
+    seqs = ExhaustiveSearch.all_sequences(ldba, ldba.initial_state)
+    print(seqs)
+    print(len(seqs))

@@ -47,6 +47,19 @@ class LDBA:
     def contains_state(self, state: int) -> bool:
         return state <= self.num_states
 
+    def is_finite_specification(self) -> bool:
+        """
+        Checks if the LDBA represents a finite specification.
+        Note: this is not an exhaustive check, but a sufficient heuristic for LDBAs constructed by rabinizer.
+        """
+        if not self.state_to_scc:
+            self.compute_sccs()
+        accepting_sccs = [scc for scc in self.state_to_scc.values() if scc.accepting]
+        if len(accepting_sccs) > 1:
+            return False
+        scc = accepting_sccs[0]
+        return scc.bottom and len(scc.states) == 1
+
     def add_transition(self, source: int, target: int, label: Optional[str], accepting: bool) -> 'LDBATransition':
         if source < 0 or source >= self.num_states:
             raise ValueError('Source state must be a valid state index.')
@@ -135,7 +148,8 @@ class LDBA:
         if self.possible_assignments:
             all_assignments = set([a.to_frozen() for a in self.possible_assignments])
         else:
-            all_assignments = set([a.to_frozen() for a in Assignment.all_possible_assignments(tuple(self.propositions))])
+            all_assignments = set(
+                [a.to_frozen() for a in Assignment.all_possible_assignments(tuple(self.propositions))])
         for state in range(self.num_states):
             covered_assignments = set() if not self.state_to_transitions[state] else set.union(
                 *[t.valid_assignments for t in self.state_to_transitions[state]]

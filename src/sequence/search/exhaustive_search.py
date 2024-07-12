@@ -1,18 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
-from ltl.automata import LDBA, LDBATransition
-from ltl.logic import FrozenAssignment
+from torch import nn
 
-
-@dataclass
-class Node:
-    id: Optional[int] = None
-    positive: set[FrozenAssignment] = field(default_factory=set)
-    negative: set[FrozenAssignment] = field(default_factory=set)
-    pos_label: str = ''
-    neg_label: str = ''
-    neighbors: set[int] = field(default_factory=set)
+from ltl.automata import LDBA, LDBATransition, LDBASequence
+from sequence.search import SequenceSearch
 
 
 @dataclass
@@ -36,90 +28,33 @@ class Path:
     def prepend(self, reach: LDBATransition, avoid: set[LDBATransition]) -> 'Path':
         return Path([(reach, avoid)] + self.reach_avoid, self.loop_index)
 
+    def to_sequence(self, num_loops: int) -> LDBASequence:
+        seq = [self.reach_avoid_to_assignments(r, a) for r, a in self.reach_avoid[:self.loop_index]]
+        loop = [self.reach_avoid_to_assignments(r, a) for r, a in self.reach_avoid[self.loop_index:]]
+        seq = seq + loop * num_loops
+        return tuple(seq)
 
-class LDBAGraph:
-    CACHE: dict[tuple[str, int], 'LDBAGraph'] = {}
+    @staticmethod
+    def reach_avoid_to_assignments(reach: LDBATransition, avoid: set[LDBATransition]) -> tuple[frozenset, frozenset]:
+        avoid = [a.valid_assignments for a in avoid]
+        avoid = set() if not avoid else set.union(*avoid)
+        return frozenset(reach.valid_assignments), frozenset(avoid)
 
-    def __init__(self):
-        self.nodes: list[Node] = []
-        self.root_nodes: set[int] = set()
-        self.paths: list[Path] = []
 
-    def add_node(self, node: Node):
-        node.id = len(self.nodes)
-        self.nodes.append(node)
+class ExhaustiveSearch(SequenceSearch):
+    def __init__(self, model: nn.Module, num_loops: int):
+        super().__init__(model)
+        self.num_loops = num_loops
 
-    @property
-    def num_nodes(self):
-        return len(self.nodes)
+    def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:
+        seqs = ExhaustiveSearch.all_sequences(ldba, ldba_state, self.num_loops)
+        return max(seqs, key=lambda s: self.get_value(s, obs))
 
-    @property
-    def edges(self):
-        return [(node.id, neighbor) for node in self.nodes for neighbor in node.neighbors]
-
-    @classmethod
-    def from_ldba(cls, ldba: LDBA, current_state: int) -> 'LDBAGraph':
-        if not ldba.complete:
-            raise ValueError('The LDBA must be complete. Make sure to call '
-                             '`ldba.complete_sink_state()` before constructing the graph.')
-        if not ldba.state_to_scc:
-            raise ValueError('The SCCs of the LDBA must be initialised. Make sure to call '
-                             '`ldba.compute_sccs()` before constructing the graph.')
-        assert ldba.formula is not None
-        if (ldba.formula, current_state) in cls.CACHE:
-            return cls.CACHE[(ldba.formula, current_state)]
-        graph = cls.construct_graph(ldba, current_state)
-        cls.CACHE[(ldba.formula, current_state)] = graph
-        return graph
-
-    @classmethod
-    def construct_graph(cls, ldba: LDBA, current_state: int) -> 'LDBAGraph':
-        paths: list[Path] = cls.dfs(ldba, current_state, [], {}, None)
-
-        transition_to_node: dict[tuple[LDBATransition, frozenset[LDBATransition]], Node] = {}
-        graph = LDBAGraph()
-
-        def build_graph(remaining_paths: list[Path]) -> list[Node]:
-            if len(remaining_paths) == 0:
-                return []
-            partition = {}
-            for path in remaining_paths:
-                s = (path[0][0], frozenset(path[0][1]))
-                if s not in partition:
-                    partition[s] = []
-                if len(path) > 1:
-                    partition[s].append(path[1:])
-            nodes = []
-            for transition, future_paths in partition.items():
-                transition = (transition[0], frozenset(transition[1]))
-                children = build_graph(future_paths)
-                if transition in transition_to_node:
-                    node = transition_to_node[transition]
-                else:
-                    node = Node(
-                        positive=transition[0].valid_assignments,
-                        pos_label=transition[0].positive_label
-                    )
-                    neg = transition[1]
-                    if neg:
-                        node.negative = set.union(*[t.valid_assignments for t in neg]),
-                        node.neg_label = ' OR '.join(t.positive_label for t in neg)
-                    transition_to_node[transition] = node
-                    graph.add_node(node)
-                for child in children:
-                    node.neighbors.add(child.id)
-                nodes.append(node)
-            return nodes
-
-        roots = build_graph(paths)
-        graph.root_nodes = set(node.id for node in roots)
-        graph.paths = paths
-        # add loops
-        for path in paths:
-            final_node = transition_to_node[(path[-1][0], frozenset(path[-1][1]))]
-            loop_node = transition_to_node[(path[path.loop_index][0], frozenset(path[path.loop_index][1]))]
-            final_node.neighbors.add(loop_node.id)
-        return graph
+    @staticmethod
+    def all_sequences(ldba: LDBA, ldba_state: int, num_loops=1) -> list[LDBASequence]:
+        paths = ExhaustiveSearch.dfs(ldba, ldba_state, [], {}, None)
+        num_loops = 0 if ldba.is_finite_specification() else num_loops
+        return [path.to_sequence(num_loops) for path in paths]
 
     @staticmethod
     def dfs(ldba: LDBA, state: int, current_path: list[LDBATransition], state_to_path_index: dict[int, int],
@@ -154,8 +89,8 @@ class LDBAGraph:
                             neg_transitions.add(transition)
                         continue
                 else:
-                    future_paths = LDBAGraph.dfs(ldba, transition.target, current_path, state_to_path_index,
-                                                 updated_accepting_transition)
+                    future_paths = ExhaustiveSearch.dfs(ldba, transition.target, current_path, state_to_path_index,
+                                                        updated_accepting_transition)
                     if len(future_paths) == 0:
                         neg_transitions.add(transition)
                 for fp in future_paths:
@@ -164,7 +99,7 @@ class LDBAGraph:
                 current_path.pop()
 
         del state_to_path_index[state]
-        paths = LDBAGraph.prune_paths(paths)
+        paths = ExhaustiveSearch.prune_paths(paths)
         for path in paths:
             path[0][1].update(neg_transitions)  # now we update the negative transitions
         return paths
@@ -177,10 +112,10 @@ class LDBAGraph:
                 if i in to_remove or j in to_remove:
                     continue
                 if len(paths[i]) < len(paths[j]):
-                    if LDBAGraph.check_path_contained(paths[j], paths[i]):
+                    if ExhaustiveSearch.check_path_contained(paths[j], paths[i]):
                         to_remove.add(j)
                 elif len(paths[i]) > len(paths[j]):
-                    if LDBAGraph.check_path_contained(paths[i], paths[j]):
+                    if ExhaustiveSearch.check_path_contained(paths[i], paths[j]):
                         to_remove.add(i)
                 if i in to_remove:
                     break

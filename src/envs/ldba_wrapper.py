@@ -13,13 +13,13 @@ class LDBAWrapper(gymnasium.Wrapper):
     Wrapper that keeps track of LTL goal satisfaction using an LDBA, which is added to the observation space.
     """
 
-    def __init__(self, env: gymnasium.Env, terminate_on_acceptance=False):
+    def __init__(self, env: gymnasium.Env):
         super().__init__(env)
         if not isinstance(env.observation_space, gymnasium.spaces.Dict):
             raise ValueError('LDBA wrapper requires dict observations')
         if 'goal' not in env.observation_space.spaces:
             raise ValueError('LDBA wrapper requires goal in observation space')
-        self.terminate_on_acceptance = terminate_on_acceptance
+        self.terminate_on_acceptance = False
         self.ldba = None
         self.ldba_state = None
 
@@ -44,6 +44,7 @@ class LDBAWrapper(gymnasium.Wrapper):
         WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
         self.ldba = self.construct_ldba(obs['goal'])
+        self.terminate_on_acceptance = self.ldba.is_finite_specification()
         self.ldba_state = self.ldba.initial_state
         self.complete_observation(obs)
         info['ldba_state_changed'] = True
