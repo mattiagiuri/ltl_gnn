@@ -36,25 +36,6 @@ class Path:
     def prepend(self, reach: LDBATransition, avoid: set[LDBATransition]) -> 'Path':
         return Path([(reach, avoid)] + self.reach_avoid, self.loop_index)
 
-    def to_sequence(self, max_length: Optional[int] = None) -> list[tuple[str, str]]:
-        # TODO: implement max_length, account for loops and finite-horizon tasks
-        # length = len(self.reach_avoid) if max_length is None else max_length
-        seq = []
-        for reach, avoid in self.reach_avoid:
-            if len(reach._valid_assignments) == 13:
-                continue
-            assert len(reach._valid_assignments) == 1
-            reach = reach.positive_label
-            assert len(avoid) <= 1
-            if len(avoid) == 1:
-                avoid = list(avoid)[0]
-                assert len(avoid._valid_assignments) == 1
-                avoid_label = avoid.positive_label
-            else:
-                avoid_label = 'empty'
-            seq.append((reach, avoid_label))
-        return seq
-
 
 class LDBAGraph:
     CACHE: dict[tuple[str, int], 'LDBAGraph'] = {}

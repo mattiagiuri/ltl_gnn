@@ -15,7 +15,7 @@ from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
 exp = '15mil'
-seed = 2  # TODO: save best model
+seed = 2
 shielding = False
 
 random.seed(seed)

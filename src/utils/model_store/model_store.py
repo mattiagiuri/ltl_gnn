@@ -8,7 +8,7 @@ import utils
 
 
 class ModelStore:
-    def __init__(self, env: str, name: str, seed: int, pretraining_experiment: str | None):  # TODO: add constructor without config
+    def __init__(self, env: str, name: str, seed: int, pretraining_experiment: str | None):
         self.path = utils.get_experiment_path(env, name, seed)
         if pretraining_experiment:
             self.pretraining_experiment_path = utils.get_pretraining_experiment_path(env, pretraining_experiment, seed)

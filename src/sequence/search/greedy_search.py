@@ -49,8 +49,7 @@ class GreedySearch:
                 return {path}
             if depth >= self.depth:
                 return {path}
-            avoid = self.collect_avoid_transitions(ldba, state,
-                                                   set())  # TODO: replace with states_on_current_path | states_on_path
+            avoid = self.collect_avoid_transitions(ldba, state, set(states_on_current_path | states_on_path))
             avoid_assignments = [a.valid_assignments for a in avoid]
             avoid = set() if not avoid_assignments else set.union(*avoid_assignments)
             paths = set()
@@ -65,8 +64,6 @@ class GreedySearch:
                     continue
                 new_path = path.extend(t.valid_assignments, avoid, t.target, t.accepting)
                 paths.update(dfs(t.target, new_path, depth + 1, new_states_on_current_path))
-
-            # TODO: implement pruning!!!
 
             return paths
 

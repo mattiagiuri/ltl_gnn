@@ -65,8 +65,6 @@ def test_from_ldba3():
     ldba.compute_sccs()
     pos, neg = LDBAGraph.from_ldba(ldba, 0)
 
-    # TODO: GFa & GFb & G (!a | F g)
-
 
 def test_get_features():
     propositions = ('a', 'b')
@@ -75,7 +73,7 @@ def test_get_features():
     features = LDBAGraph.get_features(LDBATransition(0, 1, 'a & b', False, propositions), assignments)
     assert features == [0., 0., 0., 1., 0., 0.]
     features = LDBAGraph.get_features(LDBATransition(0, 1, 'a', True, propositions), assignments)
-    assert features== [0., 0., 1., 1., 0., 1.]
+    assert features == [0., 0., 1., 1., 0., 1.]
     features = LDBAGraph.get_features(LDBATransition(0, 1, None, False, propositions), assignments)
     assert features == [0., 0., 0., 0., 1., 0.]
 

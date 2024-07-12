@@ -243,7 +243,7 @@ class BaseAlgo(ABC):
             "violation_per_episode": self.log_violation[-keep:],
             "num_steps": self.num_steps,
             "avg_goal_success": {k: float(v) / self.goal_counts[k] for k, v in self.goal_success.items()},
-        }  # TODO: print mean and std of goal success!!!
+        }
 
         self.log_done_counter = 0
         self.log_return = self.log_return[-self.num_procs:]

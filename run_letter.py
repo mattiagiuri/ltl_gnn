@@ -64,6 +64,3 @@ if __name__ == '__main__':
         wandb.finish()
         # kill_all_wandb_processes()
         sys.exit(0)
-
-    # TODO: improve performance of reset() - this is the bottleneck!
-    # TODO: reduce number of channels in env_net - policy network can be simpler!
