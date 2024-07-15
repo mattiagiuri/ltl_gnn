@@ -33,8 +33,8 @@ class Trainer:
         self.model_store = ModelStore.from_config(args)
 
     def train(self, log_csv: bool = True, log_wandb: bool = False):
-        envs = self.make_envs()
         training_status, resuming = self.get_training_status()
+        envs = self.make_envs(training_status["curriculum_stage"])
         pretrained_model = self.load_pretrained_model()
         model = build_model(envs[0], training_status, model_configs[self.args.model_config])
         model.to(self.args.experiment.device)
@@ -69,16 +69,20 @@ class Trainer:
                     and self.args.save:
                 training_status = {"num_steps": num_steps, "num_updates": num_updates,
                                    "model_state": algo.model.state_dict(),
-                                   "optimizer_state": algo.optimizer.state_dict()}
+                                   "optimizer_state": algo.optimizer.state_dict(),
+                                   "curriculum_stage": curriculum.stage_index,
+                                   }
                 self.model_store.save_training_status(training_status)
                 self.model_store.save_ltl_net(algo.model.ltl_net.state_dict())
                 self.text_logger.info("Saved training status")
 
-    def make_envs(self) -> list[gymnasium.Env]:
+    def make_envs(self, curriculum_stage: int) -> list[gymnasium.Env]:
         utils.set_seed(self.args.experiment.seed)
         envs = []
         for i in range(self.args.experiment.num_procs):
             curriculum = curricula[self.args.curriculum]
+            curriculum.stage_index = curriculum_stage
+            self.text_logger.important_info(f"Curriculum stage: {curriculum.stage_index}")
             sampler = CurriculumSampler.partial(curriculum)
             envs.append(make_env(self.args.experiment.env, sampler, sequence=True))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
@@ -97,7 +101,7 @@ class Trainer:
             self.text_logger.important_info("Resuming training from existing run.")
             resuming = True
         except FileNotFoundError:
-            training_status = {"num_steps": 0, "num_updates": 0}
+            training_status = {"num_steps": 0, "num_updates": 0, "curriculum_stage": 0}
         return training_status, resuming
 
     def load_pretrained_model(self) -> Optional[dict]:
