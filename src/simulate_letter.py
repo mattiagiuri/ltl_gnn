@@ -31,10 +31,10 @@ torch.random.manual_seed(seed)
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=False)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
 # sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
-# sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
+# sampler = AvoidSampler.partial(depth=3, num_conjuncts=1)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
-# sampler = FixedSampler.partial('GF a & GF b & G (!h | F f)')
-sampler = FixedSampler.partial('(!h | F f) U b')
+sampler = FixedSampler.partial('GF k & GF e & G (h => F f)')
+# sampler = FixedSampler.partial('(h => F f)  b')
 
 deterministic = False
 
