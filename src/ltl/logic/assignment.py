@@ -49,7 +49,7 @@ class Assignment(MutableMapping):
         if label == 't':
             return True
         ast = parse(label)
-        return ast.evaluate(self.mapping)
+        return ast.eval(self.mapping)
 
     def to_frozen(self) -> 'FrozenAssignment':
         return FrozenAssignment(self)
