@@ -23,7 +23,7 @@ class SequenceWrapper(gymnasium.Wrapper):
         self.goal_seq = None
         self.num_reached = 0
         self.propositions = set(env.get_propositions())
-        self.partial_reward = False
+        self.partial_reward = partial_reward
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         obs, _, terminated, truncated, info = super().step(action)

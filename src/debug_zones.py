@@ -1,9 +1,8 @@
-import envs
 from envs import make_env
-from sequence import RandomSequenceSampler
+from ltl.samplers import AvoidSampler
 
-sampler = RandomSequenceSampler.partial(length=2, unique=True)
-env = make_env('PointLtl2Debug-v0', sampler, ltl=False, render_mode='human', max_steps=2000, eval_mode=True)
+sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
+env = make_env('PointLtl2Debug-v0', sampler, render_mode='human', max_steps=2000)
 
 observation = env.reset(seed=1)
 print(f'Goal: {observation["goal"]}')
@@ -13,7 +12,7 @@ for i in range(5000):
     observation, reward, terminated, info = env.step(action)
 
     if terminated:
-        print(reward)
+        print(f'Success: {"success" in info}')
         observation = env.reset()
         print(f'Goal: {observation["goal"]}')
 

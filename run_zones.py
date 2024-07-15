@@ -39,11 +39,12 @@ def main():
             '--epochs', '10',
             '--num_steps', '15_000_000',
             '--model_config', 'default',
+            '--curriculum', 'zones',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
             '--num_procs', str(args.num_procs),
-            # '--pretraining_experiment', 'seq',  # Try with frozen weights
+            # '--pretraining_experiment', 'seq',
         ]
         if args.log_wandb:
             command.append('--log_wandb')
@@ -63,5 +64,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Interrupted!')
         wandb.finish()
-        kill_all_wandb_processes()
+        # kill_all_wandb_processes()
         sys.exit(0)

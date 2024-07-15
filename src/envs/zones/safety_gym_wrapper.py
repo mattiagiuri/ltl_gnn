@@ -6,7 +6,7 @@ from gymnasium import spaces
 from gymnasium.core import ActType, WrapperObsType
 from gymnasium.spaces import Box
 
-from ltl.logic import FrozenAssignment, Assignment
+from ltl.logic import Assignment
 
 
 class SafetyGymWrapper(gymnasium.Wrapper):
