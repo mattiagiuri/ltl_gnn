@@ -8,9 +8,9 @@ from sequence.search import SequenceSearch
 class Agent:
     def __init__(self, model: Model, search: SequenceSearch, verbose=False):
         self.model = model
-        self.sequence = None
         self.search = search
         self.verbose = verbose
+        self.sequence = None
 
     def reset(self):
         self.sequence = None

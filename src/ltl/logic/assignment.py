@@ -45,6 +45,10 @@ class Assignment(MutableMapping):
     def single_proposition(p: str, propositions: set[str]) -> 'Assignment':
         return Assignment({p: True} | {q: False for q in propositions if q != p})
 
+    @staticmethod
+    def zero_propositions(propositions: set[str]) -> 'Assignment':
+        return Assignment({p: False for p in propositions})
+
     def satisfies(self, label: str) -> bool:
         if label == 't':
             return True

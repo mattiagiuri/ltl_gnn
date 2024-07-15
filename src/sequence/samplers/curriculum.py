@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from ltl.automata import LDBASequence
-from sequence.samplers.reach_avoid_sequence_sampler import sample_reach_avoid, all_reach_avoid_tasks
+from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_avoid_tasks, all_reach_tasks
 
 
 @dataclass
@@ -130,4 +130,48 @@ LETTER_CURRICULUM = Curriculum([
         threshold=None,
         threshold_type=None
     ),
+])
+
+ZONES_CURRICULUM = Curriculum([
+    ExplicitCurriculumStage(
+        task_fn=all_reach_tasks(1),
+        temperature=0.5,
+        threshold=0.8,
+        threshold_type='min',
+    ),
+    ExplicitCurriculumStage(
+        task_fn=all_reach_tasks(2),
+        threshold=0.95,
+        threshold_type='mean'
+    ),
+    ExplicitCurriculumStage(
+        task_fn=all_reach_avoid_tasks(1),
+        threshold=0.95,
+        threshold_type='mean'
+    ),
+    ExplicitCurriculumStage(
+        task_fn=all_reach_avoid_tasks(2),
+        threshold=0.9,
+        threshold_type='mean'
+    ),
+    RandomCurriculumStage(
+        sampler=sample_reach_avoid(3, (1, 2), (0, 2), not_reach_same_as_last=False),
+        threshold=None,
+        threshold_type=None
+    ),
+    # RandomCurriculumStage(
+    #     sampler=sample_reach_avoid(1, (1, 2), (0, 2)),
+    #     threshold=0.95,
+    #     threshold_type='mean'
+    # ),
+    # RandomCurriculumStage(
+    #     sampler=sample_reach_avoid(2, (1, 2), (1, 2), not_reach_same_as_last=False),
+    #     threshold=0.95,
+    #     threshold_type='mean'
+    # ),
+    # RandomCurriculumStage(
+    #     sampler=sample_reach_avoid(3, (1, 2), (0, 3), not_reach_same_as_last=False),
+    #     threshold=None,
+    #     threshold_type=None
+    # ),
 ])
