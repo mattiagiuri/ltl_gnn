@@ -14,16 +14,16 @@ from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
 exp = 'new2'
-seed = 2
+seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = False
-sampler = AvoidSampler.partial(2, 1)
-# sampler = FixedSampler.partial('!(green | blue | yellow) U magenta')
-deterministic = False
+# sampler = AvoidSampler.partial(2, 1)
+sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
+deterministic = True
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
 config = model_configs['default']
