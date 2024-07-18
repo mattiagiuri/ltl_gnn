@@ -15,11 +15,11 @@ from config import model_configs
 from sequence.search import BFS, DijkstraSearch, ExhaustiveSearch
 from utils.model_store import ModelStore
 
-env_name = 'LetterEnv-v0'
+env_name = 'LetterEnv-v0.fixed'
 exp = 'stage3_095'
 seed = 1
 render_modes = [None, 'human', 'path']
-render = render_modes[1]
+render = render_modes[0]
 render_on_fail = False
 
 random.seed(seed)
@@ -33,8 +33,8 @@ torch.random.manual_seed(seed)
 # sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
 # sampler = AvoidSampler.partial(depth=3, num_conjuncts=1)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
-sampler = FixedSampler.partial('GF k & GF e & G (h => F f)')
-# sampler = FixedSampler.partial('(h => F f)  b')
+# sampler = FixedSampler.partial('GF k & GF e & G (h => F f)')
+sampler = FixedSampler.partial('F (a & (!d U c))')
 
 deterministic = False
 

@@ -38,8 +38,13 @@ register(
         use_fixed_map=True,
         use_agent_centric_view=True,
         map={
-            (3, 0): 'b',
-            (0, 1): 'a',
+            (4, 0): 'c',
+            (0, 2): 'a',
+            (0, 1): 'd',
+            (0, 3): 'd',
+            (1, 2): 'd',
+            (6, 2): 'd',
+            (3, 4): 'a'
         }
     )
 )
