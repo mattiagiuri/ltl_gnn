@@ -4,7 +4,7 @@ import torch
 from ltl.automata import LDBA, LDBATransition
 from ltl.logic import Assignment
 from model.ltl.ldba_graph import LDBAGraph
-from visualize.visualize import draw_ldba_graph, draw_ldba
+from visualize.automata import draw_ldba_graph, draw_ldba
 
 
 def assert_edge_index_equal(edge_index1, edge_index2):

@@ -158,8 +158,14 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
         self.task.random_generator.set_random_seed(self._seed)
 
     @property
-    def robot_pos(self):
+    def agent_pos(self):
         return self.task.agent.pos
+
+    @property
+    def zone_positions(self):
+        return {
+            k: v for k, v in self.task.world_info.layout.items() if 'zone' in k
+        }
 
     def reset(
         self,
