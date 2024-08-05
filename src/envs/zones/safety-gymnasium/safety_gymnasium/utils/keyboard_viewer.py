@@ -26,6 +26,8 @@ class KeyboardViewer(WindowViewer):  # pylint: disable=too-many-instance-attribu
 
     def __init__(self, model, data, custom_key_press_callback) -> None:
         super().__init__(model, data)
+        self.cam.fixedcamid = 0
+        self.cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
         self._custom_key_press_callback = custom_key_press_callback
 
     # pylint: disable-next=too-many-arguments, too-many-branches
@@ -96,8 +98,7 @@ class KeyboardViewer(WindowViewer):  # pylint: disable=too-many-instance-attribu
             self._custom_key_press_callback(key=key, action=action)
 
         # Quit
-        if key == glfw.KEY_ESCAPE:
-            print('Pressed ESC')
-            print('Quitting.')
+        if key == glfw.KEY_Q:
+            print('Pressed Q. Quitting.')
             glfw.destroy_window(self.window)
             glfw.terminate()
