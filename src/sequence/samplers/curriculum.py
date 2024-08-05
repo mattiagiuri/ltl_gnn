@@ -7,7 +7,8 @@ import numpy as np
 import torch
 
 from ltl.automata import LDBASequence
-from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_avoid_tasks, all_reach_tasks
+from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_avoid_tasks, all_reach_tasks, \
+    all_reach_and_stay_tasks, sample_reach_and_stay
 
 
 @dataclass
@@ -65,6 +66,20 @@ class RandomCurriculumStage(CurriculumStage):
 
     def sample(self, propositions: list[str]) -> LDBASequence:
         return self.sampler(propositions)
+
+    def update_task_success(self, task_success: dict[LDBASequence, float]) -> None:
+        pass
+
+
+@dataclass
+class MultiRandomStage(CurriculumStage):
+    """A combination of multiple RandomCurriculumStages with associated sampling probabilities."""
+    stages: list[RandomCurriculumStage]
+    probs: list[float]
+
+    def sample(self, propositions: list[str]) -> LDBASequence:
+        stage = np.random.choice(self.stages, p=self.probs)
+        return stage.sample(propositions)
 
     def update_task_success(self, task_success: dict[LDBASequence, float]) -> None:
         pass
@@ -154,8 +169,25 @@ ZONES_CURRICULUM = Curriculum([
         threshold=0.9,
         threshold_type='mean'
     ),
-    RandomCurriculumStage(
-        sampler=sample_reach_avoid(3, (1, 2), (0, 2), not_reach_same_as_last=False),
+    ExplicitCurriculumStage(
+        task_fn=all_reach_and_stay_tasks(1),
+        threshold=0.95,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(
+        stages=[
+            RandomCurriculumStage(
+                sampler=sample_reach_avoid(3, (1, 2), (0, 2), not_reach_same_as_last=False),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=sample_reach_and_stay(1),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.9, 0.1],
         threshold=None,
         threshold_type=None
     ),

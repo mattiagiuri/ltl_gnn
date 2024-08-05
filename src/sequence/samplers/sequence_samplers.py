@@ -94,6 +94,37 @@ def all_reach_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
     return wrapper
 
 
+def all_reach_and_stay_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
+    def wrapper(propositions: list[str]) -> list[LDBASequence]:
+        tasks = []
+        for p in propositions:
+            reach = frozenset([Assignment.single_proposition(p, propositions).to_frozen()])
+            avoid = frozenset([
+                Assignment.zero_propositions(propositions).to_frozen(),
+                *[Assignment.single_proposition(q, propositions).to_frozen() for q in propositions if q != p]
+                ])
+            task = [(reach, frozenset()), *[(reach, avoid)] * depth]
+            tasks.append(tuple(task))
+        return tasks
+
+    return wrapper
+
+
+def sample_reach_and_stay(depth: int) -> Callable[[list[str]], LDBASequence]:
+    def wrapper(propositions: list[str]) -> LDBASequence:
+        tasks = all_reach_and_stay_tasks(depth)(propositions)
+        return random.choice(tasks)
+
+    return wrapper
+
+
+def fixed(sequence: LDBASequence) -> Callable[[list[str]], Callable[[], LDBASequence]]:
+    def wrapper(propositions: list[str]) -> Callable[[], LDBASequence]:
+        return lambda: sequence
+
+    return wrapper
+
+
 if __name__ == '__main__':
     tasks = all_reach_avoid_tasks(2)(['a', 'b', 'c', 'd'])
     pprint(tasks)

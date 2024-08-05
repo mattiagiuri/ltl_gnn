@@ -66,6 +66,7 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 if __name__ == '__main__':
     # f = '!a U b'
     # f = 'FGa'
+    # f = 'F g => GF b'
     # f = 'GF a & GF b & G (s => F g)'
     # f = 'F (green & (!yellow U blue)) & G (!magenta)'
     # f = '(F (g & F (f & F (d & F (g & F (a & F (h & F (b & F (j & F (f & F (g & F (i & F (b & F (c & F (f & F h)))))))))))))))'
