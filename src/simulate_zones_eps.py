@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from envs import make_env
 from ltl import AvoidSampler, FixedSampler
+from ltl.automata import EPSILON
 from ltl.logic import Assignment
 from model.model import build_model
 from model.agent import Agent
@@ -18,7 +19,7 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'reachstay'
+exp = 'target30_softplus'
 seed = 1
 
 random.seed(seed)
@@ -26,25 +27,16 @@ np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = True
-# sampler = AvoidSampler.partial(2, 1)
-# sampler = FixedSampler.partial('G green')
 props = ['green', 'magenta', 'blue', 'yellow']
-reach_any = frozenset([
-    Assignment.zero_propositions(props).to_frozen(),
-    *[Assignment.single_proposition(p, props).to_frozen() for p in props]
-])
-print(len(reach_any))
 prop = 'green'
 reach_green = frozenset([Assignment.single_proposition(prop, props).to_frozen()])
-avoid_none = frozenset()
 avoid_others = frozenset([
     Assignment.zero_propositions(props).to_frozen(),
     *[Assignment.single_proposition(p, props).to_frozen() for p in props if p != prop]
 ])
-seq = [(reach_green, avoid_others)] * 3
-seq2 = [(reach_green, avoid_none), *[(reach_green, avoid_others)] * 2]
+seq = [(EPSILON, frozenset()), *[(reach_green, avoid_others)] * 3]
 sampler = sequence_samplers.fixed(tuple(seq))
-deterministic = True
+deterministic = False  # TODO: fix mode in mixed_distribution!!!
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000, sequence=True)
 config = model_configs['default']
@@ -52,10 +44,9 @@ model_store = ModelStore('PointLtl2-v0', exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
-search = ExhaustiveSearch(model, num_loops=2)
-agent = SequenceAgent(model, verbose=render)
+agent = SequenceAgent(model, set(env.get_propositions()), verbose=render)
 
-num_episodes = 8
+num_episodes = 1000
 
 trajectories = []
 zone_poss = []
@@ -88,15 +79,8 @@ for i in pbar:
     while not done:
         action = agent.get_action(obs, info, deterministic=deterministic)
         action = action.flatten()
-
-        value = agent.get_value(obs, seq)
-        old_value = agent.get_value(obs, seq2)
-        print(value, old_value)
-        if value >= 0.85 and not env.switched:
-            if render:
-                print('SWITCHED: ', value)
-            env.switch()
-
+        if (action == EPSILON).all():
+            print('TOOK EPSILON ACTION')
         obs, reward, done, info = env.step(action)
         agent_traj.append(env.agent_pos[:2])
         if len(info['propositions']) > 0:

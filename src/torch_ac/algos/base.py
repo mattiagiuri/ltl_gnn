@@ -51,6 +51,7 @@ class BaseAlgo(ABC):
 
         # Store parameters
 
+        self.propositions = envs[0].get_propositions()
         self.env = ParallelEnv(envs) if parallel else SyncEnv(envs)
         self.model = model
         self.device = device
@@ -97,7 +98,7 @@ class BaseAlgo(ABC):
         self.qs = torch.zeros(*shape, device=self.device)
         self.rewards = torch.zeros(*shape, device=self.device)
         self.advantages = torch.zeros(*shape, device=self.device)
-        self.log_probs = torch.zeros(*act_shape, device=self.device)
+        self.log_probs = torch.zeros(*shape, device=self.device)
 
         # Initialize log values
 
@@ -137,7 +138,7 @@ class BaseAlgo(ABC):
         for i in range(self.num_steps_per_proc):
             # Do one agent-environment interaction
 
-            preprocessed_obs = self.preprocess_obss(self.obs, device=self.device)
+            preprocessed_obs = self.preprocess_obss(self.obs, self.propositions, device=self.device)
             with torch.no_grad():
                 if self.model.recurrent:
                     dist, value, memory = self.model(preprocessed_obs, self.memory * self.mask.unsqueeze(1))
@@ -160,7 +161,7 @@ class BaseAlgo(ABC):
             self.values[i] = value
 
             self.rewards[i] = torch.tensor(reward, device=self.device)
-            self.log_probs[i] = dist.log_prob(action)
+            self.log_probs[i] = dist.log_prob(action).detach()
 
             # Update log values
 
@@ -186,7 +187,7 @@ class BaseAlgo(ABC):
 
         # Add advantage and return to experiences
 
-        preprocessed_obs = self.preprocess_obss(self.obs, device=self.device)
+        preprocessed_obs = self.preprocess_obss(self.obs, self.propositions, device=self.device)
         with torch.no_grad():
             if self.model.recurrent:
                 _, next_value, _ = self.model(preprocessed_obs, self.memory * self.mask.unsqueeze(1))
@@ -226,11 +227,12 @@ class BaseAlgo(ABC):
         exps.reward = self.rewards.transpose(0, 1).reshape(-1)
         exps.advantage = self.advantages.transpose(0, 1).reshape(-1)
         exps.returnn = exps.value + exps.advantage
-        exps.log_prob = self.log_probs.transpose(0, 1).reshape((-1,) + self.action_space_shape)
+        exps.log_prob = self.log_probs.transpose(0, 1).reshape(-1)
+        # exps.log_prob = self.log_probs.transpose(0, 1).reshape((-1,) + self.action_space_shape)  # TODO: fix
 
         # Preprocess experiences
 
-        exps.obs = self.preprocess_obss(exps.obs, device=self.device)
+        exps.obs = self.preprocess_obss(exps.obs, self.propositions, device=self.device)
 
         # Log some values
 

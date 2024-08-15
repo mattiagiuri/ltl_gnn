@@ -13,7 +13,7 @@ from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
-exp = 'new2'
+exp = 'eps'
 seed = 1
 
 random.seed(seed)
@@ -21,8 +21,8 @@ np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = False
-# sampler = AvoidSampler.partial(2, 1)
-sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
+sampler = AvoidSampler.partial(2, 1)
+# sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
 deterministic = True
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)

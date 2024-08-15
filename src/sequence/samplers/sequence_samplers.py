@@ -2,7 +2,7 @@ import random
 from pprint import pprint
 from typing import Callable
 
-from ltl.automata import LDBASequence
+from ltl.automata import LDBASequence, EPSILON
 from ltl.logic import Assignment
 
 
@@ -94,6 +94,30 @@ def all_reach_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
     return wrapper
 
 
+def all_epsilon_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
+    def wrapper(propositions: list[str]) -> list[LDBASequence]:
+        tasks = []
+        for p in propositions:
+            reach = frozenset([Assignment.single_proposition(p, propositions).to_frozen()])
+            avoid = frozenset([
+                Assignment.zero_propositions(propositions).to_frozen(),
+                *[Assignment.single_proposition(q, propositions).to_frozen() for q in propositions if q != p]
+            ])
+            task = [(EPSILON, frozenset()), *[(reach, avoid)] * depth]
+            tasks.append(tuple(task))
+        return tasks
+
+    return wrapper
+
+
+def sample_epsilon(depth: int) -> Callable[[list[str]], LDBASequence]:
+    def wrapper(propositions: list[str]) -> LDBASequence:
+        tasks = all_epsilon_tasks(depth)(propositions)
+        return random.choice(tasks)
+
+    return wrapper
+
+
 def all_reach_and_stay_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
     def wrapper(propositions: list[str]) -> list[LDBASequence]:
         tasks = []
@@ -126,5 +150,5 @@ def fixed(sequence: LDBASequence) -> Callable[[list[str]], Callable[[], LDBASequ
 
 
 if __name__ == '__main__':
-    tasks = all_reach_avoid_tasks(2)(['a', 'b', 'c', 'd'])
+    tasks = all_epsilon_tasks(5)(['a', 'b', 'c', 'd'])
     pprint(tasks)

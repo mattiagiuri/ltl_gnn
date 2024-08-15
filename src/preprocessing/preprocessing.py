@@ -5,21 +5,32 @@ import torch
 import torch_ac
 import numpy as np
 
-from ltl.automata import LDBASequence
-from ltl.logic import FrozenAssignment
+from ltl.automata import LDBASequence, EPSILON
+from ltl.logic import FrozenAssignment, Assignment
 from preprocessing.batched_ast_sequence import BatchedASTSequence
 from preprocessing.assignment_ast import *
 
 
-def preprocess_obss(obss: list[dict[str, Any]], device=None) -> torch_ac.DictList:
+def preprocess_obss(obss: list[dict[str, Any]], propositions: set[str], device=None) -> torch_ac.DictList:
     features = []
     seqs = []
+    epsilon_mask = []
     for obs in obss:
         features.append(obs["features"])
         seqs.append(list(reversed(obs["goal"])))
+    for seq, obs in zip(seqs, obss):
+        epsilon_enabled = seq[-1][0] == EPSILON
+        if epsilon_enabled and len(seq) > 1:
+            next_avoid = seq[-2][1]
+            assignment = Assignment({p: (p in obs['propositions']) for p in propositions}).to_frozen()
+            epsilon_enabled &= assignment not in next_avoid
+        epsilon_mask.append(epsilon_enabled)
+
+
     return torch_ac.DictList({
         "features": preprocess_features(features, device=device),
         "seq": BatchedASTSequence([preprocess_sequence(seq) for seq in seqs], device=device),
+        "epsilon_mask": torch.tensor(epsilon_mask, dtype=torch.bool).to(device),  # TODO: check if this is correct
     })
 
 
@@ -31,7 +42,9 @@ def preprocess_sequence(seq: LDBASequence) -> list[tuple[ASTNode, ASTNode]]:
     return [(preprocess_assignments(a), preprocess_assignments(b)) for a, b in seq]
 
 
-def preprocess_assignments(assignments: frozenset[FrozenAssignment]) -> ASTNode:
+def preprocess_assignments(assignments: frozenset[FrozenAssignment] | type(EPSILON)) -> ASTNode:
+    if assignments == EPSILON:
+        return EpsilonNode()
     if len(assignments) == 0:
         return NullNode()
     if len(assignments) == 1:

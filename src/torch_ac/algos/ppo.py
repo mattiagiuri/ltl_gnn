@@ -5,7 +5,7 @@ import torch
 
 from config import PPOConfig
 from torch_ac.algos.base import BaseAlgo
-
+import math
 
 class PPO(BaseAlgo):
     """The Proximal Policy Optimization algorithm
@@ -70,8 +70,8 @@ class PPO(BaseAlgo):
 
                     # ratio = torch.exp(dist.log_prob(sb.action) - sb.log_prob)
                     delta_log_prob = dist.log_prob(sb.action) - sb.log_prob
-                    if (len(self.act_shape) == 1):  # Not scalar actions (multivariate)
-                        delta_log_prob = torch.sum(delta_log_prob, dim=1)
+                    # if (len(self.act_shape) == 1):  # Not scalar actions (multivariate)
+                    #    delta_log_prob = torch.sum(delta_log_prob, dim=1)
                     ratio = torch.exp(delta_log_prob)
                     surr1 = ratio * sb.advantage
                     surr2 = torch.clamp(ratio, 1.0 - self.clip_eps, 1.0 + self.clip_eps) * sb.advantage
@@ -83,6 +83,8 @@ class PPO(BaseAlgo):
                     value_loss = torch.max(surr1, surr2).mean()
 
                     loss = policy_loss - self.entropy_coef * entropy + self.value_loss_coef * value_loss
+                    if loss.isnan():
+                        print("Loss is NaN")
 
                     # Update batch values
 
@@ -114,7 +116,10 @@ class PPO(BaseAlgo):
                     p.grad.data.norm(2).item() ** 2 for p in self.model.parameters() if p.requires_grad and p.grad is not None) ** 0.5
                 torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad and p.grad is not None],
                                                self.max_grad_norm)
-                self.optimizer.step()
+                self.optimizer.step()  # TODO: multiply by probability of choosing continuous action or discrete. update step() in seq_wrapper
+
+                if any(torch.isnan(p).any() for p in self.model.parameters()):
+                    print("Model parameters are NaN")
 
                 # Update log values
 

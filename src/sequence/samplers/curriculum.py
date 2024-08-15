@@ -8,7 +8,7 @@ import torch
 
 from ltl.automata import LDBASequence
 from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_avoid_tasks, all_reach_tasks, \
-    all_reach_and_stay_tasks, sample_reach_and_stay
+    all_reach_and_stay_tasks, sample_reach_and_stay, all_epsilon_tasks, sample_epsilon
 
 
 @dataclass
@@ -114,12 +114,12 @@ class Curriculum:
         if aggr(list(task_success.values())) >= self.current_stage.threshold:
             if verbose:
                 print('=' * 80)
-                print(f"Stage {self.stage_index + 1} completed.")
+                print(f"Stage {self.stage_index} completed.")
                 print('=' * 80)
             self.stage_index += 1
         else:
             if verbose and self.num_updates % 100 == 0:
-                print(f"Stage {self.stage_index + 1} not completed.")
+                print(f"Stage {self.stage_index} not completed.")
                 print(f'MEAN: {np.mean(list(task_success.values()))}, THRESHOLD: {self.current_stage.threshold}')
 
 
@@ -170,8 +170,9 @@ ZONES_CURRICULUM = Curriculum([
         threshold_type='mean'
     ),
     ExplicitCurriculumStage(
-        task_fn=all_reach_and_stay_tasks(1),
-        threshold=0.95,
+        task_fn=all_epsilon_tasks(1),  # TODO: train with longer epsilon sequences.
+        temperature=0.5,
+        threshold=0.9,
         threshold_type='mean'
     ),
     MultiRandomStage(
@@ -182,7 +183,7 @@ ZONES_CURRICULUM = Curriculum([
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=sample_reach_and_stay(1),
+                sampler=sample_epsilon(1),
                 threshold=None,
                 threshold_type=None
             ),

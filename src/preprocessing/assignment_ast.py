@@ -15,6 +15,11 @@ class EmptyNode(ASTNode):
     pass
 
 
+class EpsilonNode(ASTNode):
+    """An epsilon transition."""
+    pass
+
+
 class PropositionNode(ASTNode):
     def __init__(self, proposition: str):
         self.proposition = proposition

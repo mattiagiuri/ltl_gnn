@@ -1,4 +1,5 @@
 from contextlib import nullcontext
+from typing import Literal
 
 from utils import memory, timeit
 from .owl import run_owl
@@ -25,6 +26,8 @@ def ltl2nba(formula: str, propositions: list[str] = None, simplify_labels=True, 
     return HOAParser(formula, hoa, propositions, simplify_labels=simplify_labels).parse_hoa()
 
 
-LDBASequence = tuple[tuple[frozenset[FrozenAssignment], frozenset[FrozenAssignment]], ...]
+EPSILON = -42  # TODO: clean up
 
-__all__ = ['LDBASequence', 'LDBA', 'LDBATransition', 'ltl2ldba', 'ltl2nba']
+LDBASequence = tuple[tuple[frozenset[FrozenAssignment] | type(EPSILON), frozenset[FrozenAssignment]], ...]
+
+__all__ = ['LDBASequence', 'LDBA', 'LDBATransition', 'ltl2ldba', 'ltl2nba', 'EPSILON']
