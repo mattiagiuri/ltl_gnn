@@ -22,6 +22,10 @@ class LDBA:
         self.possible_assignments: Optional[list[Assignment]] = None
         self.state_to_scc = {}
 
+    @property
+    def states(self) -> list[int]:
+        return list(range(self.num_states))
+
     def add_state(self, state: int, initial=False):
         if state < 0:
             raise ValueError('State must be a positive integer.')

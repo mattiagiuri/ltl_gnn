@@ -22,4 +22,5 @@ class LtlLevel0(LtlBaseTask):
     """No zones."""
 
     def __init__(self, config) -> None:
-        super().__init__(config=config, zone_size=0.5, walls=False)
+        super().__init__(config=config, zone_size=0.4)
+        self._add_geoms(Zones(color='green', size=self.zone_size, num=2))

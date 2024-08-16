@@ -20,7 +20,7 @@ class BFS(SequenceSearch):
     def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:
         seqs = self.bfs(ldba, ldba_state, obs)
         seq = max(seqs, key=lambda s: self.get_value(s, obs))
-        seq = self.augment_sequence(ldba, ldba_state, seq)  # TODO: augment or not?
+        seq = self.augment_sequence(ldba, ldba_state, seq)
         return seq
 
     def bfs(self, ldba: LDBA, ldba_state: int, obs) -> list[LDBASequence]:

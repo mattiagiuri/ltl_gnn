@@ -15,7 +15,7 @@ from config import model_configs
 from sequence.search import BFS, DijkstraSearch, ExhaustiveSearch
 from utils.model_store import ModelStore
 
-env_name = 'LetterEnv-v0.fixed'
+env_name = 'LetterEnv-v0'
 exp = 'stage3_095'
 seed = 1
 render_modes = [None, 'human', 'path']
@@ -30,22 +30,23 @@ torch.random.manual_seed(seed)
 # sampler = FixedSequenceSampler.partial([('b', 'a')])
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=False)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
-# sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
-# sampler = AvoidSampler.partial(depth=3, num_conjuncts=1)
+# sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
+sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
+# sampler = AvoidSampler.partial(depth=6, num_conjuncts=1)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
 # sampler = FixedSampler.partial('GF k & GF e & G (h => F f)')
-sampler = FixedSampler.partial('F (a & (!d U c))')
+# sampler = FixedSampler.partial('F (a & (!d U c))')
 
 deterministic = False
 
-env = make_env(env_name, sampler, max_steps=75, render_mode=render)
+env = make_env(env_name, sampler, max_steps=225, render_mode=render)
 config = model_configs['letter']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
-# search = BFS(model)
-search = ExhaustiveSearch(model, num_loops=2)
+search = BFS(model)
+# search = ExhaustiveSearch(model, num_loops=2)
 agent = Agent(model, search=search, verbose=render is not None)
 
 num_episodes = 500

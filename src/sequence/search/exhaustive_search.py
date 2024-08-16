@@ -42,31 +42,29 @@ class Path:
 
 
 class ExhaustiveSearch(SequenceSearch):
-    def __init__(self, model: nn.Module, num_loops: int):
+    def __init__(self, model: nn.Module, num_loops: int, value_threshold: float = 0.4):
         super().__init__(model)
         self.num_loops = num_loops
+        self.value_threshold = value_threshold
 
-    def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:
-        seqs = ExhaustiveSearch.all_sequences(ldba, ldba_state, self.num_loops)
+    def __call__(self, ldba: LDBA, ldba_state: int, obs=None) -> LDBASequence:
+        seqs = self.all_sequences(ldba, ldba_state, obs, self.num_loops)
         return max(seqs, key=lambda s: self.get_value(s, obs))
 
-    @staticmethod
-    def all_sequences(ldba: LDBA, ldba_state: int, num_loops=1) -> list[LDBASequence]:
-        paths = ExhaustiveSearch.dfs(ldba, ldba_state, [], {}, None)
+    def all_sequences(self, ldba: LDBA, ldba_state: int, obs=None, num_loops=1) -> list[LDBASequence]:
         num_loops = 0 if ldba.is_finite_specification() else num_loops
+        paths = self.dfs(ldba, ldba_state, [], {}, None, obs, num_loops)
         return [path.to_sequence(num_loops) for path in paths]
 
-    @staticmethod
-    def dfs(ldba: LDBA, state: int, current_path: list[LDBATransition], state_to_path_index: dict[int, int],
-            accepting_transition: Optional[LDBATransition]) -> list[Path]:
+    def dfs(self, ldba: LDBA, state: int, current_path: list[LDBATransition], state_to_path_index: dict[int, int],
+            accepting_transition: Optional[LDBATransition], obs=None, num_loops=1) -> list[Path]:
         """
         Performs a depth-first search on the LDBA to find all simple paths leading to an accepting loop.
-        Returns the list of simple paths, and a set of negative transitions that either (i) lead to a sink state,
-        or (ii) only lead to non-accepting cycles.
         """
         state_to_path_index[state] = len(current_path)
         neg_transitions = set()
         paths = []
+        transition_to_max_value = {}
         for transition in ldba.state_to_transitions[state]:
             scc = ldba.state_to_scc[transition.target]
             if scc.bottom and not scc.accepting:
@@ -89,10 +87,15 @@ class ExhaustiveSearch(SequenceSearch):
                             neg_transitions.add(transition)
                         continue
                 else:
-                    future_paths = ExhaustiveSearch.dfs(ldba, transition.target, current_path, state_to_path_index,
-                                                        updated_accepting_transition)
+                    future_paths = self.dfs(ldba, transition.target, current_path, state_to_path_index,
+                                            updated_accepting_transition, obs)
                     if len(future_paths) == 0:
                         neg_transitions.add(transition)
+                    else:
+                        if obs is not None:
+                            future_seqs = [fp.to_sequence(num_loops) for fp in future_paths]
+                            max_value = max([self.get_value(s, obs) for s in future_seqs])
+                            transition_to_max_value[transition] = max_value
                 for fp in future_paths:
                     # avoid transitions can only be added once the recursion is finished, so only set() for now
                     paths.append(fp.prepend(transition, set()))
@@ -100,8 +103,20 @@ class ExhaustiveSearch(SequenceSearch):
 
         del state_to_path_index[state]
         paths = ExhaustiveSearch.prune_paths(paths)
+        # for path in paths:
+        #     path[0][1].update(neg_transitions)  # now we update the negative transitions
         for path in paths:
             path[0][1].update(neg_transitions)  # now we update the negative transitions
+            if obs is None:
+                continue
+            chosen_seq = path.to_sequence(num_loops)
+            chosen_value = self.get_value(chosen_seq, obs)
+            for transition in ldba.state_to_transitions[state]:
+                if transition in neg_transitions or transition.source == transition.target or transition == path[0][0]:
+                    continue
+                alternative_value = transition_to_max_value[transition]
+                if chosen_value - alternative_value > self.value_threshold:
+                    path[0][1].add(transition)
         return paths
 
     @staticmethod

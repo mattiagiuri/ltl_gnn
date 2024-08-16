@@ -111,6 +111,7 @@ if __name__ == '__main__':
     ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
     print(f'Finite: {ldba.is_finite_specification()}')
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    seqs = ExhaustiveSearch.all_sequences(ldba, ldba.initial_state)
+    search = ExhaustiveSearch(None, num_loops=1)
+    seqs = search.all_sequences(ldba, ldba.initial_state)
     print(seqs)
     print(len(seqs))
