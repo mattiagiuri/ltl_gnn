@@ -5,7 +5,7 @@ import gymnasium
 from gymnasium.core import WrapperObsType, WrapperActType
 
 from envs import get_env_attr
-from ltl.automata import ltl2ldba, LDBA
+from ltl.automata import ltl2ldba, LDBA, EPSILON
 
 
 class LDBAWrapper(gymnasium.Wrapper):
@@ -22,37 +22,55 @@ class LDBAWrapper(gymnasium.Wrapper):
         self.terminate_on_acceptance = False
         self.ldba = None
         self.ldba_state = None
+        self.num_accepting_visits = 0
+        self.obs = None
+        self.info = None
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        obs, reward, terminated, truncated, info = super().step(action)
-        new_ldba_state, accepting = self.ldba.get_next_state(self.ldba_state, info['propositions'])
+        if (action == EPSILON).all():
+            obs, reward, terminated, truncated, info = self.obs, 0.0, False, False, self.info
+            take_epsilon = True
+        else:
+            assert not (action == EPSILON).any()
+            obs, reward, terminated, truncated, info = super().step(action)
+            take_epsilon = False
+            self.obs = obs
+            self.info = info
+        new_ldba_state, accepting = self.ldba.get_next_state(self.ldba_state, info['propositions'], take_epsilon)
         if new_ldba_state != self.ldba_state:
             self.ldba_state = new_ldba_state
             info['ldba_state_changed'] = True
-        self.complete_observation(obs)
+        self.complete_observation(obs, info)
         if self.terminate_on_acceptance and accepting:
             terminated = True
             info['success'] = True
+        if accepting:
+            self.num_accepting_visits += 1
         scc = self.ldba.state_to_scc[self.ldba_state]
         if scc.bottom and not scc.accepting:
             terminated = True
             info['violation'] = True
         info['accepting'] = accepting
+        info['num_accepting_visits'] = self.num_accepting_visits
         return obs, reward, terminated, truncated, info
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
         WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
+        self.obs = obs
+        self.info= info
         self.ldba = self.construct_ldba(obs['goal'])
         self.terminate_on_acceptance = self.ldba.is_finite_specification()
         self.ldba_state = self.ldba.initial_state
-        self.complete_observation(obs)
+        self.num_accepting_visits = 0
+        self.complete_observation(obs, info)
         info['ldba_state_changed'] = True
         return obs, info
 
-    def complete_observation(self, obs: WrapperObsType):
+    def complete_observation(self, obs: WrapperObsType, info: dict[str, Any] = None):
         obs['ldba'] = self.ldba
         obs['ldba_state'] = self.ldba_state
+        obs['propositions'] = info['propositions']
 
     @functools.cache
     def construct_ldba(self, formula: str) -> LDBA:

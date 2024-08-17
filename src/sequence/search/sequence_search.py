@@ -9,8 +9,9 @@ from ltl.automata import LDBA, LDBASequence, LDBATransition
 class SequenceSearch(ABC):
     """A search that can be performed on an LDBA and yields the optimal sequence according to the model."""
 
-    def __init__(self, model: nn.Module, **kwargs):
+    def __init__(self, model: nn.Module, propositions, **kwargs):
         self.model = model
+        self.propositions = propositions
 
     @abstractmethod
     def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:
@@ -20,7 +21,7 @@ class SequenceSearch(ABC):
         obs['goal'] = seq
         if not (isinstance(obs, list) or isinstance(obs, tuple)):
             obs = [obs]
-        preprocessed = preprocessing.preprocess_obss(obs)
+        preprocessed = preprocessing.preprocess_obss(obs, self.propositions)
         _, value = self.model(preprocessed)
         return value.item()
 

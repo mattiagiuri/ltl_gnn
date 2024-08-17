@@ -9,6 +9,7 @@ from envs import make_env
 from ltl import AvoidSampler, FixedSampler
 from ltl.automata import EPSILON
 from ltl.logic import Assignment
+from ltl.samplers.reach_stay_sampler import ReachStaySampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
@@ -19,34 +20,28 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'target30_softplus'
+exp = 'target200'
 seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-render = True
-props = ['green', 'magenta', 'blue', 'yellow']
-prop = 'green'
-reach_green = frozenset([Assignment.single_proposition(prop, props).to_frozen()])
-avoid_others = frozenset([
-    Assignment.zero_propositions(props).to_frozen(),
-    *[Assignment.single_proposition(p, props).to_frozen() for p in props if p != prop]
-])
-seq = [(EPSILON, frozenset()), *[(reach_green, avoid_others)] * 3]
-sampler = sequence_samplers.fixed(tuple(seq))
-deterministic = False  # TODO: fix mode in mixed_distribution!!!
+render = False
+sampler = ReachStaySampler.partial()
+deterministic = False
 
-env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000, sequence=True)
+env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
 config = model_configs['default']
 model_store = ModelStore('PointLtl2-v0', exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
-agent = SequenceAgent(model, set(env.get_propositions()), verbose=render)
+props = set(env.get_propositions())
+search = ExhaustiveSearch(model, props, num_loops=2)
+agent = Agent(model, search=search, propositions=props, verbose=render)
 
-num_episodes = 1000
+num_episodes = 500
 
 trajectories = []
 zone_poss = []
@@ -68,8 +63,8 @@ for i in pbar:
     obs = env.reset()
     agent.reset()
     info = {'ldba_state_changed': True}
-    # if render:
-    #    print(obs['goal'])
+    if render:
+       print(obs['goal'])
     done = False
     num_steps = 0
 
@@ -79,8 +74,6 @@ for i in pbar:
     while not done:
         action = agent.get_action(obs, info, deterministic=deterministic)
         action = action.flatten()
-        if (action == EPSILON).all():
-            print('TOOK EPSILON ACTION')
         obs, reward, done, info = env.step(action)
         agent_traj.append(env.agent_pos[:2])
         if len(info['propositions']) > 0:
@@ -88,22 +81,11 @@ for i in pbar:
         num_steps += 1
         if done:
             trajectories.append(agent_traj)
-            stays.append(info['max_stay'])
-            if 'success' in info:
-                num_successes += 1
-                final_reward = 1
-                steps.append(num_steps)
-            elif 'violation' in info:
-                num_violations += 1
-                final_reward = -1
-            else:
-                final_reward = 0
-            # print(final_reward)
-            rets.append(final_reward * 0.998 ** (num_steps - 1))
-            success_mask.append('success' in info)
+            stays.append(info['num_accepting_visits'])
             if not render:
                 pbar.set_postfix({
-                    'MS': np.median(stays)
+                    'med': np.median(stays),
+                    'mean': np.mean(stays)
                 })
 
 env.close()

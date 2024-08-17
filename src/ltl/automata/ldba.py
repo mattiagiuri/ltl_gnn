@@ -35,9 +35,16 @@ class LDBA:
         if state not in self.state_to_incoming_transitions:
             self.state_to_incoming_transitions[state] = []
 
-    def get_next_state(self, state: int, propositions: set[str]) -> tuple[int, bool]:
+    def get_next_state(self, state: int, propositions: set[str], take_epsilon=False) -> tuple[int, bool]:
         """Returns the next state and whether the taken transition is accepting,
            given the current state and the propositions that are true."""
+        if take_epsilon:
+            eps_transitions = [t for t in self.state_to_transitions[state] if t.is_epsilon()]
+            if len(eps_transitions) > 1:
+                raise ValueError('More than one epsilon transition from a state is currently not supported.')
+            assert eps_transitions
+            t = eps_transitions[0]
+            return t.target, t.accepting
         assignment = Assignment({p: (p in propositions) for p in self.propositions}).to_frozen()
         for transition in self.state_to_transitions[state]:
             if assignment in transition.valid_assignments:

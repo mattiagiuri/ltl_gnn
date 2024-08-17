@@ -30,7 +30,7 @@ def preprocess_obss(obss: list[dict[str, Any]], propositions: set[str], device=N
     return torch_ac.DictList({
         "features": preprocess_features(features, device=device),
         "seq": BatchedASTSequence([preprocess_sequence(seq) for seq in seqs], device=device),
-        "epsilon_mask": torch.tensor(epsilon_mask, dtype=torch.bool).to(device),  # TODO: check if this is correct
+        "epsilon_mask": torch.tensor(epsilon_mask, dtype=torch.bool).to(device),
     })
 
 

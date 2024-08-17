@@ -3,7 +3,7 @@ from typing import Optional
 
 from torch import nn
 
-from ltl.automata import LDBA, LDBATransition, LDBASequence
+from ltl.automata import LDBA, LDBATransition, LDBASequence, EPSILON
 from sequence.search import SequenceSearch
 
 
@@ -38,12 +38,13 @@ class Path:
     def reach_avoid_to_assignments(reach: LDBATransition, avoid: set[LDBATransition]) -> tuple[frozenset, frozenset]:
         avoid = [a.valid_assignments for a in avoid]
         avoid = set() if not avoid else set.union(*avoid)
-        return frozenset(reach.valid_assignments), frozenset(avoid)
+        reach = EPSILON if reach.is_epsilon() else frozenset(reach.valid_assignments)
+        return reach, frozenset(avoid)
 
 
 class ExhaustiveSearch(SequenceSearch):
-    def __init__(self, model: nn.Module, num_loops: int):
-        super().__init__(model)
+    def __init__(self, model: nn.Module, propositions, num_loops: int):
+        super().__init__(model, propositions)
         self.num_loops = num_loops
 
     def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:

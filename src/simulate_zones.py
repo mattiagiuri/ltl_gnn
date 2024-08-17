@@ -13,7 +13,7 @@ from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
-exp = 'eps'
+exp = 'target30_softplus'
 seed = 1
 
 random.seed(seed)
@@ -31,8 +31,9 @@ model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
-search = ExhaustiveSearch(model, num_loops=2)
-agent = Agent(model, search=search, verbose=render)
+props = set(env.get_propositions())
+search = ExhaustiveSearch(model, props, num_loops=2)
+agent = Agent(model, search=search, propositions=props, verbose=render)
 
 num_episodes = 1000
 
