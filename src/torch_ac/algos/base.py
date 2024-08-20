@@ -178,7 +178,6 @@ class BaseAlgo(ABC):
                     assert not (('success' in info[j]) and ('violation' in info[j]))
 
                     goal = self.obss[i][j]['initial_goal']
-                    goal = tuple(goal)
                     self.goal_success[goal] += int('success' in info[j])
                     self.goal_counts[goal] += 1
 

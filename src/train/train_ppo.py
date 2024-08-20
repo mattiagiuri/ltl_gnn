@@ -62,10 +62,11 @@ class Trainer:
 
             num_steps += logs["num_steps"]
             num_updates += 1
-            if num_updates % self.args.experiment.log_interval == 0:
+            if num_updates % self.args.experiment.log_interval == 0 or curriculum.finished:
                 logs = self.augment_logs(logs, update_time, num_steps)
                 logger.log(logs)
-            if self.args.experiment.save_interval > 0 and num_updates % self.args.experiment.save_interval == 0 \
+            if (
+                    curriculum.finished or self.args.experiment.save_interval > 0 and num_updates % self.args.experiment.save_interval == 0) \
                     and self.args.save:
                 training_status = {"num_steps": num_steps, "num_updates": num_updates,
                                    "model_state": algo.model.state_dict(),
@@ -75,6 +76,9 @@ class Trainer:
                 self.model_store.save_training_status(training_status)
                 self.model_store.save_ltl_net(algo.model.ltl_net.state_dict())
                 self.text_logger.info("Saved training status")
+            if curriculum.finished:
+                self.text_logger.important_info("Finished curriculum.")
+                break
 
     def make_envs(self, curriculum_stage: int) -> list[gymnasium.Env]:
         utils.set_seed(self.args.experiment.seed)

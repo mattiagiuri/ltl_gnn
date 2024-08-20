@@ -1,7 +1,7 @@
 import torch
 from torch.distributions import Distribution
 
-from ltl.automata import EPSILON
+from ltl.automata import LDBASequence
 
 
 class MixedDistribution(Distribution):
@@ -22,12 +22,12 @@ class MixedDistribution(Distribution):
 
     def sample(self, **kwargs) -> torch.tensor:
         sample = self.dist.sample(**kwargs)
-        mask = self.epsilon_mask & (torch.rand(len(sample)) < self.epsilon_prob)
-        sample[mask] = EPSILON
+        mask = self.epsilon_mask & (torch.rand(len(sample)).to(self.epsilon_prob.device) < self.epsilon_prob)
+        sample[mask] = LDBASequence.EPSILON
         return sample
 
     def log_prob(self, value):
-        mask = (value == EPSILON).all(dim=1)
+        mask = (value == LDBASequence.EPSILON).all(dim=1)
         assert sum(mask) <= sum(self.epsilon_mask), "More epsilon transitions than allowed."
         log_probs = torch.zeros(len(value), device=value.device)
         log_probs[mask] = torch.log(self.epsilon_prob[mask])
@@ -48,5 +48,5 @@ class MixedDistribution(Distribution):
         assert len(self.epsilon_prob) == 1
         assert len(self.epsilon_mask) == 1
         if self.epsilon_mask[0] and self.epsilon_prob.item() > 0.7:
-            return torch.tensor([EPSILON])
+            return torch.tensor([LDBASequence.EPSILON])
         return self.dist.mode

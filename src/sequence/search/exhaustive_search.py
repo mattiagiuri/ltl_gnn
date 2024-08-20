@@ -3,7 +3,7 @@ from typing import Optional
 
 from torch import nn
 
-from ltl.automata import LDBA, LDBATransition, LDBASequence, EPSILON
+from ltl.automata import LDBA, LDBATransition, LDBASequence
 from sequence.search import SequenceSearch
 
 
@@ -32,13 +32,13 @@ class Path:
         seq = [self.reach_avoid_to_assignments(r, a) for r, a in self.reach_avoid[:self.loop_index]]
         loop = [self.reach_avoid_to_assignments(r, a) for r, a in self.reach_avoid[self.loop_index:]]
         seq = seq + loop * num_loops
-        return tuple(seq)
+        return LDBASequence(seq)
 
     @staticmethod
     def reach_avoid_to_assignments(reach: LDBATransition, avoid: set[LDBATransition]) -> tuple[frozenset, frozenset]:
         avoid = [a.valid_assignments for a in avoid]
         avoid = set() if not avoid else set.union(*avoid)
-        reach = EPSILON if reach.is_epsilon() else frozenset(reach.valid_assignments)
+        reach = LDBASequence.EPSILON if reach.is_epsilon() else frozenset(reach.valid_assignments)
         return reach, frozenset(avoid)
 
 

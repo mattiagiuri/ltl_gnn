@@ -2,7 +2,7 @@ import random
 from pprint import pprint
 from typing import Callable
 
-from ltl.automata import LDBASequence, EPSILON
+from ltl.automata import LDBASequence
 from ltl.logic import Assignment
 
 
@@ -37,7 +37,7 @@ def sample_reach_avoid(
             reach, avoid, reach_props = sample_one(last_reach)
             seq.append((reach, avoid))
             last_reach = reach_props
-        return tuple(seq)
+        return LDBASequence(seq)
 
     return wrapper
 
@@ -48,11 +48,11 @@ def all_reach_avoid_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence
                          frozenset([Assignment.single_proposition(q, propositions).to_frozen()]))
                         for p in propositions for q in propositions if p != q]
 
-        def rec(depth: int) -> list[LDBASequence]:
+        def rec(depth: int):
             if depth == 0:
                 return []
             if depth == 1:
-                return [(ra,) for ra in reach_avoids]
+                return [[ra] for ra in reach_avoids]
             rec_res = rec(depth - 1)
             result = []
             for task in rec_res:
@@ -60,10 +60,10 @@ def all_reach_avoid_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence
                 for p, q in reach_avoids:
                     if p == next_reach or p == next_avoid:
                         continue
-                    result.append(((p, q),) + task)
+                    result.append([(p, q)] + task)
             return result
 
-        return rec(depth)
+        return [LDBASequence(task) for task in rec(depth)]
 
     return wrapper
 
@@ -74,11 +74,11 @@ def all_reach_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
                    frozenset())
                   for p in propositions]
 
-        def rec(depth: int) -> list[LDBASequence]:
+        def rec(depth: int):
             if depth == 0:
                 return []
             if depth == 1:
-                return [(r,) for r in reachs]
+                return [[r] for r in reachs]
             rec_res = rec(depth - 1)
             result = []
             for task in rec_res:
@@ -86,15 +86,15 @@ def all_reach_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
                 for p, _ in reachs:
                     if p == next_reach:
                         continue
-                    result.append(((p, frozenset()),) + task)
+                    result.append([(p, frozenset())] + task)
             return result
 
-        return rec(depth)
+        return [LDBASequence(task) for task in rec(depth)]
 
     return wrapper
 
 
-def all_epsilon_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
+def all_reach_stay_tasks(num_stay: int) -> Callable[[list[str]], list[LDBASequence]]:
     def wrapper(propositions: list[str]) -> list[LDBASequence]:
         tasks = []
         for p in propositions:
@@ -103,41 +103,27 @@ def all_epsilon_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
                 Assignment.zero_propositions(propositions).to_frozen(),
                 *[Assignment.single_proposition(q, propositions).to_frozen() for q in propositions if q != p]
             ])
-            task = [(EPSILON, frozenset()), *[(reach, avoid)] * depth]
-            tasks.append(tuple(task))
+            task = [(LDBASequence.EPSILON, frozenset()), (reach, avoid)]
+            tasks.append(LDBASequence(task, repeat_last=num_stay))
         return tasks
 
     return wrapper
 
 
-def sample_epsilon(depth: int) -> Callable[[list[str]], LDBASequence]:
+def sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
     def wrapper(propositions: list[str]) -> LDBASequence:
-        tasks = all_epsilon_tasks(depth)(propositions)
-        return random.choice(tasks)
-
-    return wrapper
-
-
-def all_reach_and_stay_tasks(depth: int) -> Callable[[list[str]], list[LDBASequence]]:
-    def wrapper(propositions: list[str]) -> list[LDBASequence]:
-        tasks = []
-        for p in propositions:
-            reach = frozenset([Assignment.single_proposition(p, propositions).to_frozen()])
-            avoid = frozenset([
-                Assignment.zero_propositions(propositions).to_frozen(),
-                *[Assignment.single_proposition(q, propositions).to_frozen() for q in propositions if q != p]
-                ])
-            task = [(reach, frozenset()), *[(reach, avoid)] * depth]
-            tasks.append(tuple(task))
-        return tasks
-
-    return wrapper
-
-
-def sample_reach_and_stay(depth: int) -> Callable[[list[str]], LDBASequence]:
-    def wrapper(propositions: list[str]) -> LDBASequence:
-        tasks = all_reach_and_stay_tasks(depth)(propositions)
-        return random.choice(tasks)
+        p = random.choice(propositions)
+        reach = frozenset([Assignment.single_proposition(p, propositions).to_frozen()])
+        na = random.randint(*num_avoid)
+        available = [q for q in propositions if q != p]
+        avoid = random.sample(available, na)
+        avoid = frozenset([Assignment.single_proposition(q, propositions).to_frozen() for q in avoid])
+        second_avoid = frozenset([
+            Assignment.zero_propositions(propositions).to_frozen(),
+            *[Assignment.single_proposition(q, propositions).to_frozen() for q in propositions if q != p]
+        ])
+        task = [(LDBASequence.EPSILON, avoid), (reach, second_avoid)]
+        return LDBASequence(task, repeat_last=num_stay)
 
     return wrapper
 
@@ -150,5 +136,4 @@ def fixed(sequence: LDBASequence) -> Callable[[list[str]], Callable[[], LDBASequ
 
 
 if __name__ == '__main__':
-    tasks = all_epsilon_tasks(5)(['a', 'b', 'c', 'd'])
-    pprint(tasks)
+    print(sample_reach_stay(100, (0, 2))(['a', 'b', 'c']))

@@ -5,7 +5,7 @@ import gymnasium
 from gymnasium.core import WrapperObsType, WrapperActType
 
 from envs import get_env_attr
-from ltl.automata import ltl2ldba, LDBA, EPSILON
+from ltl.automata import ltl2ldba, LDBA, LDBASequence
 
 
 class LDBAWrapper(gymnasium.Wrapper):
@@ -27,11 +27,11 @@ class LDBAWrapper(gymnasium.Wrapper):
         self.info = None
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        if (action == EPSILON).all():
+        if (action == LDBASequence.EPSILON).all():
             obs, reward, terminated, truncated, info = self.obs, 0.0, False, False, self.info
             take_epsilon = True
         else:
-            assert not (action == EPSILON).any()
+            assert not (action == LDBASequence.EPSILON).any()
             obs, reward, terminated, truncated, info = super().step(action)
             take_epsilon = False
             self.obs = obs

@@ -58,7 +58,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 2 --device cpu --name eps --seed 1 --log_csv false --save false'.split(' ')
+        sys.argv += '--num_procs 2 --device cpu --name asd --seed 1 --log_csv false --save false'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

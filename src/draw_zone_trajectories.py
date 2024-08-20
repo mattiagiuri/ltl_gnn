@@ -15,17 +15,17 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'reachstay'
-seed = 2
+exp = 'base'
+seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-render = False
+render = True
 # sampler = FixedSampler.partial('GF yellow & GF blue')
-sampler = FixedSampler.partial('GF magenta & GF green & G (yellow => (!blue U magenta))')
-# sampler = AvoidSampler.partial(2, 1)
+# sampler = FixedSampler.partial('GF magenta & GF green & G (yellow => (!blue U magenta))')
+sampler = AvoidSampler.partial(2, 1)
 # sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
 # sampler = FixedSampler.partial('!(green | blue | yellow) U (magenta)')
 deterministic = True
@@ -36,8 +36,9 @@ model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
-search = ExhaustiveSearch(model, num_loops=2)
-agent = Agent(model, search=search, verbose=render)
+props = set(env.get_propositions())
+search = ExhaustiveSearch(model, props, num_loops=2)
+agent = Agent(model, search=search, propositions=props, verbose=render)
 
 num_episodes = 8
 

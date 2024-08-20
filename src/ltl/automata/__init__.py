@@ -1,11 +1,10 @@
 from contextlib import nullcontext
-from typing import Literal
 
 from utils import memory, timeit
 from .owl import run_owl
 from .rabinizer import run_rabinizer
 from .ldba import LDBA, LDBATransition
-from ..logic import FrozenAssignment
+from .ldba_sequence import LDBASequence
 
 
 @memory.cache
@@ -26,8 +25,4 @@ def ltl2nba(formula: str, propositions: list[str] = None, simplify_labels=True, 
     return HOAParser(formula, hoa, propositions, simplify_labels=simplify_labels).parse_hoa()
 
 
-EPSILON = -42  # TODO: clean up
-
-LDBASequence = tuple[tuple[frozenset[FrozenAssignment] | type(EPSILON), frozenset[FrozenAssignment]], ...]
-
-__all__ = ['LDBASequence', 'LDBA', 'LDBATransition', 'ltl2ldba', 'ltl2nba', 'EPSILON']
+__all__ = ['LDBASequence', 'LDBA', 'LDBATransition', 'ltl2ldba', 'ltl2nba']

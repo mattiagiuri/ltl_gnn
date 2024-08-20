@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 from envs import make_env
 from ltl import AvoidSampler, FixedSampler
-from ltl.automata import EPSILON
 from ltl.logic import Assignment
 from ltl.samplers.reach_stay_sampler import ReachStaySampler
 from model.model import build_model
@@ -20,15 +19,17 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'target200'
-seed = 1
+exp = 'curr3'
+seed = 2
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = False
+render_trajectories = False
 sampler = ReachStaySampler.partial()
+# sampler = FixedSampler.partial('FG magenta & G(! (yellow | green | blue))')  # TODO: this does not work great
 deterministic = False
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
@@ -41,7 +42,7 @@ props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
 agent = Agent(model, search=search, propositions=props, verbose=render)
 
-num_episodes = 500
+num_episodes = 8 if render_trajectories else 500
 
 trajectories = []
 zone_poss = []
@@ -73,6 +74,8 @@ for i in pbar:
 
     while not done:
         action = agent.get_action(obs, info, deterministic=deterministic)
+        # if (action == -42).all():
+        #     print('Took epsilon action')
         action = action.flatten()
         obs, reward, done, info = env.step(action)
         agent_traj.append(env.agent_pos[:2])
@@ -91,5 +94,6 @@ for i in pbar:
 env.close()
 print(np.median(stays))
 print(np.mean(stays))
-# fig = draw_trajectories(zone_poss, trajectories, 4, 2)
-# plt.show()
+if render_trajectories:
+    fig = draw_trajectories(zone_poss, trajectories, 4, 2)
+    plt.show()
