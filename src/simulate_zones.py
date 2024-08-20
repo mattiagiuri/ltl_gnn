@@ -13,16 +13,17 @@ from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
-exp = 'reachstay'
-seed = 2
+exp = 'curr3'
+seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = False
-sampler = AvoidSampler.partial(2, 1)
+# sampler = AvoidSampler.partial(2, 1)
 # sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
+sampler = FixedSampler.partial('!(green | blue | yellow) U (magenta)')
 deterministic = True
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
@@ -31,8 +32,9 @@ model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
-search = ExhaustiveSearch(model, num_loops=2)
-agent = Agent(model, search=search, verbose=render)
+props = set(env.get_propositions())
+search = ExhaustiveSearch(model, props, num_loops=2)
+agent = Agent(model, search=search, propositions=props, verbose=render)
 
 num_episodes = 500
 

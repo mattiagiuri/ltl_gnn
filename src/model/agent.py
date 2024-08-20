@@ -6,9 +6,10 @@ from sequence.search import SequenceSearch
 
 
 class Agent:
-    def __init__(self, model: Model, search: SequenceSearch, verbose=False):
+    def __init__(self, model: Model, search: SequenceSearch, propositions: set[str], verbose=False):
         self.model = model
         self.search = search
+        self.propositions = propositions
         self.verbose = verbose
         self.sequence = None
 
@@ -27,7 +28,7 @@ class Agent:
     def forward(self, obs, deterministic=False) -> np.ndarray:
         if not (isinstance(obs, list) or isinstance(obs, tuple)):
             obs = [obs]
-        preprocessed = preprocessing.preprocess_obss(obs)
+        preprocessed = preprocessing.preprocess_obss(obs, self.propositions)
         dist, value = self.model(preprocessed)
         action = dist.mode if deterministic else dist.sample()
         return action.detach().numpy()

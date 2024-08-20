@@ -4,7 +4,7 @@ from utils import memory, timeit
 from .owl import run_owl
 from .rabinizer import run_rabinizer
 from .ldba import LDBA, LDBATransition
-from ..logic import FrozenAssignment
+from .ldba_sequence import LDBASequence
 
 
 @memory.cache
@@ -24,7 +24,5 @@ def ltl2nba(formula: str, propositions: list[str] = None, simplify_labels=True, 
         hoa = run_owl(formula)
     return HOAParser(formula, hoa, propositions, simplify_labels=simplify_labels).parse_hoa()
 
-
-LDBASequence = tuple[tuple[frozenset[FrozenAssignment], frozenset[FrozenAssignment]], ...]
 
 __all__ = ['LDBASequence', 'LDBA', 'LDBATransition', 'ltl2ldba', 'ltl2nba']

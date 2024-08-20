@@ -1,10 +1,5 @@
-VOCAB = {
-    'PAD': 0,
-    'EMPTY': 1,
-    'NULL': 2,
-    'AND': 3,
-    'OR': 4,
-}
+FIXED = ['PAD', 'EPSILON', 'EMPTY', 'NULL', 'AND', 'OR']
+VOCAB = {k: i for i, k in enumerate(FIXED)}
 
 
 def init_vocab(propositions: list[str]):

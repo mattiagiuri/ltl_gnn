@@ -7,32 +7,34 @@ from tqdm import tqdm
 
 from envs import make_env
 from ltl import AvoidSampler, FixedSampler
+from ltl.logic import Assignment
+from ltl.samplers.reach_stay_sampler import ReachStaySampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
+from model.seq_agent import SequenceAgent
+from sequence.samplers import sequence_samplers
 from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'base'
-seed = 1
+exp = 'curr3'
+seed = 2
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-render = True
-# sampler = FixedSampler.partial('GF yellow & GF blue')
-# sampler = FixedSampler.partial('GF magenta & GF green & G (yellow => (!blue U magenta))')
-sampler = AvoidSampler.partial(2, 1)
-# sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
-# sampler = FixedSampler.partial('!(green | blue | yellow) U (magenta)')
-deterministic = True
+render = False
+render_trajectories = False
+sampler = ReachStaySampler.partial()
+# sampler = FixedSampler.partial('FG magenta & G(! (yellow | green | blue))')  # TODO: this does not work great
+deterministic = False
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
 config = model_configs['default']
-model_store = ModelStore(env_name, exp, seed, None)
+model_store = ModelStore('PointLtl2-v0', exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
@@ -40,10 +42,18 @@ props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
 agent = Agent(model, search=search, propositions=props, verbose=render)
 
-num_episodes = 8
+num_episodes = 8 if render_trajectories else 500
 
 trajectories = []
 zone_poss = []
+
+num_successes = 0
+num_violations = 0
+steps = []
+rets = []
+success_mask = []
+props = []
+stays = []
 
 env.reset(seed=seed)
 
@@ -54,6 +64,8 @@ for i in pbar:
     obs = env.reset()
     agent.reset()
     info = {'ldba_state_changed': True}
+    if render:
+       print(obs['goal'])
     done = False
     num_steps = 0
 
@@ -62,14 +74,26 @@ for i in pbar:
 
     while not done:
         action = agent.get_action(obs, info, deterministic=deterministic)
+        # if (action == -42).all():
+        #     print('Took epsilon action')
         action = action.flatten()
         obs, reward, done, info = env.step(action)
         agent_traj.append(env.agent_pos[:2])
+        if len(info['propositions']) > 0:
+            props.append(list(info['propositions'])[0])
         num_steps += 1
         if done:
             trajectories.append(agent_traj)
+            stays.append(info['num_accepting_visits'])
+            if not render:
+                pbar.set_postfix({
+                    'med': np.median(stays),
+                    'mean': np.mean(stays)
+                })
 
 env.close()
-fig = draw_trajectories(zone_poss, trajectories, 4, 2)
-plt.show()
-fig.savefig('trajectories.pdf')
+print(np.median(stays))
+print(np.mean(stays))
+if render_trajectories:
+    fig = draw_trajectories(zone_poss, trajectories, 4, 2)
+    plt.show()

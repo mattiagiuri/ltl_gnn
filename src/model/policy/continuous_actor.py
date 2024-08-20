@@ -1,7 +1,9 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.distributions import Normal
 
+from model.mixed_distribution import MixedDistribution
 from utils import torch_utils
 
 
@@ -27,8 +29,9 @@ class ContinuousActor(nn.Module):
             self.softplus = nn.Softplus()
         else:
             self.logstd = nn.Parameter(torch.zeros(1, action_dim))
+        self.epsilon_prob = torch_utils.make_mlp_layers([layers[-1], 1], torch.nn.Sigmoid, final_layer_activation=True)
 
-    def forward(self, obs: torch.tensor) -> torch.distributions.Normal:
+    def forward(self, obs: torch.tensor) -> MixedDistribution:
         hidden = self.enc(obs)
         mu = self.mu(hidden)
         if self.state_dependent_std:
@@ -36,4 +39,6 @@ class ContinuousActor(nn.Module):
         else:
             std = self.logstd.expand_as(mu).exp()
         std = std + 1e-3
-        return Normal(mu, std)
+        normal = Normal(mu, std)
+        eps_prob = torch.clamp(self.epsilon_prob(hidden), 1e-3, 1 - 1e-3)
+        return MixedDistribution(normal, eps_prob.flatten())

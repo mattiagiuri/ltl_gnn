@@ -40,7 +40,9 @@ class ProcessedSequences:
     def process_node(self, node: ASTNode, i: int, j: int):
         if len(self.graphs) <= i:
             self.graphs.append([])
-        if isinstance(node, NullNode):
+        if isinstance(node, EpsilonNode):
+            self.batched[i, j] = VOCAB['EPSILON']
+        elif isinstance(node, NullNode):
             self.batched[i, j] = VOCAB['NULL']
         elif isinstance(node, EmptyNode):
             self.batched[i, j] = VOCAB['EMPTY']

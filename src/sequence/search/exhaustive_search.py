@@ -32,18 +32,19 @@ class Path:
         seq = [self.reach_avoid_to_assignments(r, a) for r, a in self.reach_avoid[:self.loop_index]]
         loop = [self.reach_avoid_to_assignments(r, a) for r, a in self.reach_avoid[self.loop_index:]]
         seq = seq + loop * num_loops
-        return tuple(seq)
+        return LDBASequence(seq)
 
     @staticmethod
     def reach_avoid_to_assignments(reach: LDBATransition, avoid: set[LDBATransition]) -> tuple[frozenset, frozenset]:
         avoid = [a.valid_assignments for a in avoid]
         avoid = set() if not avoid else set.union(*avoid)
-        return frozenset(reach.valid_assignments), frozenset(avoid)
+        reach = LDBASequence.EPSILON if reach.is_epsilon() else frozenset(reach.valid_assignments)
+        return reach, frozenset(avoid)
 
 
 class ExhaustiveSearch(SequenceSearch):
-    def __init__(self, model: nn.Module, num_loops: int, value_threshold: float = 0.4):
-        super().__init__(model)
+    def __init__(self, model: nn.Module, propositions, num_loops: int, value_threshold: float = 0.4):
+        super().__init__(model, propositions)
         self.num_loops = num_loops
         self.value_threshold = value_threshold
 
