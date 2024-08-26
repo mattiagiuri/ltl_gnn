@@ -38,6 +38,7 @@ class SafetyGymWrapper(gymnasium.Wrapper):
         info['propositions'] = {c for c in self.colors if info[f'cost_zones_{c}'] > 0}
         if 'cost_ltl_walls' in info:
             terminated = terminated or info['cost_ltl_walls'] > 0
+            reward = -1. if info['cost_ltl_walls'] > 0 else 0.
         return obs, reward, terminated, truncated, info
 
     def reset(

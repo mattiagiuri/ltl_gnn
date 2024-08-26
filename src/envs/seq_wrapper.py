@@ -29,11 +29,11 @@ class SequenceWrapper(gymnasium.Wrapper):
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         if (action == LDBASequence.EPSILON).all():
             obs, _, terminated, truncated, info = self.apply_epsilon_action()
+            reward = 0.
         else:
             assert not (action == LDBASequence.EPSILON).any()
-            obs, _, terminated, truncated, info = super().step(action)
+            obs, reward, terminated, truncated, info = super().step(action)
         reach, avoid = self.goal_seq[self.num_reached]
-        reward = 0.
         active_props = info['propositions']
         assignment = Assignment({p: (p in active_props) for p in self.propositions}).to_frozen()
         if assignment in avoid:

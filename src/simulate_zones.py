@@ -13,8 +13,8 @@ from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
-exp = 'curr3'
-seed = 1
+exp = 'punishwall'
+seed = 2
 
 random.seed(seed)
 np.random.seed(seed)
@@ -97,4 +97,4 @@ print(f'AS: {np.mean(steps):.3f}')
 print(f'AS (median): {np.median(steps):.3f}')
 
 print(
-    f'{num_successes / num_episodes:.3f},{num_violations / num_episodes:.3f},{np.mean(rets):.3f},{np.mean(np.array(rets)[success_mask]):.3f},{np.mean(steps):.3f}')
+    f'{num_successes / num_episodes:.3f},{num_violations / num_episodes:.3f},{np.mean(rets):.3f},{np.mean(np.array(rets)[success_mask]):.3f},{np.mean(steps):.3f},{np.median(steps):.3f}')

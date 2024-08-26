@@ -19,7 +19,7 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'curr3'
+exp = 'punishwall'
 seed = 2
 
 random.seed(seed)
@@ -27,9 +27,9 @@ np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = False
-render_trajectories = False
+render_trajectories = True
 sampler = ReachStaySampler.partial()
-# sampler = FixedSampler.partial('FG magenta & G(! (yellow | green | blue))')  # TODO: this does not work great
+# sampler = FixedSampler.partial('FG magenta & G(! (yellow | green | blue))')
 deterministic = False
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
