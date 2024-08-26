@@ -29,6 +29,7 @@ class KeyboardViewer(WindowViewer):  # pylint: disable=too-many-instance-attribu
         self.cam.fixedcamid = 0
         self.cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
         self._custom_key_press_callback = custom_key_press_callback
+        glfw.set_window_size(self.window, 1280, 768)
 
     # pylint: disable-next=too-many-arguments, too-many-branches
     def _key_callback(self, window, key, scancode, action, mods):
