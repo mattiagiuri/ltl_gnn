@@ -35,13 +35,12 @@ class Trainer:
     def train(self, log_csv: bool = True, log_wandb: bool = False):
         training_status, resuming = self.get_training_status()
         envs = self.make_envs(training_status["curriculum_stage"])
-        pretrained_model = self.load_pretrained_model()
+        # pretrained_model = self.load_pretrained_model()
         model = build_model(envs[0], training_status, model_configs[self.args.model_config])
         model.to(self.args.experiment.device)
         print(model.ltl_net)
         algo = torch_ac.PPO(envs, model, self.args.experiment.device, self.args.ppo,
-                            preprocess_obss=preprocessing.preprocess_obss,
-                            parallel=False)  # TODO: add cmd argument for this
+                            preprocess_obss=preprocessing.preprocess_obss, parallel=False)
         if "optimizer_state" in training_status:
             algo.optimizer.load_state_dict(training_status["optimizer_state"])
             self.text_logger.info("Loaded optimizer from existing run.")
@@ -51,7 +50,13 @@ class Trainer:
         self.text_logger.info(f'Num parameters: {torch_utils.get_number_of_params(model)}')
         num_steps = training_status["num_steps"]
         num_updates = training_status["num_updates"]
+        num_eval_steps = training_status["num_eval_steps"]
         while num_steps < self.args.experiment.num_steps:
+            if self.args.save and (num_updates == 0 or num_eval_steps >= self.args.experiment.eval_interval):
+                num_eval_steps = 0
+                training_status = {"num_steps": num_steps, "num_updates": num_updates,
+                                   "model_state": algo.model.state_dict()}
+                self.model_store.save_eval_training_status(training_status)
             start = time.time()
             exps, logs = algo.collect_experiences()
             curriculum = get_env_attr(envs[0], 'sample_sequence').curriculum
@@ -61,6 +66,7 @@ class Trainer:
             update_time = time.time() - start
 
             num_steps += logs["num_steps"]
+            num_eval_steps += logs["num_steps"]
             num_updates += 1
             if num_updates % self.args.experiment.log_interval == 0 or curriculum.finished:
                 logs = self.augment_logs(logs, update_time, num_steps)
@@ -105,7 +111,7 @@ class Trainer:
             self.text_logger.important_info("Resuming training from existing run.")
             resuming = True
         except FileNotFoundError:
-            training_status = {"num_steps": 0, "num_updates": 0, "curriculum_stage": 0}
+            training_status = {"num_steps": 0, "num_updates": 0, "curriculum_stage": 0, "num_eval_steps": 0}
         return training_status, resuming
 
     def load_pretrained_model(self) -> Optional[dict]:

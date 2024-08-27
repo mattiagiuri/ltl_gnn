@@ -10,6 +10,9 @@ def get_experiment_path(env: str, name: str, seed: int) -> str:
     path = f'experiments/ppo/{env}/{name}/{seed}'
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
+    eval_path = f'{path}/eval'
+    if not os.path.exists(eval_path):
+        os.makedirs(eval_path, exist_ok=True)
     return path
 
 

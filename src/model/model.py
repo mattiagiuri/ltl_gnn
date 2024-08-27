@@ -57,7 +57,6 @@ def build_model(
 
     embedding = nn.Embedding(len(VOCAB), model_config.ltl_embedding_dim, padding_idx=VOCAB['PAD'])
     ltl_net = LTLNet(embedding, model_config.num_gnn_layers, model_config.num_rnn_layers)
-    print(f'Number of LTL net params: {torch_utils.get_number_of_params(ltl_net)}')
 
     if isinstance(env.action_space, gymnasium.spaces.Discrete):
         actor = DiscreteActor(action_dim=action_dim,
