@@ -45,8 +45,7 @@ class MixedDistribution(Distribution):
 
     @property
     def mode(self) -> torch.Tensor:
-        assert len(self.epsilon_prob) == 1
-        assert len(self.epsilon_mask) == 1
-        if self.epsilon_mask[0] and self.epsilon_prob.item() > 0.7:
-            return torch.tensor([LDBASequence.EPSILON])
-        return self.dist.mode
+        epsilon_actions = self.epsilon_mask & (self.epsilon_prob > 0.7)
+        result = self.dist.mode
+        result[epsilon_actions] = LDBASequence.EPSILON
+        return result

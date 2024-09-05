@@ -122,7 +122,7 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
             camera_id (int): Camera id to render.
             camera_name (str): Camera name to render.
         """
-        gymnasium.utils.EzPickle.__init__(self, config=config)
+        super().__init__(task_id, config, render_mode, width, height, camera_id, camera_name)
 
         self.task_id: str = task_id
         self.config: dict = config

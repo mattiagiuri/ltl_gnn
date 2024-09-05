@@ -71,7 +71,11 @@ def __combine(tasks, agents, max_episode_steps):
         # Vector inputs
         for robot_name in agents:
             if 'Ltl' in task_name:
-                env_id = f'{robot_name}{task_name}-{VERSION}'
+                if '.' in task_name:
+                    pre, post = task_name.split('.')
+                    env_id = f'{robot_name}{pre}-{VERSION}.{post}'
+                else:
+                    env_id = f'{robot_name}{task_name}-{VERSION}'
             else:
                 env_id = f'{PREFIX}{robot_name}{task_name}-{VERSION}'
 
@@ -119,7 +123,7 @@ def __combine(tasks, agents, max_episode_steps):
 # ----------------------------------------
 # LTL
 # ----------------------------------------
-ltl_tasks = {'Ltl0': {}, 'Ltl1': {}, 'Ltl2': {}, 'Ltl3': {}}
+ltl_tasks = {'Ltl0': {}, 'Ltl1': {}, 'Ltl2': {}, 'Ltl3': {}, 'Ltl2.fixed': {}}
 __combine(ltl_tasks, robots, max_episode_steps=None)
 
 # ----------------------------------------

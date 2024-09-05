@@ -18,6 +18,7 @@ from safety_gymnasium.tasks.ltl.ltl_level0 import LtlLevel0
 from safety_gymnasium.tasks.ltl.ltl_level1 import LtlLevel1
 from safety_gymnasium.tasks.ltl.ltl_level2 import LtlLevel2
 from safety_gymnasium.tasks.ltl.ltl_level3 import LtlLevel3
+from safety_gymnasium.tasks.ltl.ltl_fixed import LtlFixed
 from safety_gymnasium.tasks.safe_navigation.button.button_level0 import ButtonLevel0
 from safety_gymnasium.tasks.safe_navigation.button.button_level1 import ButtonLevel1
 from safety_gymnasium.tasks.safe_navigation.button.button_level2 import ButtonLevel2

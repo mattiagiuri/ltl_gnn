@@ -22,6 +22,9 @@ import numpy as np
 
 def get_task_class_name(task_id):
     """Help to translate task_id into task_class_name."""
+    if '.fixed' in task_id:
+        class_name = 'LtlFixed'
+        return class_name
     if 'Ltl' in task_id:
         task_num = task_id.split('-')[0][-1]
         class_name = f'Ltl{task_num}'

@@ -1,9 +1,11 @@
 #!/usr/bin/env fish
 
 conda activate deepltl
-set device cpu
-set name new
+set device gpu
+set name eval
 set num_procs 16
-PYTHONPATH=src/ ./run_zones.py --num_procs $num_procs --device $device --name $name --seed 1 --log_wandb
-# PYTHONPATH=src/ ./run_letter.py --num_procs $num_procs --device $device --name $name --seed 2 --log_wandb
-# PYTHONPATH=src/ ./run_letter.py --num_procs $num_procs --device $device --name $name --seed 3 --log_wandb
+set seeds 1 2
+
+for seed in $seeds
+    PYTHONPATH=src/ ./run_zones.py --num_procs $num_procs --device $device --name $name --seed $seed --log_wandb
+end

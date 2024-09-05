@@ -19,7 +19,7 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'punishwall'
+exp = 'eval'
 seed = 2
 
 random.seed(seed)

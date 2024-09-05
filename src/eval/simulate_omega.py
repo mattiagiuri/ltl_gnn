@@ -7,8 +7,6 @@ from tqdm import tqdm
 
 from envs import make_env
 from ltl import AvoidSampler, FixedSampler
-from ltl.samplers.reach_sampler import ReachSampler
-from ltl.samplers.super_sampler import SuperSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
@@ -17,7 +15,7 @@ from utils.model_store import ModelStore
 
 env_name = 'PointLtl2-v0'
 exp = 'eval'
-seed = 2
+seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
@@ -30,11 +28,7 @@ render = False
 # sampler = FixedSampler.partial('(yellow => F magenta) U green')
 # sampler = FixedSampler.partial('(F green | F yellow) & G ! blue')
 # sampler = FixedSampler.partial('(!(green | blue)) U (yellow | magenta)')
-# sampler = FixedSampler.partial('GF blue & GF green')
-
-avoid_sampler = AvoidSampler.partial((1, 2), 1)
-reach_sampler = ReachSampler.partial((1, 3))
-sampler = SuperSampler.partial(reach_sampler, avoid_sampler)
+sampler = FixedSampler.partial('GF blue & GF green & GF yellow')
 deterministic = True
 
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
@@ -55,6 +49,7 @@ steps = []
 rets = []
 success_mask = []
 props = []
+total_omega = 0
 
 env.reset(seed=seed)
 
@@ -77,35 +72,11 @@ for i in pbar:
             props.append(list(info['propositions'])[0])
         num_steps += 1
         if done:
-            if 'success' in info:
-                num_successes += 1
-                final_reward = 1
-                steps.append(num_steps)
-            elif 'violation' in info:
-                num_violations += 1
-                final_reward = -1
-            else:
-                final_reward = 0
-            rets.append(final_reward * 0.998 ** (num_steps - 1))
-            success_mask.append('success' in info)
+            total_omega += info['num_accepting_visits']
             if not render:
                 pbar.set_postfix({
-                    's': num_successes / (i + 1),
-                    'v': num_violations / (i + 1),
-                    'ADR(t)': np.mean(rets),
-                    'ADR(s)': np.mean(np.array(rets)[success_mask]),
-                    'AS': np.mean(steps),
-                    'AS(m)': np.median(steps),
+                    'omega': total_omega / (i + 1),
                 })
 
 env.close()
-print(f'Success rate: {num_successes / num_episodes}')
-print(f'Violation rate: {num_violations / num_episodes}')
-print(f'Num total: {num_episodes}')
-print(f'ADR (total): {np.mean(rets):.3f}')
-print(f'ADR (successful): {np.mean(np.array(rets)[success_mask]):.3f}')
-print(f'AS: {np.mean(steps):.3f}')
-print(f'AS (median): {np.median(steps):.3f}')
-
-print(
-    f'{num_successes / num_episodes:.3f},{num_violations / num_episodes:.3f},{np.mean(rets):.3f},{np.mean(np.array(rets)[success_mask]):.3f},{np.mean(steps):.3f},{np.median(steps):.3f}')
+print(f'Omega: {total_omega / num_episodes}')

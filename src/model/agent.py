@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 import preprocessing
 from model.model import Model
@@ -29,6 +30,7 @@ class Agent:
         if not (isinstance(obs, list) or isinstance(obs, tuple)):
             obs = [obs]
         preprocessed = preprocessing.preprocess_obss(obs, self.propositions)
-        dist, value = self.model(preprocessed)
-        action = dist.mode if deterministic else dist.sample()
+        with torch.no_grad():
+            dist, value = self.model(preprocessed)
+            action = dist.mode if deterministic else dist.sample()
         return action.detach().numpy()
