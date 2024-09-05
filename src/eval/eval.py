@@ -1,78 +1,121 @@
+import functools
+import os
 import random
+import sys
+import time
 
 import numpy as np
 import pandas as pd
+import psutil
 import torch
 from tqdm import tqdm
 
 from envs import make_env
 from ltl import AvoidSampler, FixedSampler
+from ltl.samplers.reach_sampler import ReachSampler
+from ltl.samplers.super_sampler import SuperSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
+from model.parallel_agent import ParallelAgent
 from sequence.search import ExhaustiveSearch
+from torch_ac.utils import SyncEnv
+from utils import timeit
 from utils.model_store import ModelStore
+import multiprocessing as mp
+from multiprocessing.pool import ThreadPool
+
+env = None
+
+def set_env():
+    global env
+    avoid_sampler = AvoidSampler.partial((1, 2), 1)
+    reach_sampler = ReachSampler.partial((1, 3))
+    sampler = SuperSampler.partial(reach_sampler, avoid_sampler)
+    # sampler = AvoidSampler.partial(2, 1)
+    envs = [make_env(env_name, sampler, render_mode=None, max_steps=1000) for _ in range(8)]
+    env = SyncEnv(envs)
+
+
+env_name = 'PointLtl2-v0'
+config = model_configs['default']
+exp = 'eval'
+seed = int(sys.argv[1])
+deterministic = True
+num_procs = 8
+num_eval_episodes = 100
+device = 'cuda'
+random.seed(seed)
+np.random.seed(seed)
+torch.random.manual_seed(seed)
+
+
+def aux(status):
+    global env
+    model = build_model(env.envs[0], status, config)
+    s, v, num_steps, adr = eval_model(model, env, num_eval_episodes, deterministic)
+    return status['num_steps'], s, v, num_steps, adr
 
 
 def main():
-    env_name = 'PointLtl2-v0'
-    exp = 'eval'
-    seed = 2
-    deterministic = True
-    num_eval_steps = 100
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.random.manual_seed(seed)
-    sampler = AvoidSampler.partial(2, 1)
-
-    env = make_env(env_name, sampler, render_mode=None, max_steps=1000)
-    config = model_configs['default']
+    start_time = time.time()
     model_store = ModelStore(env_name, exp, seed, None)
-    statuses = model_store.load_eval_training_statuses(map_location='cpu')
+    statuses = model_store.load_eval_training_statuses(map_location=device)
 
-    xs, sr, vr, steps = [], [], [], []
-    pbar = tqdm(statuses)
-    for status in pbar:
-        model = build_model(env, status, config)
-        s, v, num_steps = eval_model(model, env, num_eval_steps, seed, deterministic)
-        xs.append(status["num_steps"])
-        sr.append(s)
-        vr.append(v)
-        steps.append(num_steps)
-        pbar.set_postfix({'num_steps': status["num_steps"], 'success_rate': s, 'violation_rate': v, 'average_steps': num_steps})
-    env.close()
-    print(sr)
+    results = []
+    with mp.Pool(num_procs, initializer=set_env) as pool:
+        for r in tqdm(pool.imap_unordered(aux, statuses), total=len(statuses)):
+            results.append(r)
 
-    df = pd.DataFrame({'num_steps': xs, 'success_rate': sr, 'violation_rate': vr, 'average_steps': steps})
-    df.to_csv(f'eval{seed}.csv', index=False)
+    print(f'Total time: {time.time() - start_time:.2f}s')
+    result = {r[0]: (r[1], r[2], r[3], r[4]) for r in results}
+
+    df = pd.DataFrame.from_dict(result, orient='index', columns=['success_rate', 'violation_rate', 'average_steps', 'return'])
+    df.sort_index(inplace=True)
+    out_path = f'eval_results/{env_name}/{exp}'
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+    df.to_csv(f'{out_path}/{seed}.csv', index_label='num_steps')
 
 
-def eval_model(model, env, num_eval_steps, seed, deterministic):
-    props = set(env.get_propositions())
+def eval_model(model, env, num_eval_episodes, deterministic):
+    props = set(env.envs[0].get_propositions())
     search = ExhaustiveSearch(model, props, num_loops=2)
-    agent = Agent(model, search=search, propositions=props, verbose=False)
+    agent = ParallelAgent(model, search=search, propositions=props, num_envs=len(env.envs))
     num_successes = 0
     num_violations = 0
     steps = []
-    env.reset(seed=seed)
-    for _ in range(num_eval_steps):
-        agent.reset()
-        obs = env.reset()
-        info = {'ldba_state_changed': True}
-        done = False
-        num_steps = 0
-        while not done:
-            action = agent.get_action(obs, info, deterministic=deterministic)
-            action = action.flatten()
-            obs, reward, done, info = env.step(action)
-            num_steps += 1
+    obss = env.reset()
+    infos = [{} for _ in range(len(obss))]
+    finished_episodes = 0
+    num_steps = [0] * len(env.envs)
+    returns = []
+    while finished_episodes < num_eval_episodes:
+        action = agent.get_action(obss, infos, deterministic=deterministic)
+        obss, rewards, dones, infos = env.step(action)
+
+        for i, done in enumerate(dones):
             if done:
-                if 'success' in info:
+                finished_episodes += 1
+                if 'success' in infos[i]:
                     num_successes += 1
-                    steps.append(num_steps)
-                elif 'violation' in info:
+                    steps.append(num_steps[i] + 1)
+                    returns.append(pow(0.998, num_steps[i] + 1))
+                elif 'violation' in infos[i]:
                     num_violations += 1
-    return num_successes / num_eval_steps, num_violations / num_eval_steps, np.mean(steps) if steps else -1
+                    returns.append(0)
+                else:
+                    returns.append(0)
+                num_steps[i] = 0
+            else:
+                num_steps[i] += 1
+
+    return num_successes / finished_episodes, num_violations / finished_episodes, np.mean(steps) if steps else -1, np.mean(returns) if returns else -1
+
 
 if __name__ == '__main__':
+    if device == 'cuda':
+        mp.set_start_method('spawn')
+    # elif device == 'cpu':
+    #     torch.set_num_threads(1)
     main()

@@ -78,6 +78,7 @@ class Trainer:
                                    "model_state": algo.model.state_dict(),
                                    "optimizer_state": algo.optimizer.state_dict(),
                                    "curriculum_stage": curriculum.stage_index,
+                                   "num_eval_steps": num_eval_steps
                                    }
                 self.model_store.save_training_status(training_status)
                 self.model_store.save_ltl_net(algo.model.ltl_net.state_dict())

@@ -9,8 +9,8 @@ sns.set_theme(font_scale=.8)
 
 
 def main():
-    env = 'LetterEnv-v0'
-    experiments = ['stage3_095', 'stage3_09']
+    env = 'PointLtl2-v0'
+    experiments = ['eval']
     name_mapping = {'pre': 'pretraining', 'cat': 'standard'}
     df = process_logs(env, experiments, name_mapping)
     ax = sns.relplot(df, x='num_steps', y='return_smooth', kind='line', errorbar='sd', hue='experiment')
