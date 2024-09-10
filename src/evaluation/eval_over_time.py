@@ -1,4 +1,3 @@
-import functools
 import os
 import random
 import sys
@@ -6,44 +5,38 @@ import time
 
 import numpy as np
 import pandas as pd
-import psutil
 import torch
 from tqdm import tqdm
 
 from envs import make_env
-from ltl import AvoidSampler, FixedSampler
-from ltl.samplers.reach_sampler import ReachSampler
-from ltl.samplers.super_sampler import SuperSampler
+from evaluation.eval_sync_env import EvalSyncEnv
+from ltl import FixedSampler
 from model.model import build_model
-from model.agent import Agent
 from config import model_configs
 from model.parallel_agent import ParallelAgent
 from sequence.search import ExhaustiveSearch
-from torch_ac.utils import SyncEnv
-from utils import timeit
 from utils.model_store import ModelStore
 import multiprocessing as mp
-from multiprocessing.pool import ThreadPool
 
 env = None
 
 def set_env():
     global env
-    avoid_sampler = AvoidSampler.partial((1, 2), 1)
-    reach_sampler = ReachSampler.partial((1, 3))
-    sampler = SuperSampler.partial(reach_sampler, avoid_sampler)
-    # sampler = AvoidSampler.partial(2, 1)
+    sampler = FixedSampler.partial('this_will_be_overridden')
     envs = [make_env(env_name, sampler, render_mode=None, max_steps=1000) for _ in range(8)]
-    env = SyncEnv(envs)
+    world_info_paths = [f'eval_datasets/zones/worlds/world_info_{i}.pkl' for i in range(num_eval_episodes)]
+    with open('eval_datasets/zones/tasks.txt') as f:
+        tasks = [line.strip() for line in f]
+    env = EvalSyncEnv(envs, world_info_paths, tasks)
 
 
 env_name = 'PointLtl2-v0'
 config = model_configs['default']
 exp = 'eval'
-seed = int(sys.argv[1])
+seed = int(sys.argv[2])
 deterministic = True
 num_procs = 8
-num_eval_episodes = 100
+num_eval_episodes = 50
 device = 'cuda'
 random.seed(seed)
 np.random.seed(seed)
@@ -66,6 +59,10 @@ def main():
     with mp.Pool(num_procs, initializer=set_env) as pool:
         for r in tqdm(pool.imap_unordered(aux, statuses), total=len(statuses)):
             results.append(r)
+
+    # set_env()
+    # for status in statuses:
+    #     results.append(aux(status))
 
     print(f'Total time: {time.time() - start_time:.2f}s')
     result = {r[0]: (r[1], r[2], r[3], r[4]) for r in results}
@@ -109,6 +106,10 @@ def eval_model(model, env, num_eval_episodes, deterministic):
                 num_steps[i] = 0
             else:
                 num_steps[i] += 1
+
+        obss = [obs for obs in obss if obs is not None]
+
+    assert len(env.active_envs) == 0
 
     return num_successes / finished_episodes, num_violations / finished_episodes, np.mean(steps) if steps else -1, np.mean(returns) if returns else -1
 

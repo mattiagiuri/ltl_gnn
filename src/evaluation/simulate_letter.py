@@ -20,7 +20,7 @@ exp = 'stage3_095'
 seed = 1
 render_modes = [None, 'human', 'path']
 render = render_modes[0]
-render_on_fail = False
+render_on_fail = 2
 
 random.seed(seed)
 np.random.seed(seed)
@@ -31,7 +31,7 @@ torch.random.manual_seed(seed)
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=False)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
 # sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
-sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
+sampler = AvoidSampler.partial(depth=3, num_conjuncts=1)
 # sampler = AvoidSampler.partial(depth=6, num_conjuncts=1)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
 # sampler = FixedSampler.partial('GF k & GF e & G (h => F f)')
@@ -39,15 +39,16 @@ sampler = AvoidSampler.partial(depth=3, num_conjuncts=2)
 
 deterministic = False
 
-env = make_env(env_name, sampler, max_steps=225, render_mode=render)
+env = make_env(env_name, sampler, max_steps=75, render_mode=render)
 config = model_configs['letter']
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
-search = BFS(model)
-# search = ExhaustiveSearch(model, num_loops=2)
-agent = Agent(model, search=search, verbose=render is not None)
+props = set(env.get_propositions())
+# search = BFS(model)
+search = ExhaustiveSearch(model, num_loops=2)
+agent = Agent(model, search=search, propositions=props, verbose=render is not None)
 
 num_episodes = 500
 

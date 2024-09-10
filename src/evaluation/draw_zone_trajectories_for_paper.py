@@ -8,8 +8,6 @@ from tqdm import tqdm
 
 from envs import make_env
 from ltl import AvoidSampler, FixedSampler
-from ltl.samplers.reach_sampler import ReachSampler
-from ltl.samplers.super_sampler import SuperSampler
 from model.model import build_model
 from model.agent import Agent
 from config import model_configs
@@ -18,7 +16,7 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories, draw_multiple_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'eval'
+exp = 'evaluation'
 seed = 2
 
 random.seed(seed)
@@ -33,9 +31,7 @@ render = False
 # sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
 # sampler = FixedSampler.partial('!green U (yellow & (!magenta U blue))')
 # sampler = FixedSampler.partial('((yellow => F magenta) U green) & F blue')
-avoid_sampler = AvoidSampler.partial((1, 2), 1)
-reach_sampler = ReachSampler.partial((1, 3))
-sampler = SuperSampler.partial(reach_sampler, avoid_sampler)
+sampler = FixedSampler.partial('FG blue')
 deterministic = True
 
 # 1: !green U (yellow & (!magenta U blue))
@@ -50,19 +46,18 @@ props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
 agent = Agent(model, search=search, propositions=props, verbose=render)
 
-num_episodes = 8
+num_episodes = 1
 
 trajectories = []
 zone_poss = []
 
-env.reset(seed=3)  # settings for nice GF yellow & GF blue trajectory: exp eval, seed 5, reset seed 6
+env.reset(seed=3)  # settings for nice GF yellow & GF blue trajectory: exp evaluation, seed 5, reset seed 6
 
 pbar = range(num_episodes)
 if not render:
     pbar = tqdm(pbar)
 for i in pbar:
     obs = env.reset()
-    print(obs['goal'])
     agent.reset()
     info = {'ldba_state_changed': True}
     done = False
@@ -92,7 +87,10 @@ env.close()
 # with open('tmp.pz', 'wb') as f:
 #     pickle.dump(traj, f)
 # fig = draw_multiple_trajectories(zone_poss[0], trajs, ['solid', 'dashed'], ['green', 'orange'])
+zone_poss = zone_poss[-1:]
+trajectories = trajectories[-1:]
 cols = 4 if len(zone_poss) > 4 else len(zone_poss)
 rows = 1 if len(zone_poss) <= 4 else 2
 fig = draw_trajectories(zone_poss, trajectories, cols, rows)
 plt.show()
+fig.savefig('trajectories.pdf', bbox_inches='tight', dpi=600)

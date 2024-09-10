@@ -2,8 +2,8 @@
 
 conda activate deepltl
 
-set seeds 1 2
+set seeds 1 2 3 4 5
 
 for seed in $seeds
-    PYTHONPATH=src/ python src/eval/eval.py --seed $seed
+    PYTHONPATH=src/ python src/evaluation/eval.py --seed $seed
 end

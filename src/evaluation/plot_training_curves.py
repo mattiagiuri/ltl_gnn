@@ -5,30 +5,32 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-sns.set_theme(font_scale=.8)
+sns.set_theme(font_scale=1.8)
 
 
 def main():
     env = 'PointLtl2-v0'
-    experiments = ['eval']
-    name_mapping = {'eval': 'DeepLTL', 'gcrl': 'GCRL'}
+    experiments = ['nodent', 'gcrl', 'ltl2action' ]
+    name_mapping = {'nodent': 'DeepLTL', 'gcrl': 'GCRL-LTL', 'ltl2action': 'LTL2Action'}
     df = process_eval_results(env, experiments, name_mapping)
+    ci = True
 
-    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
-    axs[0].set(ylabel='Success rate', yticks=np.arange(0, 1.01, 0.1))
-    axs[1].set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1))
-    sns.lineplot(df, x='num_steps', y='success_rate_smooth', errorbar='sd', hue='Method', ax=axs[0])
-    sns.lineplot(df, x='num_steps', y='return_smooth', errorbar='sd', hue='Method', ax=axs[1])
-    plt.savefig(os.path.expanduser('~/tmp/plot.png'))
+    fig, ax = plt.subplots(1, 1, figsize=(9, 7))
+    ax.set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
+    errorbar = ('ci', 90) if ci else ('sd', 1)
+    sns.lineplot(df, x='num_steps', y='return_smooth', errorbar=errorbar, hue='Method', ax=ax)
+    plt.savefig(os.path.expanduser('~/work/dphil/iclr-deepltl/figures/training_zones.pdf'))
     plt.show()
 
 
-def process_eval_results(env: str, experiments: list[str], name_mapping=None, smooth_radius=5):
+def process_eval_results(env: str, experiments: list[str], name_mapping=None, smooth_radius=15):
     dfs = []
     for experiment in experiments:
         path = f'eval_results/{env}/{experiment}'
         files = [f for f in os.listdir(path) if f.endswith('.csv')]
         for file in files:
+            # if experiment == 'super_comp' and (file.startswith('1') or file.startswith('3')):
+            #   continue
             df = pd.read_csv(f'{path}/{file}')
             name = name_mapping.get(experiment, experiment)
             df['Method'] = name
@@ -36,7 +38,7 @@ def process_eval_results(env: str, experiments: list[str], name_mapping=None, sm
             for col in ['success_rate', 'violation_rate', 'average_steps', 'return']:
                 df[f'{col}_smooth'] = smooth(df[col], smooth_radius)
             dfs.append(df)
-        print(f'Loaded {len(files)} files for experiment {name_mapping.get(experiment, experiment)}')
+        print(f'Loaded {len(files)} files for {name_mapping.get(experiment, experiment)}')
     result = pd.concat(dfs)
     if result.isna().any().any():
         print('Warning: data contains NaN values')
