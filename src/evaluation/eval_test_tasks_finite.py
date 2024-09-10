@@ -7,6 +7,7 @@ from evaluation.simulate_zones import simulate
 
 def main():
     exp = 'nodent'
+    num_episodes = 500
     tasks = [
         'F (green & (!blue U yellow)) & F magenta',
         'F (blue | green) & F yellow & F magenta',
@@ -20,7 +21,7 @@ def main():
         results = []
         for seed in seeds:
             print(f'Running seed: {seed}')
-            sr, mean_steps = simulate(exp, seed, task)
+            sr, mean_steps = simulate(exp, seed, num_episodes, task, True, False, True)
             results.append([seed, sr, mean_steps])
         df = pd.DataFrame(results, columns=['seed', 'success_rate', 'mean_steps'])
         os.makedirs('multiple_results', exist_ok=True)
