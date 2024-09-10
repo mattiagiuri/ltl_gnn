@@ -16,6 +16,8 @@
 
 from __future__ import annotations
 
+import os
+import pickle
 from dataclasses import asdict, dataclass
 from typing import Any, ClassVar
 
@@ -26,6 +28,7 @@ from safety_gymnasium import tasks
 from safety_gymnasium.bases.base_task import BaseTask
 from safety_gymnasium.utils.common_utils import ResamplingError, quat2zalign
 from safety_gymnasium.utils.task_utils import get_task_class_name
+from safety_gymnasium.world import World
 
 
 @dataclass
@@ -134,6 +137,7 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
         self.cost: float = None
         self.terminated: bool = True
         self.truncated: bool = False
+        self.loaded_fixed_world = False
 
         self.render_parameters = RenderConf(render_mode, width, height, camera_id, camera_name)
 
@@ -162,10 +166,34 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
         return self.task.agent.pos
 
     @property
+    def agent_rot(self):
+        return self.task.world.agent_rot
+
+    @property
     def zone_positions(self):
         return {
             k: v for k, v in self.task.world_info.layout.items() if 'zone' in k
         }
+
+    def save_world_info(self, path: str) -> None:
+        """Save the world information to a file."""
+        with open(path, 'wb+') as f:
+            pickle.dump(self.task.world_info, f)
+
+    def load_world_info(self, path: str) -> None:
+        """Load the world information from a file."""
+        with open(path, 'rb') as f:
+            self.task.world_info = pickle.load(f)
+        if self.task.world is None:
+            self.task.world = World(self.task.agent, self.task._obstacles, self.task.world_info.world_config_dict)
+            self.task.world.reset()
+            self.task.world.build()
+        else:
+            self.task.world.reset(build=False)
+            self.task.world.rebuild(self.task.world_info.world_config_dict, state=False)
+            if self.task.viewer:
+                self.task._update_viewer(self.task.model, self.task.data)
+        self.loaded_fixed_world = True
 
     def reset(
         self,
@@ -186,10 +214,11 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
         self.truncated = False
         self.steps = 0  # Count of steps taken in this episode
 
-        self.task.reset()
-        self.task.specific_reset()
-        self.task.update_world()  # refresh specific settings
-        self.task.agent.reset()
+        if not self.loaded_fixed_world:
+            self.task.reset()
+            self.task.specific_reset()
+            self.task.update_world()  # refresh specific settings
+            self.task.agent.reset()
 
         cost = self._cost()
         assert cost['cost_sum'] == 0, f'World has starting cost! {cost}'

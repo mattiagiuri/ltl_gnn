@@ -16,6 +16,10 @@ def get_experiment_path(env: str, name: str, seed: int) -> str:
     return path
 
 
+def get_eval_results_path(env: str, name: str, seed: int) -> str:
+    return f'eval_results/{env}/{name}/{seed}.csv'
+
+
 def get_experiment_path_from_config(config: argparse.Namespace) -> str:
     experiment = config.experiment
     return get_experiment_path(experiment.env, experiment.name, experiment.seed)

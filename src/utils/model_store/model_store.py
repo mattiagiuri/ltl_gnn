@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 
+import pandas as pd
 import torch
 
 import utils
@@ -10,6 +11,7 @@ import utils
 class ModelStore:
     def __init__(self, env: str, name: str, seed: int, pretraining_experiment: str | None):
         self.path = utils.get_experiment_path(env, name, seed)
+        self.eval_results_path = utils.get_eval_results_path(env, name, seed)
         if pretraining_experiment:
             self.pretraining_experiment_path = utils.get_pretraining_experiment_path(env, pretraining_experiment, seed)
         else:
@@ -29,9 +31,6 @@ class ModelStore:
     def save_ltl_net(self, ltl_net: dict[str, any]):
         torch.save(ltl_net, f'{self.path}/ltl_net.pth')
 
-    def save_best_model(self, status: dict[str, any]):
-        torch.save(status, f'{self.path}/best_model.pth')
-
     def load_training_status(self, map_location=None) -> dict[str, any]:
         if not os.path.exists(f'{self.path}/status.pth'):
             raise FileNotFoundError(f'No training status found at {self.path}/status.pth')
@@ -44,10 +43,16 @@ class ModelStore:
             raise FileNotFoundError(f'No pretrained model found at {self.pretraining_experiment_path}/ltl_net.pth')
         return torch.load(f'{self.pretraining_experiment_path}/ltl_net.pth')
 
-    def load_best_model(self) -> dict[str, any]:
-        if not os.path.exists(f'{self.path}/best_model.pth'):
-            raise FileNotFoundError(f'No best model found at {self.path}/best_model.pth')
-        return torch.load(f'{self.path}/best_model.pth')
+    def load_best_model(self, map_location=None) -> dict[str, any]:
+        if not os.path.exists(self.eval_results_path):
+            raise FileNotFoundError(f'No eval results found at {self.eval_results_path}')
+        with open(self.eval_results_path) as f:
+            df = pd.read_csv(f)
+        # Get the best model by success rate and return
+        best_model_steps = df[df['success_rate'] >= df['success_rate'].max() - 0.02].sort_values('return', ascending=False).iloc[0]['num_steps']
+        print(best_model_steps)
+        best_model_file = f'{self.path}/eval/{int(best_model_steps)}.pth'
+        return torch.load(best_model_file, map_location=map_location)
 
     def load_eval_training_statuses(self, map_location=None) -> list[dict[str, any]]:
         eval_dir = f'{self.path}/eval'

@@ -16,6 +16,11 @@ class LTLWrapper(gymnasium.Wrapper):
         })
         self.sample_task = sample_task
         self.goal = None
+        self.fixed_goal = False
+
+    def set_goal(self, goal: str):
+        self.goal = goal
+        self.fixed_goal = True
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = super().step(action)
@@ -25,6 +30,10 @@ class LTLWrapper(gymnasium.Wrapper):
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
         WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
-        self.goal = self.sample_task()
-        obs = {'features': obs, 'goal': self.goal}
+        if not self.fixed_goal:
+            self.goal = self.sample_task()
+        if isinstance(self.goal, tuple):   # only if we also sample a goal in ltl2action format
+            obs = {'features': obs, 'goal': self.goal[0], 'ltl2action_goal': self.goal[1]}
+        else:
+            obs = {'features': obs, 'goal': self.goal}
         return obs, info
