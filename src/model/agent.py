@@ -18,7 +18,7 @@ class Agent:
         self.sequence = None
 
     def get_action(self, obs, info, deterministic=False) -> np.ndarray:
-        if 'ldba_state_changed' in info:
+        if 'ldba_state_changed' in info or self.sequence is None:
             self.sequence = self.search(obs['ldba'], obs['ldba_state'], obs)
             if self.verbose:
                 print(f'Selected sequence: {self.sequence}')

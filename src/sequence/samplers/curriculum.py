@@ -172,12 +172,6 @@ ZONES_CURRICULUM = Curriculum([
         threshold=0.9,
         threshold_type='mean'
     ),
-    ExplicitCurriculumStage(  # 4
-        task_fn=None,
-        eps_task_fn=all_reach_stay_tasks(30),
-        threshold=0.9,
-        threshold_type='mean'
-    ),
     MultiRandomStage(  # 5
         stages=[
             RandomCurriculumStage(
@@ -186,12 +180,12 @@ ZONES_CURRICULUM = Curriculum([
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=sample_reach_stay(60, (0, 1)),
+                sampler=sample_reach_stay(30, (0, 1)),
                 threshold=None,
                 threshold_type=None
             ),
         ],
-        probs=[0.5, 0.5],
+        probs=[0.4, 0.6],
         threshold=0.9,
         threshold_type='mean'
     ),
