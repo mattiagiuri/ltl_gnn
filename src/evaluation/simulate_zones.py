@@ -17,8 +17,8 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='nodent')
-    parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--num_episodes', type=int, default=20)
+    parser.add_argument('--seed', type=int, default=2)
+    parser.add_argument('--num_episodes', type=int, default=500)
     parser.add_argument('--formula', type=str, default='FG blue')
     parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)

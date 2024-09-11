@@ -7,7 +7,7 @@ from evaluation.simulate_zones import simulate
 
 def main():
     exp = 'nodent'
-    num_episodes = 100
+    num_episodes = 500
     tasks = [
         'GF blue & GF green',
         'GF blue & GF green & GF yellow & G !magenta',
@@ -20,7 +20,8 @@ def main():
         results = []
         for seed in seeds:
             print(f'Running seed: {seed}')
-            accepting_visits = simulate(exp, seed, num_episodes, task, False, False, False)
+            deterministic = task.startswith('GF')
+            accepting_visits = simulate(exp, seed, num_episodes, task, False, False, deterministic=deterministic)
             results.append([seed, accepting_visits])
             df = pd.DataFrame(results, columns=['seed', 'accepting_visits'])
             os.makedirs('multiple_results', exist_ok=True)
