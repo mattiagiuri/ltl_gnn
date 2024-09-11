@@ -37,7 +37,7 @@ def main():
             '--entropy_coef', '0.01',
             '--log_interval', '5',
             '--save_interval', '20',
-            '--num_steps', '20_000_000',
+            '--num_steps', '15_000_000',
             '--model_config', 'letter',
             '--curriculum', 'letter',
             '--name', args.name,

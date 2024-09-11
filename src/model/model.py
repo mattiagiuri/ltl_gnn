@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from config import ModelConfig
 from model.ltl.ltl_net import LTLNet
+from model.mixed_distribution import MixedDistribution
 from preprocessing.vocab import VOCAB
 from model.policy import ContinuousActor
 from model.policy import DiscreteActor
@@ -34,7 +35,8 @@ class Model(nn.Module):
     def forward(self, obs):
         embedding = self.compute_embedding(obs)
         dist = self.actor(embedding)
-        dist.set_epsilon_mask(obs.epsilon_mask)
+        if isinstance(dist, MixedDistribution):
+            dist.set_epsilon_mask(obs.epsilon_mask)
         value = self.critic(embedding).squeeze(1)
         return dist, value
 
