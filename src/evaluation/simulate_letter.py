@@ -16,11 +16,11 @@ from sequence.search import BFS, DijkstraSearch, ExhaustiveSearch
 from utils.model_store import ModelStore
 
 env_name = 'LetterEnv-v0'
-exp = 'stage3_095'
+exp = 'final'
 seed = 1
 render_modes = [None, 'human', 'path']
 render = render_modes[0]
-render_on_fail = 2
+render_on_fail = False
 
 random.seed(seed)
 np.random.seed(seed)
@@ -31,11 +31,12 @@ torch.random.manual_seed(seed)
 # sampler = PartiallyOrderedSampler.partial(depth=15, num_conjuncts=1, disjunct_prob=0.25, as_list=False)
 # sampler = PartiallyOrderedSampler.partial(depth=3, num_conjuncts=2, as_list=False, disjunct_prob=0)
 # sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
-sampler = AvoidSampler.partial(depth=3, num_conjuncts=1)
+# sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
 # sampler = AvoidSampler.partial(depth=6, num_conjuncts=1)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
 # sampler = FixedSampler.partial('GF k & GF e & G (h => F f)')
 # sampler = FixedSampler.partial('F (a & (!d U c))')
+sampler = FixedSampler.partial('((a | b | c | d) => F (e & (F (f & F g)))) U (h & F i)')
 
 deterministic = False
 
@@ -47,7 +48,7 @@ model = build_model(env, training_status, config)
 
 props = set(env.get_propositions())
 # search = BFS(model)
-search = ExhaustiveSearch(model, num_loops=2)
+search = ExhaustiveSearch(model, props, num_loops=2)
 agent = Agent(model, search=search, propositions=props, verbose=render is not None)
 
 num_episodes = 500
@@ -105,16 +106,6 @@ for i in pbar:
                 env.render_path(actions)
                 print(props)
                 props = []
-
-                # test_goals = [
-                #     [('i', 'a'), ('a', 'b')],
-                #     [('a', 'b')],
-                # ]
-                # for goal in test_goals:
-                #     modified_obs = copy.deepcopy(obs)
-                #     modified_obs['goal'] = goal
-                #     print(f'Goal: {goal}, Value: {agent.get_value(modified_obs)}')
-
                 finish = env.wait_for_input()
             elif not render:
                 pbar.set_postfix({

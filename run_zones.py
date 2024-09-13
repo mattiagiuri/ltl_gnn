@@ -38,7 +38,7 @@ def main():
             '--save_interval', '2',
             '--epochs', '10',
             '--num_steps', '15_000_000',
-            '--model_config', 'default',
+            '--model_config', 'zones',
             '--curriculum', 'zones',
             '--name', args.name,
             '--seed', str(seed),

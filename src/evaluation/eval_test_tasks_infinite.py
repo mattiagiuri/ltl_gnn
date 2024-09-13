@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from evaluation.simulate_zones import simulate
+from evaluation.simulate import simulate
 
 
 def main():

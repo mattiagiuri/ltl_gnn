@@ -1,3 +1,4 @@
+import pickle
 import random
 from typing import Any, Literal
 
@@ -175,6 +176,15 @@ class LetterEnv(gym.Env):
 
     def get_possible_assignments(self) -> list[Assignment]:
         return Assignment.zero_or_one_propositions(set(self.get_propositions()))
+
+    def save_world_info(self, path: str):
+        with open(path, 'wb+') as f:
+            pickle.dump(self.map, f)
+
+    def load_world_info(self, path: str):
+        with open(path, 'rb') as f:
+            self.map = pickle.load(f)
+        self.use_fixed_map = True
 
 
 def _is_valid_map(map, grid_size, actions):

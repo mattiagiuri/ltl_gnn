@@ -42,7 +42,7 @@ zone_poss = []
 
 pbar = trange(num_episodes)
 for i in pbar:
-    env.load_world_info(f'eval_datasets/zones/worlds/world_info_{i}.pkl')
+    env.load_world_info(f'eval_datasets/PointLtl2-v0/worlds/world_info_{i}.pkl')
     obs, info = env.reset(), {}
     agent.reset()
     done = False

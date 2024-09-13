@@ -16,6 +16,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0'], default='PointLtl2-v0')
     parser.add_argument('--exp', type=str, default='nodent')
     parser.add_argument('--seed', type=int, default=2)
     parser.add_argument('--num_episodes', type=int, default=500)
@@ -24,18 +25,19 @@ def main():
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
-    return simulate(args.exp, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic)
+    gamma = 0.94 if args.env == 'LetterEnv-v0' else 0.998
+    return simulate(args.exp, gamma, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic)
 
 
-def simulate(exp, seed, num_episodes, formula, finite, render, deterministic):
-    env_name = 'PointLtl2-v0'
+def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic):
+    env_name = env
     random.seed(seed)
     np.random.seed(seed)
     torch.random.manual_seed(seed)
 
     sampler = FixedSampler.partial(formula)
-    env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
-    config = model_configs['default']
+    env = make_env(env_name, sampler, render_mode='human' if render else None)
+    config = model_configs[env_name]
     model_store = ModelStore(env_name, exp, seed, None)
     training_status = model_store.load_best_model(map_location='cpu')
     model = build_model(env, training_status, config)
@@ -65,10 +67,10 @@ def simulate(exp, seed, num_episodes, formula, finite, render, deterministic):
         while not done:
             action = agent.get_action(obs, info, deterministic=deterministic)
             action = action.flatten()
+            if action.shape == (1,):
+                action = action[0]
             obs, reward, done, info = env.step(action)
             num_steps += 1
-            if not done:
-                continue
             if done:
                 if finite:
                     final_reward = int('success' in info)
@@ -77,7 +79,7 @@ def simulate(exp, seed, num_episodes, formula, finite, render, deterministic):
                         steps.append(num_steps)
                     elif 'violation' in info:
                         num_violations += 1
-                    rets.append(final_reward * 0.998 ** (num_steps - 1))
+                    rets.append(final_reward * gamma ** (num_steps - 1))
                     if not render:
                         pbar.set_postfix({
                             'S': num_successes / (i + 1),

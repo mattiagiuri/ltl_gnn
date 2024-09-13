@@ -50,7 +50,7 @@ class ModelConfig:
     env_net: Optional[AbstractModelConfig]
 
 
-default = ModelConfig(
+zones = ModelConfig(
     actor=ActorConfig(
         layers=[64, 64, 64],
         activation=dict(

@@ -3,8 +3,8 @@ from .ppo_config import *
 from .model_config import *
 
 model_configs = {
-    'default': default,
-    'letter': letter,
+    'PointLtl2-v0': zones,
+    'LetterEnv-v0': letter,
     'pretraining': pretraining,
 }
 

@@ -23,18 +23,19 @@ env = None
 def set_env():
     global env
     sampler = FixedSampler.partial('this_will_be_overridden')
-    envs = [make_env(env_name, sampler, render_mode=None, max_steps=1000) for _ in range(8)]
-    world_info_paths = [f'eval_datasets/zones/worlds/world_info_{i}.pkl' for i in range(num_eval_episodes)]
-    with open('eval_datasets/zones/tasks.txt') as f:
+    envs = [make_env(env_name, sampler, render_mode=None) for _ in range(8)]
+    world_info_paths = [f'eval_datasets/{env_name}/worlds/world_info_{i}.pkl' for i in range(num_eval_episodes)]
+    with open(f'eval_datasets/{env_name}/tasks.txt') as f:
         tasks = [line.strip() for line in f]
     env = EvalSyncEnv(envs, world_info_paths, tasks)
 
 
-env_name = 'PointLtl2-v0'
-config = model_configs['default']
-exp = 'eval'
+env_name = 'LetterEnv-v0'
+config = model_configs['letter']
+exp = 'final'
 seed = int(sys.argv[2])
-deterministic = True
+deterministic = False
+gamma = 0.94
 num_procs = 8
 num_eval_episodes = 50
 device = 'cuda'
@@ -46,7 +47,7 @@ torch.random.manual_seed(seed)
 def aux(status):
     global env
     model = build_model(env.envs[0], status, config)
-    s, v, num_steps, adr = eval_model(model, env, num_eval_episodes, deterministic)
+    s, v, num_steps, adr = eval_model(model, env, num_eval_episodes, deterministic, gamma)
     return status['num_steps'], s, v, num_steps, adr
 
 
@@ -75,7 +76,7 @@ def main():
     df.to_csv(f'{out_path}/{seed}.csv', index_label='num_steps')
 
 
-def eval_model(model, env, num_eval_episodes, deterministic):
+def eval_model(model, env, num_eval_episodes, deterministic, gamma):
     props = set(env.envs[0].get_propositions())
     search = ExhaustiveSearch(model, props, num_loops=2)
     agent = ParallelAgent(model, search=search, propositions=props, num_envs=len(env.envs))
@@ -97,7 +98,7 @@ def eval_model(model, env, num_eval_episodes, deterministic):
                 if 'success' in infos[i]:
                     num_successes += 1
                     steps.append(num_steps[i] + 1)
-                    returns.append(pow(0.998, num_steps[i] + 1))
+                    returns.append(pow(gamma, num_steps[i] + 1))
                 elif 'violation' in infos[i]:
                     num_violations += 1
                     returns.append(0)
