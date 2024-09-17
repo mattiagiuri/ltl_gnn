@@ -17,7 +17,7 @@ env_to_tasks = {
     'LetterEnv-v0': [
         'F (a & (!b U c)) & F d',
         '(F d) & (!f U (d & F b))',
-        '(F (a | c | j) & F b) & (F (c & F d)) & F k',
+        '(F ((a | c | j) & F b)) & (F (c & F d)) & F k',
         '!a U (b & (!c U (d & (!e U f))))',
         '((a | b | c | d) => F (e & (F (f & F g)))) U (h & F i)'
     ]
@@ -30,6 +30,9 @@ def main(env, exp, deterministic):
     gamma = 0.94 if env == 'LetterEnv-v0' else 0.998
     seeds = range(1, 6)
     results = []
+    if os.path.exists(f'results/{env}.csv'):
+        df = pd.read_csv(f'results/{env}.csv')
+        results = df.values.tolist()
     for task in tasks:
         print(f'Running task: {task}')
         for seed in seeds:
