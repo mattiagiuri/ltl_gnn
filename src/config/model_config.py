@@ -91,6 +91,28 @@ letter = ModelConfig(
     )
 )
 
+flatworld = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=dict(
+            hidden=nn.ReLU,
+            output=nn.Tanh
+        ),
+        state_dependent_std=True
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.Tanh
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    num_gnn_layers=2,
+    env_net=StandardNetConfig(
+        layers=[16, 16],
+        activation=nn.Tanh
+    )
+)
+
 pretraining = ModelConfig(
     actor=ActorConfig(
         layers=[],

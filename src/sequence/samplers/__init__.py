@@ -1,7 +1,8 @@
-from .curriculum import ZONES_CURRICULUM, LETTER_CURRICULUM
+from .curriculum import ZONES_CURRICULUM, LETTER_CURRICULUM, FLATWORLD_CURRICULUM
 from .curriculum_sampler import CurriculumSampler
 
 curricula = {
-    'zones': ZONES_CURRICULUM,
-    'letter': LETTER_CURRICULUM,
+    'PointLtl2-v0': ZONES_CURRICULUM,
+    'LetterEnv-v0': LETTER_CURRICULUM,
+    'FlatWorld-v0': FLATWORLD_CURRICULUM
 }

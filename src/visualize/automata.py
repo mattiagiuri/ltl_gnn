@@ -49,13 +49,23 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
     # assert ldba.check_valid()
     # print('Checked valid.')
     if prune:
-        ldba.prune(Assignment.zero_or_one_propositions(set(ldba.propositions)))
-        # ldba.prune([
-        #     Assignment(dict(a=False, r=False)),
-        #     Assignment(dict(a=False, r=True)),
-        #     Assignment(dict(a=True, r=False)),
-        #     Assignment(dict(a=True, r=True)),
-        # ])
+        # ldba.prune(Assignment.zero_or_one_propositions(set(ldba.propositions)))
+        props = {'red', 'magenta', 'blue', 'green', 'aqua', 'yellow', 'orange'}
+        ldba.prune([
+            Assignment.where('red', propositions=props),
+            Assignment.where('magenta', propositions=props),
+            Assignment.where('red', 'magenta', propositions=props),
+            Assignment.where('blue', propositions=props),
+            Assignment.where('green', propositions=props),
+            Assignment.where('aqua', propositions=props),
+            Assignment.where('blue', 'green', propositions=props),
+            Assignment.where('green', 'aqua', propositions=props),
+            Assignment.where('blue', 'aqua', propositions=props),
+            Assignment.where('blue', 'green', 'aqua', propositions=props),
+            Assignment.where('yellow', propositions=props),
+            Assignment.where('orange', propositions=props),
+            Assignment.zero_propositions(props),
+        ])
         print('Pruned impossible transitions.')
     ldba.complete_sink_state()
     print('Added sink state.')
@@ -64,12 +74,13 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 
 
 if __name__ == '__main__':
-    f = 'F (blue & F green) & G(!magenta & !yellow)'
+    props = {'red', 'magenta', 'blue', 'green', 'aqua', 'yellow', 'orange'}
+    f = 'F blue'
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
     print(f'Finite: {ldba.is_finite_specification()}')
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
-    search = ExhaustiveSearch(None, num_loops=1)
+    search = ExhaustiveSearch(None, props, num_loops=1)
     seqs = search.all_sequences(ldba, ldba.initial_state)
     print(seqs)
     print(len(seqs))

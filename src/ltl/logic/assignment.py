@@ -49,11 +49,18 @@ class Assignment(MutableMapping):
     def zero_propositions(propositions: set[str]) -> 'Assignment':
         return Assignment({p: False for p in propositions})
 
+    @staticmethod
+    def where(*true_propositions: str, propositions: set[str]):
+        return Assignment({p: (p in true_propositions) for p in propositions})
+
     def satisfies(self, label: str) -> bool:
         if label == 't':
             return True
         ast = parse(label)
         return ast.eval(self.mapping)
+
+    def get_true_propositions(self) -> set[str]:
+        return {p for p, v in self.mapping.items() if v}
 
     def to_frozen(self) -> 'FrozenAssignment':
         return FrozenAssignment(self)
@@ -96,6 +103,9 @@ class FrozenAssignment:
         cnf = [f'{"!" if not truth_value else ""}{p}' for p, truth_value in self.assignment]
         return ' & '.join(sorted(cnf, key=lambda x: x[1:] if x[0] == '!' else x))
 
+    def get_true_propositions(self) -> frozenset[str]:
+        return frozenset(p for p, v in self.assignment if v)
+
     def __eq__(self, other):
         return self.assignment == other.assignment
 
@@ -107,7 +117,7 @@ class FrozenAssignment:
 
     def __repr__(self):
         active = set(t[0] for t in self.assignment if t[1])
-        return ' | '.join(active)
+        return ' & '.join(active)
 
     def __iter__(self):
         return iter(self.assignment)

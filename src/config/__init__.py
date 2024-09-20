@@ -5,6 +5,7 @@ from .model_config import *
 model_configs = {
     'PointLtl2-v0': zones,
     'LetterEnv-v0': letter,
+    'FlatWorld-v0': flatworld,
     'pretraining': pretraining,
 }
 
