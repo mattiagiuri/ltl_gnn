@@ -28,7 +28,7 @@ class FlatWorld(gym.Env):
         Circle(center=np.array([-1.4, .55]), radius=.4, color='red'),
         Circle(center=np.array([-1.1, 1.1]), radius=.5, color='magenta'),
         Circle(center=np.array([-1, -1.2]), radius=.3, color='yellow'),
-        Circle(center=np.array([-1.53, -1.4]), radius=.15, color='orange'),
+        Circle(center=np.array([-1.53, -0.5]), radius=.32, color='orange'),
         Circle(center=np.array([0.1, 0.0]), radius=.8, color='blue'),
         Circle(center=np.array([.5, -1.3]), radius=.35, color='red'),
         Circle(center=np.array([.7, .7]), radius=.5, color='green'),
@@ -39,7 +39,7 @@ class FlatWorld(gym.Env):
     def __init__(self, continuous_actions=True):
         self.rng = np.random.default_rng()
         self.continuous_actions = continuous_actions
-        self.delta_t = 0.4
+        self.delta_t = 0.04
 
         self.observation_space = spaces.Box(low=-2., high=2., shape=(2,), dtype=np.float64)
         if continuous_actions:
@@ -92,6 +92,7 @@ class FlatWorld(gym.Env):
             else:
                 raise ValueError(f"Invalid action: {action}")
 
+        action = np.clip(action, -1, 1)
         self.agent_pos = self.agent_pos + action.flatten() * self.delta_t
         terminated = False
         reward = 0.0
@@ -103,7 +104,7 @@ class FlatWorld(gym.Env):
     def get_propositions(self):
         return sorted(list({circle.color for circle in self.CIRCLES}))
 
-    def get_possible_assignments(self):
+    def get_possible_assignments(self) -> list[Assignment]:
         props = set(self.get_propositions())
         return [
             Assignment.where('red', propositions=props),
@@ -122,10 +123,11 @@ class FlatWorld(gym.Env):
         ]
 
     @staticmethod
-    def render(trajectory: list[np.ndarray] = None):
+    def render(trajectory: list[np.ndarray] = None, ax=None):
         if trajectory is None:
             trajectory = []
-        fig, ax = plt.subplots(1, 1)
+        if ax is None:
+            fig, ax = plt.subplots(1, 1)
         for circle in FlatWorld.CIRCLES:
             xy = (float(circle.center[0]), float(circle.center[1]))
             patch = plt.Circle(xy, circle.radius, color=circle.color, fill=True, alpha=.2)
@@ -143,7 +145,6 @@ class FlatWorld(gym.Env):
         hide_ticks(ax.yaxis)
         ax.set_xlim([-2.1, 2.1])
         ax.set_ylim([-2.1, 2.1])
-        plt.show()
 
 
 def hide_ticks(axis):
@@ -155,12 +156,13 @@ def hide_ticks(axis):
 
 
 if __name__ == '__main__':
-    env = FlatWorld(continuous_actions=True)
+    env = FlatWorld(continuous_actions=False)
     obs, _ = env.reset()
     trajectory = [obs]
-    for i in range(1000):
+    for i in range(300):
         obs, reward, term, trunc, info = env.step(env.action_space.sample())
         trajectory.append(obs)
         if term or trunc:
             break
     env.render(trajectory)
+    plt.show()

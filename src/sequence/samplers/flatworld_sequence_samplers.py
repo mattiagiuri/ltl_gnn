@@ -118,4 +118,4 @@ def flatworld_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Ca
 
 if __name__ == '__main__':
     for _ in range(5):
-        print(flatworld_sample_reach_stay(5, (0,1))([]))
+        print(flatworld_sample_reach(2)([]))

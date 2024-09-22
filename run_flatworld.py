@@ -29,12 +29,12 @@ def main():
         command = [
             'python', 'src/train/train_ppo.py',
             '--env', 'FlatWorld-v0',
-            '--steps_per_process', '4096',
+            '--steps_per_process', '4096',  # 1024
             '--epochs', '10',
-            '--batch_size', '2048',
+            '--batch_size', '2048',  # 512
             '--discount', '0.98',
             '--gae_lambda', '0.95',
-            '--entropy_coef', '0.003',
+            '--entropy_coef', '0.003',  # 0.003
             '--log_interval', '1',
             '--save_interval', '2',
             '--num_steps', '15_000_000',
@@ -57,7 +57,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 16 --device cpu --name tmp --seed 1 --log_csv false --save false'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name tmp --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

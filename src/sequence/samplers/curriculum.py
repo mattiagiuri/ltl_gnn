@@ -230,25 +230,30 @@ ZONES_CURRICULUM = Curriculum([
 FLATWORLD_CURRICULUM = Curriculum([
     ExplicitCurriculumStage(  # 0
         task_fn=flatworld_all_reach_tasks(1),
-        temperature=0.5,
+        temperature=0.4,
         threshold=0.8,
         threshold_type='min',
     ),
     RandomCurriculumStage(  # 1
         sampler=flatworld_sample_reach(2),
-        threshold=0.95,
+        threshold=0.9,
         threshold_type='mean'
     ),
     RandomCurriculumStage(  # 2
         sampler=flatworld_sample_reach_avoid(1, 1, 1),
-        threshold=0.95,
-        threshold_type='mean'
-    ),
-    RandomCurriculumStage(  # 3
-        sampler=flatworld_sample_reach_avoid(2, (1,2), (0,2)),
         threshold=0.9,
         threshold_type='mean'
     ),
+    RandomCurriculumStage(  # 3
+        sampler=flatworld_sample_reach_avoid(2, (1, 2), (0, 2)),
+        threshold=0.9,
+        threshold_type='mean'
+    ),
+    # RandomCurriculumStage(  # 3
+    #     sampler=flatworld_sample_reach_avoid(3, (1, 2), (0, 3)),
+    #     threshold=None,
+    #     threshold_type=None
+    # ),
     MultiRandomStage(  # 4
         stages=[
             RandomCurriculumStage(
@@ -257,7 +262,7 @@ FLATWORLD_CURRICULUM = Curriculum([
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_stay(30, (0, 1)),
+                sampler=flatworld_sample_reach_stay(15, (0, 1)),
                 threshold=None,
                 threshold_type=None
             ),
@@ -274,7 +279,7 @@ FLATWORLD_CURRICULUM = Curriculum([
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_stay(60, (0, 1)),
+                sampler=flatworld_sample_reach_stay(25, (0, 1)),
                 threshold=None,
                 threshold_type=None
             ),
@@ -291,7 +296,7 @@ FLATWORLD_CURRICULUM = Curriculum([
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_stay(60, (0, 2)),
+                sampler=flatworld_sample_reach_stay(50, (0, 2)),
                 threshold=None,
                 threshold_type=None
             ),
