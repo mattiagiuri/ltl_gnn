@@ -1,11 +1,13 @@
 import argparse
 import json
 import os
+import pickle
 
 import pandas as pd
 import torch
 
 import utils
+from preprocessing import VOCAB
 
 
 class ModelStore:
@@ -30,6 +32,15 @@ class ModelStore:
 
     def save_ltl_net(self, ltl_net: dict[str, any]):
         torch.save(ltl_net, f'{self.path}/ltl_net.pth')
+
+    def save_vocab(self):
+        with open(f'{self.path}/vocab.pkl', 'wb+') as f:
+            pickle.dump(VOCAB, f)
+
+    def load_vocab(self):
+        with open(f'{self.path}/vocab.pkl', 'rb') as f:
+            v = pickle.load(f)
+        VOCAB.update(v)
 
     def load_training_status(self, map_location=None) -> dict[str, any]:
         if not os.path.exists(f'{self.path}/status.pth'):

@@ -35,6 +35,11 @@ class Trainer:
     def train(self, log_csv: bool = True, log_wandb: bool = False):
         training_status, resuming = self.get_training_status()
         envs = self.make_envs(training_status["curriculum_stage"])
+        if resuming:
+            self.model_store.load_vocab()
+        else:
+            preprocessing.init_vocab(envs[0].get_possible_assignments())
+            self.model_store.save_vocab()
         # pretrained_model = self.load_pretrained_model()
         model = build_model(envs[0], training_status, model_configs[self.args.model_config])
         model.to(self.args.experiment.device)
@@ -78,7 +83,7 @@ class Trainer:
                                    "model_state": algo.model.state_dict(),
                                    "optimizer_state": algo.optimizer.state_dict(),
                                    "curriculum_stage": curriculum.stage_index,
-                                   "num_eval_steps": num_eval_steps
+                                   "num_eval_steps": num_eval_steps,
                                    }
                 self.model_store.save_training_status(training_status)
                 self.model_store.save_ltl_net(algo.model.ltl_net.state_dict())

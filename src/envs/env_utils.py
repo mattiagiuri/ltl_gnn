@@ -4,7 +4,6 @@ import gymnasium
 from gymnasium.wrappers import FlattenObservation, TimeLimit
 
 from envs.remove_trunc_wrapper import RemoveTruncWrapper
-from preprocessing.vocab import init_vocab
 
 
 def get_env_attr(env, attr: str):
@@ -48,7 +47,6 @@ def make_env(
         raise ValueError(f'Unknown environment: {name}')
 
     propositions = get_env_attr(env, 'get_propositions')()
-    init_vocab(propositions)
     sample_task = sampler(propositions)
     if not sequence:
         # env = PartiallyOrderedWrapper(env, sample_task)

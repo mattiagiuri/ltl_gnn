@@ -17,10 +17,10 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0'], default='FlatWorld-v0')
-    parser.add_argument('--exp', type=str, default='fixedregions')
+    parser.add_argument('--exp', type=str, default='newtry')
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--num_episodes', type=int, default=500)
-    parser.add_argument('--formula', type=str, default='!(red | green) U magenta')
+    parser.add_argument('--formula', type=str, default='F (yellow & F green)')  # !(red | green) U magenta
     parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=False)
@@ -40,6 +40,7 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     config = model_configs[env_name]
     model_store = ModelStore(env_name, exp, seed, None)
     training_status = model_store.load_training_status(map_location='cpu')
+    model_store.load_vocab()
     model = build_model(env, training_status, config)
 
     props = set(env.get_propositions())

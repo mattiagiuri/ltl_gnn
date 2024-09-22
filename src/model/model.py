@@ -35,8 +35,7 @@ class Model(nn.Module):
     def forward(self, obs):
         embedding = self.compute_embedding(obs)
         dist = self.actor(embedding)
-        if isinstance(dist, MixedDistribution):
-            dist.set_epsilon_mask(obs.epsilon_mask)
+        dist.set_epsilon_mask(obs.epsilon_mask)
         value = self.critic(embedding).squeeze(1)
         return dist, value
 
@@ -46,6 +45,8 @@ def build_model(
         training_status: dict[str, Any],
         model_config: ModelConfig,
 ) -> Model:
+    if len(VOCAB) <= 3:
+        raise ValueError('VOCAB not initialized')
     obs_shape = env.observation_space['features'].shape
     action_space = env.action_space
     action_dim = action_space.n if isinstance(action_space, gymnasium.spaces.Discrete) else action_space.shape[0]
@@ -58,7 +59,7 @@ def build_model(
         env_embedding_dim = obs_shape[0]
 
     embedding = nn.Embedding(len(VOCAB), model_config.ltl_embedding_dim, padding_idx=VOCAB['PAD'])
-    ltl_net = LTLNet(embedding, model_config.num_gnn_layers, model_config.num_rnn_layers)
+    ltl_net = LTLNet(embedding, model_config.num_rnn_layers)
 
     if isinstance(env.action_space, gymnasium.spaces.Discrete):
         actor = DiscreteActor(action_dim=action_dim,
