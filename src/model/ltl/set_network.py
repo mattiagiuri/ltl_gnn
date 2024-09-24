@@ -2,20 +2,18 @@ from typing import Type
 
 import torch
 from torch import nn
-import torch.nn.functional as F
+
+from utils import torch_utils
 
 
 class SetNetwork(nn.Module):
 
-    def __init__(self, input_dim: int, output_dim: int, activation: Type[nn.Module] = nn.ReLU):
+    def __init__(self, input_dim: int, layer_sizes: list[int], activation: Type[nn.Module] = nn.ReLU):
         super().__init__()
-        self.linear = nn.Linear(input_dim, 32)
-        self.linear2 = nn.Linear(32, output_dim)
-        self.activation = activation()
+        self.mlp = torch_utils.make_mlp_layers([input_dim, *layer_sizes], activation=activation,
+                                               weight_init=None)
+        self.embedding_size = layer_sizes[-1]
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         x = x.sum(dim=-2)
-        x = self.linear(x)
-        x = self.activation(x)
-        x = self.linear2(x)
-        return self.activation(x)
+        return self.mlp(x)

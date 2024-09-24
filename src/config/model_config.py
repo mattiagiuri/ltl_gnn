@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from torch import nn
 
 from model.env import ConvEnvNet, StandardEnvNet
+from model.ltl.set_network import SetNetwork
 
 
 class AbstractModelConfig(ABC):
@@ -34,6 +35,15 @@ class ConvNetConfig(AbstractModelConfig):
 
 
 @dataclass
+class SetNetConfig(AbstractModelConfig):
+    layers: list[int]
+    activation: Type[nn.Module]
+
+    def build(self, input_shape: int) -> nn.Module:
+        return SetNetwork(input_shape, self.layers, self.activation)
+
+
+@dataclass
 class ActorConfig:
     layers: list[int]
     activation: Optional[Type[nn.Module]] | dict[str, Type[nn.Module]]
@@ -46,8 +56,8 @@ class ModelConfig:
     critic: StandardNetConfig
     ltl_embedding_dim: int
     num_rnn_layers: int
-    num_gnn_layers: int
     env_net: Optional[AbstractModelConfig]
+    set_net: SetNetConfig
 
 
 zones = ModelConfig(
@@ -65,10 +75,13 @@ zones = ModelConfig(
     ),
     ltl_embedding_dim=16,
     num_rnn_layers=1,
-    num_gnn_layers=2,
     env_net=StandardNetConfig(
         layers=[128, 64],
         activation=nn.Tanh
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
     )
 )
 
@@ -83,10 +96,13 @@ letter = ModelConfig(
     ),
     ltl_embedding_dim=32,
     num_rnn_layers=1,
-    num_gnn_layers=2,
     env_net=ConvNetConfig(
         channels=[16, 32, 64],
         kernel_size=(2, 2),
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
         activation=nn.ReLU
     )
 )
@@ -102,25 +118,12 @@ flatworld = ModelConfig(
     ),
     ltl_embedding_dim=16,
     num_rnn_layers=1,
-    num_gnn_layers=2,
     env_net=StandardNetConfig(
         layers=[16, 16],
         activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
     )
-)
-
-pretraining = ModelConfig(
-    actor=ActorConfig(
-        layers=[],
-        activation=None,
-        state_dependent_std=False
-    ),
-    critic=StandardNetConfig(
-        layers=[],
-        activation=None
-    ),
-    ltl_embedding_dim=32,
-    num_rnn_layers=1,
-    num_gnn_layers=2,
-    env_net=None
 )

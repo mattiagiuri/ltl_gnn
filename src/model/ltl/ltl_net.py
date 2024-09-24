@@ -9,13 +9,13 @@ class LTLNet(nn.Module):
     def __init__(
             self,
             embedding: nn.Module,
+            set_net_config: 'SetNetConfig',
             num_rnn_layers: int,
     ):
         super().__init__()
         self.embedding = embedding
-        embedding_dim = embedding.embedding_dim
-
-        self.set_network = SetNetwork(embedding_dim, embedding_dim)
+        self.set_network = set_net_config.build(embedding.embedding_dim)
+        embedding_dim = self.set_network.embedding_size
         self.rnn = nn.GRU(input_size=2 * embedding_dim, hidden_size=2 * embedding_dim, num_layers=num_rnn_layers,
                           batch_first=True)
         self.embedding_dim = 2 * embedding_dim

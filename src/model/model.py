@@ -59,7 +59,7 @@ def build_model(
         env_embedding_dim = obs_shape[0]
 
     embedding = nn.Embedding(len(VOCAB), model_config.ltl_embedding_dim, padding_idx=VOCAB['PAD'])
-    ltl_net = LTLNet(embedding, model_config.num_rnn_layers)
+    ltl_net = LTLNet(embedding, model_config.set_net, model_config.num_rnn_layers)
 
     if isinstance(env.action_space, gymnasium.spaces.Discrete):
         actor = DiscreteActor(action_dim=action_dim,
@@ -79,4 +79,5 @@ def build_model(
 
     if "model_state" in training_status:
         model.load_state_dict(training_status["model_state"])
+    print(model)
     return model
