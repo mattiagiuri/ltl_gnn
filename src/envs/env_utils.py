@@ -43,7 +43,7 @@ def make_env(
         max_steps = max_steps or 75
     elif name.startswith('FlatWorld'):
         env = make_flatworld_env()
-        max_steps = max_steps or 1000
+        max_steps = max_steps or 500
     else:
         raise ValueError(f'Unknown environment: {name}')
 

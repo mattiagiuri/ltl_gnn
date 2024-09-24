@@ -6,6 +6,6 @@ register(
     id='FlatWorld-v0',
     entry_point='envs.flatworld.flatworld:FlatWorld',
     kwargs=dict(
-        continuous_actions=True
+        continuous_actions=False
     )
 )

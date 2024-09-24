@@ -35,8 +35,7 @@ class Model(nn.Module):
     def forward(self, obs):
         embedding = self.compute_embedding(obs)
         dist = self.actor(embedding)
-        if isinstance(dist, MixedDistribution):
-            dist.set_epsilon_mask(obs.epsilon_mask)
+        dist.set_epsilon_mask(obs.epsilon_mask)
         value = self.critic(embedding).squeeze(1)
         return dist, value
 

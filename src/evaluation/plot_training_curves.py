@@ -10,9 +10,11 @@ sns.set_theme(font_scale=1.8)
 
 def main():
     # env = 'PointLtl2-v0'
-    env = 'LetterEnv-v0'
+    # env = 'LetterEnv-v0'
+    env = 'FlatWorld-v0'
     # experiments = ['nodent', 'gcrl', 'ltl2action']
-    experiments = ['final', 'gcrl', 'ltl2action']
+    # experiments = ['final', 'gcrl', 'ltl2action']
+    experiments = ['ltl2action', 'newcurr', 'final1stage', 'final2stage']
     name_mapping = {'nodent': 'DeepLTL', 'gcrl': 'GCRL-LTL', 'ltl2action': 'LTL2Action', 'final': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping)
     ci = True
@@ -21,7 +23,7 @@ def main():
     ax.set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
     errorbar = ('ci', 90) if ci else ('sd', 1)
     sns.lineplot(df, x='num_steps', y='return_smooth', errorbar=errorbar, hue='Method', ax=ax)
-    plt.savefig(os.path.expanduser('~/work/dphil/iclr-deepltl/figures/training_letter.pdf'))
+    # plt.savefig(os.path.expanduser('~/work/dphil/iclr-deepltl/figures/training_letter.pdf'))
     plt.show()
 
 
