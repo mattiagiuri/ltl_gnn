@@ -20,6 +20,14 @@ env_to_tasks = {
         '(F ((a | c | j) & F b)) & (F (c & F d)) & F k',
         '!a U (b & (!c U (d & (!e U f))))',
         '((a | b | c | d) => F (e & (F (f & F g)))) U (h & F i)'
+    ],
+    'FlatWorld-v0': [
+        'F (green & (!(blue | red) U yellow)) & F magenta',
+        'F ((red & magenta) & F (blue & green))',
+        'F (orange & (!red U magenta))',
+        '(!blue U (green & blue & aqua)) & F yellow',
+        '!blue U (yellow & F (red & magenta))',
+        '(blue => F magenta) U (yellow | green)'
     ]
 }
 
@@ -27,8 +35,12 @@ env_to_tasks = {
 def main(env, exp, deterministic):
     num_episodes = 500
     tasks = env_to_tasks[env]
-    gamma = 0.94 if env == 'LetterEnv-v0' else 0.998
-    seeds = range(1, 6)
+    gamma = {
+        'PointLtl2-v0': 0.998,
+        'LetterEnv-v0': 0.94,
+        'FlatWorld-v0': 0.98
+    }[env]
+    seeds = range(1, 3)
     results = []
     if os.path.exists(f'results/{env}.csv'):
         df = pd.read_csv(f'results/{env}.csv')
@@ -46,8 +58,8 @@ def main(env, exp, deterministic):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0'], default='LetterEnv-v0')
-    parser.add_argument('--exp', type=str, default='final')
+    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0'], default='FlatWorld-v0')
+    parser.add_argument('--exp', type=str, default='deepset_complex')
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
     main(args.env, args.exp, args.deterministic)

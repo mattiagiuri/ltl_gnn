@@ -98,14 +98,14 @@ flatworld = ModelConfig(
     ),
     critic=StandardNetConfig(
         layers=[64, 64],
-        activation=nn.Tanh
+        activation=nn.ReLU
     ),
     ltl_embedding_dim=16,
     num_rnn_layers=1,
     num_gnn_layers=2,
     env_net=StandardNetConfig(
         layers=[16, 16],
-        activation=nn.Tanh
+        activation=nn.ReLU
     )
 )
 

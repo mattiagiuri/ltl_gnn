@@ -14,7 +14,7 @@ def main():
     env = 'FlatWorld-v0'
     # experiments = ['nodent', 'gcrl', 'ltl2action']
     # experiments = ['final', 'gcrl', 'ltl2action']
-    experiments = ['ltl2action', 'newcurr', 'final1stage', 'final2stage']
+    experiments = ['ltl2action', 'deepset_complex']
     name_mapping = {'nodent': 'DeepLTL', 'gcrl': 'GCRL-LTL', 'ltl2action': 'LTL2Action', 'final': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping)
     ci = True
@@ -27,7 +27,7 @@ def main():
     plt.show()
 
 
-def process_eval_results(env: str, experiments: list[str], name_mapping=None, smooth_radius=5):
+def process_eval_results(env: str, experiments: list[str], name_mapping=None, smooth_radius=10):
     dfs = []
     for experiment in experiments:
         path = f'eval_results/{env}/{experiment}'

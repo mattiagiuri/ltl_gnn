@@ -16,14 +16,14 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'FlatWorld-v0'
-exp = 'newcurr'
+exp = 'deepset_complex'
 seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-sampler = FixedSampler.partial('!blue U green')
+sampler = FixedSampler.partial('GF (red & magenta) & GF green')
 deterministic = False
 
 env = make_env(env_name, sampler, render_mode=None)
@@ -31,7 +31,7 @@ config = model_configs[env_name]
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 print(training_status['curriculum_stage'])
-# model_store.load_vocab()
+model_store.load_vocab()
 model = build_model(env, training_status, config)
 
 props = set(env.get_propositions())

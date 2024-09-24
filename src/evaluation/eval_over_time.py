@@ -34,8 +34,8 @@ def set_env():
 
 env_name = 'FlatWorld-v0'
 config = model_configs[env_name]
-exp = 'final2stage'
-seed = int(sys.argv[2])
+exp = 'deepset_complex'
+seed = 2
 deterministic = False
 gamma = 0.98
 num_procs = 8
@@ -57,15 +57,16 @@ def main():
     start_time = time.time()
     model_store = ModelStore(env_name, exp, seed, None)
     statuses = model_store.load_eval_training_statuses(map_location=device)
+    model_store.load_vocab()
 
     results = []
-    with mp.Pool(num_procs, initializer=set_env) as pool:
-        for r in tqdm(pool.imap_unordered(aux, statuses), total=len(statuses)):
-            results.append(r)
+    # with mp.Pool(num_procs, initializer=set_env) as pool:
+    #     for r in tqdm(pool.imap_unordered(aux, statuses), total=len(statuses)):
+    #         results.append(r)
 
-    # set_env()
-    # for status in statuses:
-    #     results.append(aux(status))
+    set_env()
+    for status in tqdm(statuses):
+        results.append(aux(status))
 
     print(f'Total time: {time.time() - start_time:.2f}s')
     result = {r[0]: (r[1], r[2], r[3], r[4]) for r in results}
