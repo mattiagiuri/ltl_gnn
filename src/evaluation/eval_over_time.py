@@ -24,21 +24,23 @@ def set_env():
     global env
     sampler = FixedSampler.partial('this_will_be_overridden')
     envs = [make_env(env_name, sampler, render_mode=None) for _ in range(8)]
-    world_info_paths = [f'eval_datasets/{env_name}/worlds/world_info_{i}.pkl' for i in range(num_eval_episodes)]
+    world_info_paths = []
+    if os.path.exists(f'eval_datasets/{env_name}/worlds'):
+        world_info_paths = [f'eval_datasets/{env_name}/worlds/world_info_{i}.pkl' for i in range(num_eval_episodes)]
     with open(f'eval_datasets/{env_name}/tasks.txt') as f:
         tasks = [line.strip() for line in f]
     env = EvalSyncEnv(envs, world_info_paths, tasks)
 
 
-env_name = 'LetterEnv-v0'
-config = model_configs['letter']
-exp = 'final'
+env_name = 'FlatWorld-v0'
+config = model_configs[env_name]
+exp = 'final2stage'
 seed = int(sys.argv[2])
 deterministic = False
-gamma = 0.94
+gamma = 0.98
 num_procs = 8
-num_eval_episodes = 50
-device = 'cuda'
+num_eval_episodes = 49
+device = 'cpu'
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)

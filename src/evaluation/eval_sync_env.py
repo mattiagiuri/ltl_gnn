@@ -12,7 +12,7 @@ class EvalSyncEnv(gym.Env):
         self.action_space = self.envs[0].action_space
         self.world_info_paths = world_info_paths
         self.tasks = tasks
-        if len(self.world_info_paths) != len(self.tasks):
+        if len(self.world_info_paths) > 0 and len(self.world_info_paths) != len(self.tasks):
             raise ValueError("Number of world info paths and tasks must be the same.")
         self.current = 0
         self.active_envs = [env for env in self.envs]
@@ -22,7 +22,8 @@ class EvalSyncEnv(gym.Env):
         self.active_envs = [env for env in self.envs]
         results = []
         for env in self.envs:
-            env.load_world_info(self.world_info_paths[self.current])
+            if self.world_info_paths:
+                env.load_world_info(self.world_info_paths[self.current])
             env.set_goal(self.tasks[self.current])
             results.append(env.reset())
             self.current += 1
@@ -35,7 +36,8 @@ class EvalSyncEnv(gym.Env):
             obs, reward, done, info = env.step(actions[i])
             if done:
                 if self.current < len(self.tasks):
-                    env.load_world_info(self.world_info_paths[self.current])
+                    if self.world_info_paths:
+                        env.load_world_info(self.world_info_paths[self.current])
                     env.set_goal(self.tasks[self.current])
                     self.current += 1
                     obs = env.reset()

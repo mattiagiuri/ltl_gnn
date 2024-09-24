@@ -94,11 +94,7 @@ letter = ModelConfig(
 flatworld = ModelConfig(
     actor=ActorConfig(
         layers=[64, 64, 64],
-        activation=dict(
-            hidden=nn.ReLU,
-            output=nn.Tanh
-        ),
-        state_dependent_std=True
+        activation=nn.ReLU,
     ),
     critic=StandardNetConfig(
         layers=[64, 64],

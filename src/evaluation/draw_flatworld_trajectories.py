@@ -16,27 +16,27 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'FlatWorld-v0'
-exp = 'cont'
+exp = 'newcurr'
 seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-sampler = FixedSampler.partial('F orange')
+sampler = FixedSampler.partial('!blue U green')
 deterministic = False
 
-env = make_env(env_name, sampler, render_mode=None, max_steps=1000)
+env = make_env(env_name, sampler, render_mode=None)
 config = model_configs[env_name]
 model_store = ModelStore(env_name, exp, seed, None)
 training_status = model_store.load_training_status(map_location='cpu')
 print(training_status['curriculum_stage'])
-model_store.load_vocab()
+# model_store.load_vocab()
 model = build_model(env, training_status, config)
 
 props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
-agent = Agent(model, search=search, propositions=props, verbose=False)
+agent = Agent(model, search=search, propositions=props, verbose=True)
 
 num_episodes = 8
 trajectories = []

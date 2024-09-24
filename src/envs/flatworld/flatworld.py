@@ -39,7 +39,7 @@ class FlatWorld(gym.Env):
     def __init__(self, continuous_actions=True):
         self.rng = np.random.default_rng()
         self.continuous_actions = continuous_actions
-        self.delta_t = 0.04
+        self.delta_t = 0.08
 
         self.observation_space = spaces.Box(low=-2., high=2., shape=(2,), dtype=np.float64)
         if continuous_actions:
@@ -72,21 +72,21 @@ class FlatWorld(gym.Env):
     def step(self, action: ActType) -> tuple[ObsType, float, bool, bool, dict[str, Any]]:
         if not self.continuous_actions:
             if action == 0:
-                action = np.array([0, .5])
+                action = np.array([0, 1])
             elif action == 1:
-                action = np.array([.5, 0])
+                action = np.array([1, 0])
             elif action == 2:
-                action = np.array([0, -.5])
+                action = np.array([0, -1])
             elif action == 3:
-                action = np.array([-.5, 0])
+                action = np.array([-1, 0])
             elif action == 4:
-                action = np.array([.5 / np.sqrt(2), .5 / np.sqrt(2)])
+                action = np.array([1 / np.sqrt(2), 1 / np.sqrt(2)])
             elif action == 5:
-                action = np.array([.5 / np.sqrt(2), -.5 / np.sqrt(2)])
+                action = np.array([1 / np.sqrt(2), -1 / np.sqrt(2)])
             elif action == 6:
-                action = np.array([-.5 / np.sqrt(2), .5 / np.sqrt(2)])
+                action = np.array([-1 / np.sqrt(2), 1 / np.sqrt(2)])
             elif action == 7:
-                action = np.array([-.5 / np.sqrt(2), -.5 / np.sqrt(2)])
+                action = np.array([-1 / np.sqrt(2), -1 / np.sqrt(2)])
             elif action == 8:
                 action = np.array([0, 0])
             else:

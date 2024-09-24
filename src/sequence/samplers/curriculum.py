@@ -228,81 +228,152 @@ ZONES_CURRICULUM = Curriculum([
 ])
 
 FLATWORLD_CURRICULUM = Curriculum([
-    ExplicitCurriculumStage(  # 0
-        task_fn=flatworld_all_reach_tasks(1),
-        temperature=0.4,
-        threshold=0.8,
-        threshold_type='min',
-    ),
-    RandomCurriculumStage(  # 1
-        sampler=flatworld_sample_reach(2),
-        threshold=0.9,
-        threshold_type='mean'
-    ),
-    RandomCurriculumStage(  # 2
-        sampler=flatworld_sample_reach_avoid(1, 1, 1),
-        threshold=0.9,
-        threshold_type='mean'
-    ),
-    RandomCurriculumStage(  # 3
-        sampler=flatworld_sample_reach_avoid(2, (1, 2), (0, 2)),
-        threshold=0.9,
-        threshold_type='mean'
-    ),
-    # RandomCurriculumStage(  # 3
-    #     sampler=flatworld_sample_reach_avoid(3, (1, 2), (0, 3)),
-    #     threshold=None,
-    #     threshold_type=None
-    # ),
-    MultiRandomStage(  # 4
+    MultiRandomStage(  # 0
         stages=[
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_avoid(1, (1, 2), (0, 2)),
+                sampler=flatworld_sample_reach_avoid((1, 2), 1, 1),
                 threshold=None,
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_stay(15, (0, 1)),
+                sampler=flatworld_sample_reach((1, 2)),
                 threshold=None,
                 threshold_type=None
             ),
         ],
-        probs=[0.4, 0.6],
-        threshold=0.9,
+        probs=[0.6, 0.4],
+        threshold=0.85,
         threshold_type='mean'
     ),
-    MultiRandomStage(  # 5
+    MultiRandomStage(  # 1
         stages=[
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_avoid(2, (1, 2), (1, 2)),
+                sampler=flatworld_sample_reach_avoid((1,2), (1,2), (1,2)),
                 threshold=None,
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_stay(25, (0, 1)),
+                sampler=flatworld_sample_reach((1, 3)),
                 threshold=None,
                 threshold_type=None
             ),
         ],
-        probs=[0.8, 0.2],
-        threshold=0.9,
-        threshold_type='mean'
-    ),
-    MultiRandomStage(  # 6
-        stages=[
-            RandomCurriculumStage(
-                sampler=flatworld_sample_reach_avoid(3, (1, 2), (0, 3)),
-                threshold=None,
-                threshold_type=None
-            ),
-            RandomCurriculumStage(
-                sampler=flatworld_sample_reach_stay(50, (0, 2)),
-                threshold=None,
-                threshold_type=None
-            ),
-        ],
-        probs=[0.8, 0.2],
+        probs=[0.6, 0.4],
         threshold=None,
         threshold_type=None
     ),
+    # MultiRandomStage(  # 2
+    #     stages=[
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_reach_avoid(1, (1, 2), (0, 2)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_reach_stay(10, (0, 1)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #     ],
+    #     probs=[0.4, 0.6],
+    #     threshold=0.85,
+    #     threshold_type='mean'
+    # ),
+    # MultiRandomStage(  # 5
+    #     stages=[
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_reach_avoid(2, (1, 2), (0, 2)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_reach_stay(20, (0, 1)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #     ],
+    #     probs=[0.8, 0.2],
+    #     threshold=None,
+    #     threshold_type=None
+    # ),
 ])
+
+# FLATWORLD_CURRICULUM = Curriculum([
+#     ExplicitCurriculumStage(  # 0
+#         task_fn=flatworld_all_reach_tasks(1),
+#         temperature=0.4,
+#         threshold=0.8,
+#         threshold_type='min',
+#     ),
+#     RandomCurriculumStage(  # 1
+#         sampler=flatworld_sample_reach(2),
+#         threshold=0.9,
+#         threshold_type='mean'
+#     ),
+#     RandomCurriculumStage(  # 2
+#         sampler=flatworld_sample_reach_avoid(1, 1, 1),
+#         threshold=0.8,
+#         threshold_type='mean'
+#     ),
+#     RandomCurriculumStage(  # 3
+#         sampler=flatworld_sample_reach_avoid(2, (1, 2), (0, 2)),
+#         threshold=0.8,
+#         threshold_type='mean'
+#     ),
+#     # RandomCurriculumStage(  # 3
+#     #     sampler=flatworld_sample_reach_avoid(3, (1, 2), (0, 3)),
+#     #     threshold=None,
+#     #     threshold_type=None
+#     # ),
+#     MultiRandomStage(  # 4
+#         stages=[
+#             RandomCurriculumStage(
+#                 sampler=flatworld_sample_reach_avoid(1, (1, 2), (0, 2)),
+#                 threshold=None,
+#                 threshold_type=None
+#             ),
+#             RandomCurriculumStage(
+#                 sampler=flatworld_sample_reach_stay(10, (0, 1)),
+#                 threshold=None,
+#                 threshold_type=None
+#             ),
+#         ],
+#         probs=[0.4, 0.6],
+#         threshold=0.85,
+#         threshold_type='mean'
+#     ),
+#     MultiRandomStage(  # 5
+#         stages=[
+#             RandomCurriculumStage(
+#                 sampler=flatworld_sample_reach_avoid(2, (1, 2), (1, 2)),
+#                 threshold=None,
+#                 threshold_type=None
+#             ),
+#             RandomCurriculumStage(
+#                 sampler=flatworld_sample_reach_stay(25, (0, 1)),
+#                 threshold=None,
+#                 threshold_type=None
+#             ),
+#         ],
+#         probs=[0.8, 0.2],
+#         threshold=0.8,
+#         threshold_type='mean'
+#     ),
+#     MultiRandomStage(  # 6
+#         stages=[
+#             RandomCurriculumStage(
+#                 sampler=flatworld_sample_reach_avoid(3, (1, 2), (0, 3)),
+#                 threshold=None,
+#                 threshold_type=None
+#             ),
+#             RandomCurriculumStage(
+#                 sampler=flatworld_sample_reach_stay(50, (0, 2)),
+#                 threshold=None,
+#                 threshold_type=None
+#             ),
+#         ],
+#         probs=[0.8, 0.2],
+#         threshold=None,
+#         threshold_type=None
+#     ),
+# ])

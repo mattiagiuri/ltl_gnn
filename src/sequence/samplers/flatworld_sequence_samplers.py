@@ -48,15 +48,27 @@ def flatworld_all_reach_tasks(depth: int) -> Callable:
     return wrapper
 
 
-def flatworld_sample_reach(depth: int) -> Callable:
+def flatworld_sample_reach(depth: int | tuple[int, int]) -> Callable:
     def wrapper(propositions: list[str]) -> LDBASequence:
+        d = random.randint(*depth) if isinstance(depth, tuple) else depth
         reach = random.choice(all_assignments)
         task = [(reach, frozenset())]
-        for _ in range(depth - 1):
+        for _ in range(d - 1):
             reach = random.choice([a for a in all_assignments if not reach.issubset(a)])
             task.append((reach, frozenset()))
         return LDBASequence(task)
 
+    return wrapper
+
+
+def flatworld_all_reach_avoid():
+    def wrapper(_):
+        seqs = []
+        for reach in all_assignments:
+            available = [a for a in all_assignments if a != reach and not reach.issubset(a)]
+            for avoid in available:
+                seqs.append(LDBASequence([(reach, avoid)]))
+        return seqs
     return wrapper
 
 
@@ -117,5 +129,4 @@ def flatworld_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Ca
 
 
 if __name__ == '__main__':
-    for _ in range(5):
-        print(flatworld_sample_reach(2)([]))
+    print(flatworld_all_reach_avoid()([]))
