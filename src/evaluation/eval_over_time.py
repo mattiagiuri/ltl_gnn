@@ -24,21 +24,23 @@ def set_env():
     global env
     sampler = FixedSampler.partial('this_will_be_overridden')
     envs = [make_env(env_name, sampler, render_mode=None) for _ in range(8)]
-    world_info_paths = [f'eval_datasets/{env_name}/worlds/world_info_{i}.pkl' for i in range(num_eval_episodes)]
+    world_info_paths = []
+    if os.path.exists(f'eval_datasets/{env_name}/worlds'):
+        world_info_paths = [f'eval_datasets/{env_name}/worlds/world_info_{i}.pkl' for i in range(num_eval_episodes)]
     with open(f'eval_datasets/{env_name}/tasks.txt') as f:
         tasks = [line.strip() for line in f]
     env = EvalSyncEnv(envs, world_info_paths, tasks)
 
 
-env_name = 'LetterEnv-v0'
-config = model_configs['letter']
-exp = 'final'
+env_name = 'PointLtl2-v0'
+config = model_configs[env_name]
+exp = 'deepset'
 seed = int(sys.argv[2])
-deterministic = False
-gamma = 0.94
+deterministic = True
+gamma = 0.998
 num_procs = 8
 num_eval_episodes = 50
-device = 'cuda'
+device = 'cpu'
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
@@ -55,6 +57,7 @@ def main():
     start_time = time.time()
     model_store = ModelStore(env_name, exp, seed, None)
     statuses = model_store.load_eval_training_statuses(map_location=device)
+    model_store.load_vocab()
 
     results = []
     with mp.Pool(num_procs, initializer=set_env) as pool:
@@ -62,7 +65,7 @@ def main():
             results.append(r)
 
     # set_env()
-    # for status in statuses:
+    # for status in tqdm(statuses):
     #     results.append(aux(status))
 
     print(f'Total time: {time.time() - start_time:.2f}s')

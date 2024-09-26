@@ -5,7 +5,7 @@ from .model_config import *
 model_configs = {
     'PointLtl2-v0': zones,
     'LetterEnv-v0': letter,
-    'pretraining': pretraining,
+    'FlatWorld-v0': flatworld,
 }
 
-__all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'model_configs']
+__all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'SetNetConfig', 'model_configs']

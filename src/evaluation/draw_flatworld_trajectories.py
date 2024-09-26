@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from tqdm import trange
 
 from envs import make_env
+from envs.flatworld import FlatWorld
 from ltl import FixedSampler
 from model.model import build_model
 from model.agent import Agent
@@ -14,53 +15,65 @@ from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
-env_name = 'PointLtl2-v0'
-exp = 'deepset'
+env_name = 'FlatWorld-v0'
+exp = 'deepset_complex'
 seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-sampler = FixedSampler.partial('GF blue & GF yellow')
-deterministic = True
+sampler = FixedSampler.partial('GF (red & magenta) & GF green')
+deterministic = False
 
-env = make_env(env_name, sampler, render_mode=None, max_steps=1000)
+env = make_env(env_name, sampler, render_mode=None)
 config = model_configs[env_name]
 model_store = ModelStore(env_name, exp, seed, None)
-model_store.load_vocab()
 training_status = model_store.load_training_status(map_location='cpu')
+print(training_status['curriculum_stage'])
+model_store.load_vocab()
 model = build_model(env, training_status, config)
 
 props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
-agent = Agent(model, search=search, propositions=props, verbose=False)
+agent = Agent(model, search=search, propositions=props, verbose=True)
 
 num_episodes = 8
-
 trajectories = []
-zone_poss = []
+steps = []
+success = []
 
-pbar = trange(num_episodes)
-for i in pbar:
-    env.load_world_info(f'eval_datasets/PointLtl2-v0/worlds/world_info_{i}.pkl')
+for _ in trange(num_episodes):
+    traj = []
     obs, info = env.reset(), {}
+    traj.append(env.agent_pos)
     agent.reset()
     done = False
-
-    zone_poss.append(env.zone_positions)
-    agent_traj = []
+    num_steps = 0
 
     while not done:
         action = agent.get_action(obs, info, deterministic=deterministic)
-        action = action.flatten()
         obs, reward, done, info = env.step(action)
-        agent_traj.append(env.agent_pos[:2])
+        num_steps += 1
+        traj.append(env.agent_pos)
         if done:
-            trajectories.append(agent_traj)
+            success.append("success" in info)
+            break
+    trajectories.append(traj)
+    steps.append(num_steps)
 
 env.close()
-cols = 4 if len(zone_poss) > 4 else len(zone_poss)
-rows = 1 if len(zone_poss) <= 4 else 2
-fig = draw_trajectories(zone_poss, trajectories, cols, rows)
+print('SR:', np.mean(success))
+print('Steps:', np.mean(steps))
+
+
+fig = plt.figure(figsize=(20, 10))
+cols = 4 if len(trajectories) > 4 else len(trajectories)
+rows = 1 if len(trajectories) <= 4 else 2
+for i, traj in enumerate(trajectories):
+    ax = fig.add_subplot(rows, cols, i + 1)
+    # setup_axis(ax)
+    FlatWorld.render(traj, ax=ax)
+
+plt.tight_layout(pad=2)
 plt.show()

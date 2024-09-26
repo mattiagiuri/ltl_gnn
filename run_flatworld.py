@@ -28,18 +28,18 @@ def main():
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
-            '--env', 'LetterEnv-v0',
-            '--steps_per_process', '128',
-            '--epochs', '8',
-            '--batch_size', '256',
-            '--discount', '0.94',
+            '--env', 'FlatWorld-v0',
+            '--steps_per_process', '4096',  # 1024
+            '--epochs', '10',
+            '--batch_size', '2048',  # 512
+            '--discount', '0.98',
             '--gae_lambda', '0.95',
-            '--entropy_coef', '0.01',
-            '--log_interval', '5',
-            '--save_interval', '20',
+            '--entropy_coef', '0.003',  # 0.003
+            '--log_interval', '1',
+            '--save_interval', '2',
             '--num_steps', '15_000_000',
-            '--model_config', 'LetterEnv-v0',
-            '--curriculum', 'LetterEnv-v0',
+            '--model_config', 'FlatWorld-v0',
+            '--curriculum', 'FlatWorld-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -57,7 +57,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 2 --device cpu --name tmp --seed 1 --log_csv false --save false'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name tmp --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

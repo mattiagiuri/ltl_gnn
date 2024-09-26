@@ -16,17 +16,17 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0'], default='PointLtl2-v0')
-    parser.add_argument('--exp', type=str, default='nodent')
-    parser.add_argument('--seed', type=int, default=2)
+    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0'], default='PointLtl2-v0')
+    parser.add_argument('--exp', type=str, default='deepset')
+    parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--num_episodes', type=int, default=500)
-    parser.add_argument('--formula', type=str, default='FG blue')
-    parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--formula', type=str, default='(F blue) & (!blue U (green & F yellow))')  # !(red | green) U magenta  !blue U (magenta & red)
+    parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
-    parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
     gamma = 0.94 if args.env == 'LetterEnv-v0' else 0.998
-    return simulate(args.exp, gamma, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic)
+    return simulate(args.env, gamma, args.exp, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic)
 
 
 def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic):
@@ -39,7 +39,8 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     env = make_env(env_name, sampler, render_mode='human' if render else None)
     config = model_configs[env_name]
     model_store = ModelStore(env_name, exp, seed, None)
-    training_status = model_store.load_best_model(map_location='cpu')
+    training_status = model_store.load_training_status(map_location='cpu')
+    model_store.load_vocab()
     model = build_model(env, training_status, config)
 
     props = set(env.get_propositions())

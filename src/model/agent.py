@@ -20,6 +20,8 @@ class Agent:
     def get_action(self, obs, info, deterministic=False) -> np.ndarray:
         if 'ldba_state_changed' in info or self.sequence is None:
             self.sequence = self.search(obs['ldba'], obs['ldba_state'], obs)
+            # new_reach = [x for x in self.sequence[0][0] if not any([y for y in self.sequence[0][1] if y.get_true_propositions().issubset(x.get_true_propositions())])]
+            # self.sequence = [(frozenset(new_reach), self.sequence[0][1]), *self.sequence[1:]]
             if self.verbose:
                 print(f'Selected sequence: {self.sequence}')
         assert self.sequence is not None

@@ -4,7 +4,6 @@ import gymnasium
 from gymnasium.wrappers import FlattenObservation, TimeLimit
 
 from envs.remove_trunc_wrapper import RemoveTruncWrapper
-from preprocessing.vocab import init_vocab
 
 
 def get_env_attr(env, attr: str):
@@ -41,11 +40,13 @@ def make_env(
     elif name.startswith('Letter'):
         env = make_letter_env(name, render_mode)
         max_steps = max_steps or 75
+    elif name.startswith('FlatWorld'):
+        env = make_flatworld_env()
+        max_steps = max_steps or 500
     else:
-        raise NotImplementedError('DMC environments not implemented yet.')
+        raise ValueError(f'Unknown environment: {name}')
 
     propositions = get_env_attr(env, 'get_propositions')()
-    init_vocab(propositions)
     sample_task = sampler(propositions)
     if not sequence:
         # env = PartiallyOrderedWrapper(env, sample_task)
@@ -79,31 +80,9 @@ def make_letter_env(name: str, render_mode: str | None = None):
     env = gymnasium.make(name, render_mode=render_mode)
     return env
 
-# def make_dmc_env(
-#         name: str,
-#         task_wrapper_cls: Type,
-#         sample_task: Callable,
-#         max_steps: Optional[int] = None,
-#         render_mode: str | None = None
-# ):
-#     # noinspection PyUnresolvedReferences
-#     from dm_control import suite, viewer  # TODO: adapt to sequences
-#     import envs.dmc as dmc
-#     dmc.register_with_suite()
-#     from envs.dmc.dmc_gym_wrapper.dmc_gym_wrapper import DMCGymWrapper
-#     from envs.ldba_seq_wrapper import LDBAGraphWrapper
-#
-#     env = suite.load(domain_name=name, task_name='ltl', visualize_reward=False)
-#     env = DMCGymWrapper(env, render_mode=render_mode)
-#     env = FlattenObservation(env)
-#     if name.startswith('ltl_cartpole'):
-#         # load alternate task
-#         env = DictWrapper(env)
-#         env = AlternateWrapper(env, ['yellow', 'green'])
-#         env = RemoveTruncWrapper(env)
-#     else:
-#         env = LTLGoalWrapper(env, ltl_sampler(get_env_attr(env, 'get_propositions')()))
-#         # env = GoalIndexWrapper(env, punish_termination=False)
-#         env = LDBAGraphWrapper(env, punish_termination=True)
-#         env = RemoveTruncWrapper(env)
-#     return env
+
+def make_flatworld_env():
+    import envs.flatworld
+
+    env = gymnasium.make('FlatWorld-v0')
+    return env
