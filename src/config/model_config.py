@@ -102,7 +102,7 @@ letter = ModelConfig(
         activation=nn.ReLU
     ),
     set_net=SetNetConfig(
-        layers=[32, 16],
+        layers=[32, 32],
         activation=nn.ReLU
     )
 )

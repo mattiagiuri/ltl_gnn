@@ -174,7 +174,7 @@ ZONES_CURRICULUM = Curriculum([
         threshold=0.9,
         threshold_type='mean'
     ),
-    MultiRandomStage(  # 5
+    MultiRandomStage(  # 4
         stages=[
             RandomCurriculumStage(
                 sampler=sample_reach_avoid(1, (1, 2), (0, 2)),
@@ -191,7 +191,7 @@ ZONES_CURRICULUM = Curriculum([
         threshold=0.9,
         threshold_type='mean'
     ),
-    MultiRandomStage(  # 6
+    MultiRandomStage(  # 5
         stages=[
             RandomCurriculumStage(
                 sampler=sample_reach_avoid(2, (1, 2), (1, 2)),
@@ -208,7 +208,7 @@ ZONES_CURRICULUM = Curriculum([
         threshold=0.9,
         threshold_type='mean'
     ),
-    MultiRandomStage(  # 7
+    MultiRandomStage(  # 6
         stages=[
             RandomCurriculumStage(
                 sampler=sample_reach_avoid(3, (1, 2), (0, 3)),

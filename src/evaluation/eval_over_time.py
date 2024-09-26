@@ -32,14 +32,14 @@ def set_env():
     env = EvalSyncEnv(envs, world_info_paths, tasks)
 
 
-env_name = 'FlatWorld-v0'
+env_name = 'PointLtl2-v0'
 config = model_configs[env_name]
-exp = 'deepset_complex'
-seed = 2
-deterministic = False
-gamma = 0.98
+exp = 'deepset'
+seed = int(sys.argv[2])
+deterministic = True
+gamma = 0.998
 num_procs = 8
-num_eval_episodes = 49
+num_eval_episodes = 50
 device = 'cpu'
 random.seed(seed)
 np.random.seed(seed)
@@ -60,13 +60,13 @@ def main():
     model_store.load_vocab()
 
     results = []
-    # with mp.Pool(num_procs, initializer=set_env) as pool:
-    #     for r in tqdm(pool.imap_unordered(aux, statuses), total=len(statuses)):
-    #         results.append(r)
+    with mp.Pool(num_procs, initializer=set_env) as pool:
+        for r in tqdm(pool.imap_unordered(aux, statuses), total=len(statuses)):
+            results.append(r)
 
-    set_env()
-    for status in tqdm(statuses):
-        results.append(aux(status))
+    # set_env()
+    # for status in tqdm(statuses):
+    #     results.append(aux(status))
 
     print(f'Total time: {time.time() - start_time:.2f}s')
     result = {r[0]: (r[1], r[2], r[3], r[4]) for r in results}

@@ -79,5 +79,4 @@ def build_model(
 
     if "model_state" in training_status:
         model.load_state_dict(training_status["model_state"])
-    print(model)
     return model

@@ -15,19 +15,20 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'nodent'
+exp = 'deepset'
 seed = 1
 
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-sampler = FixedSampler.partial('F (blue & F green)')
+sampler = FixedSampler.partial('GF blue & GF yellow')
 deterministic = True
 
 env = make_env(env_name, sampler, render_mode=None, max_steps=1000)
-config = model_configs['default']
+config = model_configs[env_name]
 model_store = ModelStore(env_name, exp, seed, None)
+model_store.load_vocab()
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
