@@ -3,24 +3,24 @@ DeepLTL,F ((red & magenta) & F ((blue & green) & F yellow)),5,1.0,76.99
 DeepLTL,F ((red & magenta) & F ((blue & green) & F yellow)),1,1.0,77.382
 DeepLTL,F ((red & magenta) & F ((blue & green) & F yellow)),2,1.0,81.978
 DeepLTL,F ((red & magenta) & F ((blue & green) & F yellow)),4,1.0,82.38
-DeepLTL,F ((red & magenta) & F ((blue & green) & F yellow)),3,0.998,100.23446893787576
+DeepLTL,F ((red & magenta) & F ((blue & green) & F yellow)),3,1.0,79.704
 DeepLTL,F (orange & (!red U magenta)),5,0.996,47.8433734939759
 DeepLTL,F (orange & (!red U magenta)),1,0.998,53.68537074148296
 DeepLTL,F (orange & (!red U magenta)),4,1.0,56.35
 DeepLTL,F (orange & (!red U magenta)),2,1.0,53.3
-DeepLTL,F (orange & (!red U magenta)),3,0.996,101.98192771084338
+DeepLTL,F (orange & (!red U magenta)),3,1.0,52.922
 DeepLTL,(!red U (green & blue & aqua)) & F (orange & (F (red & magenta))),2,0.98,68.60816326530612
 DeepLTL,(!red U (green & blue & aqua)) & F (orange & (F (red & magenta))),4,0.98,71.29387755102042
 DeepLTL,(!red U (green & blue & aqua)) & F (orange & (F (red & magenta))),1,0.99,70.62828282828283
 DeepLTL,(!red U (green & blue & aqua)) & F (orange & (F (red & magenta))),5,0.982,71.87983706720978
-DeepLTL,(!red U (green & blue & aqua)) & F (orange & (F (red & magenta))),3,0.914,162.53172866520788
-DeepLTL,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),3,0.586,44.744027303754265
+DeepLTL,(!red U (green & blue & aqua)) & F (orange & (F (red & magenta))),3,0.956,76.39121338912133
+DeepLTL,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),3,0.87,45.66896551724138
 DeepLTL,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),1,0.866,41.697459584295615
 DeepLTL,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),5,0.864,43.5162037037037
 DeepLTL,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),2,0.858,44.02097902097902
 DeepLTL,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),4,0.84,44.44047619047619
 DeepLTL,(blue => F magenta) U (yellow | ((green & blue) & F orange)),5,1.0,32.458
-DeepLTL,(blue => F magenta) U (yellow | ((green & blue) & F orange)),3,0.984,41.63821138211382
+DeepLTL,(blue => F magenta) U (yellow | ((green & blue) & F orange)),3,1.0,31.266
 DeepLTL,(blue => F magenta) U (yellow | ((green & blue) & F orange)),1,1.0,37.638
 DeepLTL,(blue => F magenta) U (yellow | ((green & blue) & F orange)),4,1.0,39.786
 DeepLTL,(blue => F magenta) U (yellow | ((green & blue) & F orange)),2,0.982,44.073319755600814
@@ -68,7 +68,7 @@ DeepLTL-reachstay,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),
 DeepLTL-reachstay,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),4,0.796,43.57286432160804
 DeepLTL-reachstay,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),2,0.824,43.81310679611651
 DeepLTL-reachstay,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),5,0.818,46.99022004889976
-DeepLTL-reachstay,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),3,0.844,50.481042654028435
+DeepLTL-reachstay,(((!yellow & !orange) U (green & blue)) & (!green U magenta)),3,0.844,50.48104265402844
 DeepLTL-reachstay,(blue => F magenta) U (yellow | ((green & blue) & F orange)),4,1.0,35.11
 DeepLTL-reachstay,(blue => F magenta) U (yellow | ((green & blue) & F orange)),1,1.0,35.31
 DeepLTL-reachstay,(blue => F magenta) U (yellow | ((green & blue) & F orange)),5,0.998,39.13827655310621
