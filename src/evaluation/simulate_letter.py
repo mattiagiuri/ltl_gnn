@@ -16,10 +16,10 @@ from sequence.search import BFS, DijkstraSearch, ExhaustiveSearch
 from utils.model_store import ModelStore
 
 env_name = 'LetterEnv-v0'
-exp = 'final'
+exp = 'deepltl'
 seed = 1
 render_modes = [None, 'human', 'path']
-render = render_modes[0]
+render = render_modes[1]
 render_on_fail = False
 
 random.seed(seed)
@@ -36,13 +36,14 @@ torch.random.manual_seed(seed)
 # sampler = AvoidMultipleSampler.partial(depth=1, num_avoid=2)
 # sampler = FixedSampler.partial('GF k & GF e & G (h => F f)')
 # sampler = FixedSampler.partial('F (a & (!d U c))')
-sampler = FixedSampler.partial('((a | b | c | d) => F (e & (F (f & F g)))) U (h & F i)')
+sampler = FixedSampler.partial('F ((a | b) & (GF k & GF e))')
 
 deterministic = False
 
 env = make_env(env_name, sampler, max_steps=75, render_mode=render)
-config = model_configs['letter']
+config = model_configs[env_name]
 model_store = ModelStore(env_name, exp, seed, None)
+model_store.load_vocab()
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 

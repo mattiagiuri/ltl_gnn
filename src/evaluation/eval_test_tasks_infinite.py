@@ -13,21 +13,14 @@ env_to_tasks = {
         'FG blue',
         'FG blue & F (yellow & F green)',
     ],
-    # 'LetterEnv-v0': [
-    #     'F (a & (!b U c)) & F d',
-    #     '(F d) & (!f U (d & F b))',
-    #     '(F ((a | c | j) & F b)) & (F (c & F d)) & F k',
-    #     '!a U (b & (!c U (d & (!e U f))))',
-    #     '((a | b | c | d) => F (e & (F (f & F g)))) U (h & F i)'
-    # ],
-    # 'FlatWorld-v0': [
-    #     'F (green & (!(blue | red) U yellow)) & F magenta',
-    #     'F ((red & magenta) & F (blue & green))',
-    #     'F (orange & (!red U magenta))',
-    #     '(!blue U (green & blue & aqua)) & F yellow',
-    #     '!blue U (yellow & F (red & magenta))',
-    #     '(blue => F magenta) U (yellow | green)'
-    # ]
+    'LetterEnv-v0': [
+        'GF a & GF b & GF c & GF d & G (!e & !f)',
+        'GF (e & (!a U f))',
+    ],
+    'FlatWorld-v0': [
+        'GF (blue & green) & GF (red & magenta)',
+        'GF red & GF yellow & GF orange & G !blue',
+    ]
 }
 
 
@@ -48,7 +41,8 @@ def main(env, exp):
         print(f'Running task: {task}')
         for seed in seeds:
             print(f'Running seed: {seed}')
-            deterministic = task.startswith('GF')  # TODO
+            # deterministic = task.startswith('GF')  # TODO
+            deterministic = False
             accepting_visits = simulate(env, gamma, exp, seed, num_episodes, task, False, False, deterministic=deterministic)
             results.append(['DeepLTL', task, seed, accepting_visits])
             df = pd.DataFrame(results, columns=['method', 'task', 'seed', 'accepting_visits'])
@@ -59,7 +53,7 @@ def main(env, exp):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0'],
-                        default='PointLtl2-v0')
-    parser.add_argument('--exp', type=str, default='deepset')
+                        default='LetterEnv-v0')
+    parser.add_argument('--exp', type=str, default='deepltl')
     args = parser.parse_args()
     main(args.env, args.exp)

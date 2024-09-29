@@ -1,0 +1,11 @@
+method,task,seed,accepting_visits
+DeepLTL,GF (blue & green) & GF (red & magenta),1,12.48
+DeepLTL,GF (blue & green) & GF (red & magenta),2,11.764
+DeepLTL,GF (blue & green) & GF (red & magenta),3,2.198
+DeepLTL,GF (blue & green) & GF (red & magenta),4,12.876
+DeepLTL,GF (blue & green) & GF (red & magenta),5,12.584
+DeepLTL,GF red & GF yellow & GF orange & G !blue,1,10.99
+DeepLTL,GF red & GF yellow & GF orange & G !blue,2,11.166
+DeepLTL,GF red & GF yellow & GF orange & G !blue,3,2.496
+DeepLTL,GF red & GF yellow & GF orange & G !blue,4,9.312
+DeepLTL,GF red & GF yellow & GF orange & G !blue,5,12.29

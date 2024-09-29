@@ -16,7 +16,7 @@ from utils.model_store import ModelStore
 from visualize.zones import draw_trajectories, draw_multiple_trajectories
 
 env_name = 'PointLtl2-v0'
-exp = 'evaluation'
+exp = 'deepset'
 seed = 2
 
 random.seed(seed)
@@ -24,21 +24,13 @@ np.random.seed(seed)
 torch.random.manual_seed(seed)
 
 render = False
-# sampler = FixedSampler.partial('(! blue U green) | F yellow')
-# sampler = FixedSampler.partial('F yellow')
-# sampler = FixedSampler.partial('GF magenta & GF green & G (yellow => (!blue U magenta))')
-# sampler = AvoidSampler.partial(2, 1)
-# sampler = FixedSampler.partial('(!magenta U yellow) & (!yellow U blue)')
-# sampler = FixedSampler.partial('!green U (yellow & (!magenta U blue))')
-# sampler = FixedSampler.partial('((yellow => F magenta) U green) & F blue')
-sampler = FixedSampler.partial('FG blue')
+sampler = FixedSampler.partial('GF blue & GF green & G! yellow')
 deterministic = True
 
-# 1: !green U (yellow & (!magenta U blue))
-
 env = make_env(env_name, sampler, render_mode='human' if render else None, max_steps=1000)
-config = model_configs['default']
+config = model_configs[env_name]
 model_store = ModelStore(env_name, exp, seed, None)
+model_store.load_vocab()
 training_status = model_store.load_training_status(map_location='cpu')
 model = build_model(env, training_status, config)
 
@@ -46,12 +38,12 @@ props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
 agent = Agent(model, search=search, propositions=props, verbose=render)
 
-num_episodes = 1
+num_episodes = 5
 
 trajectories = []
 zone_poss = []
 
-env.reset(seed=3)  # settings for nice GF yellow & GF blue trajectory: exp evaluation, seed 5, reset seed 6
+env.reset(seed=1)  # settings for nice GF yellow & GF blue trajectory: exp evaluation, seed 5, reset seed 6
 
 pbar = range(num_episodes)
 if not render:
@@ -87,10 +79,10 @@ env.close()
 # with open('tmp.pz', 'wb') as f:
 #     pickle.dump(traj, f)
 # fig = draw_multiple_trajectories(zone_poss[0], trajs, ['solid', 'dashed'], ['green', 'orange'])
-zone_poss = zone_poss[-1:]
-trajectories = trajectories[-1:]
+zone_poss = zone_poss[4:]
+trajectories = trajectories[4:]
 cols = 4 if len(zone_poss) > 4 else len(zone_poss)
 rows = 1 if len(zone_poss) <= 4 else 2
 fig = draw_trajectories(zone_poss, trajectories, cols, rows)
 plt.show()
-fig.savefig('trajectories.pdf', bbox_inches='tight', dpi=600)
+fig.savefig('/home/matier/tmp/omega.pdf', bbox_inches='tight', dpi=600)

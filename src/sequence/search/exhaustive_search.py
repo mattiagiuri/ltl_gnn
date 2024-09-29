@@ -115,6 +115,8 @@ class ExhaustiveSearch(SequenceSearch):
             for transition in ldba.state_to_transitions[state]:
                 if transition in neg_transitions or transition.source == transition.target or transition == path[0][0]:
                     continue
+                if transition not in transition_to_max_value:
+                    continue
                 alternative_value = transition_to_max_value[transition]
                 if chosen_value - alternative_value > self.value_threshold:
                     path[0][1].add(transition)

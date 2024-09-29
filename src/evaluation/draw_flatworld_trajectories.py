@@ -23,7 +23,7 @@ random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-sampler = FixedSampler.partial('GF (red & magenta) & GF green')
+sampler = FixedSampler.partial('GF red & GF yellow & GF orange & G !blue')
 deterministic = False
 
 env = make_env(env_name, sampler, render_mode=None)
@@ -36,7 +36,7 @@ model = build_model(env, training_status, config)
 
 props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
-agent = Agent(model, search=search, propositions=props, verbose=True)
+agent = Agent(model, search=search, propositions=props, verbose=False)
 
 num_episodes = 8
 trajectories = []

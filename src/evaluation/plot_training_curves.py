@@ -10,19 +10,19 @@ sns.set_theme(font_scale=2.9)
 
 def main():
     # env = 'PointLtl2-v0'
-    # env = 'LetterEnv-v0'
-    env = 'FlatWorld-v0'
-    # experiments = ['deepset', 'gcrl', 'ltl2action']
-    # experiments = ['deepltl', 'gcrl', 'ltl2action']
-    experiments = ['ltl2action']
+    env = 'LetterEnv-v0'
+    # env = 'FlatWorld-v0'
+    experiments = ['noactivesampling', 'nocurriculum']
+    # experiments = ['deepltl', 'nocurriculum', 'noactivesampling']
+    # experiments = ['deepset_complex', 'ltl2action', 'deepset_reachstay']
     name_mapping = {'nodent': 'DeepLTL', 'gcrl': 'GCRL-LTL', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'deepltl': 'DeepLTL', 'deepset_complex': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping)
-    ci = False
+    ci = True
 
     fig, ax = plt.subplots(1, 1, figsize=(9,7))
     ax.set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
     errorbar = ('ci', 90) if ci else ('sd', 1)
-    sns.lineplot(df, x='num_steps', y='return_smooth', errorbar=errorbar, hue='seed', ax=ax)
+    sns.lineplot(df, x='num_steps', y='return_smooth', errorbar=errorbar, hue='Method', ax=ax)
     # sns.relplot(df, x='num_steps', y='return', kind='line', ci=ci, hue='seed', col='Method')
     # plt.savefig(os.path.expanduser('~/work/dphil/iclr-deepltl/figures/training_letter.pdf'))
     handles, labels = ax.get_legend_handles_labels()
@@ -31,7 +31,7 @@ def main():
     for label in ax.xaxis.get_ticklabels()[::2]:
         label.set_visible(False)
 
-    plt.savefig('/home/matier/tmp/curves_zones.pdf', bbox_inches='tight')
+    # plt.savefig('/home/matier/tmp/curves_flatworld.pdf', bbox_inches='tight')
     plt.show()
 
 
