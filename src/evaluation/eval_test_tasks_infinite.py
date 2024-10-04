@@ -16,8 +16,8 @@ env_to_tasks = {
         'FG blue & F (yellow & F green)',
     ],
     'LetterEnv-v0': [
-        'GF a & GF b & GF c & GF d & G (!e & !f)',
         'GF (e & (!a U f))',
+        'GF a & GF b & GF c & GF d & G (!e & !f)',
     ],
     'FlatWorld-v0': [
         'GF (blue & green) & GF (red & magenta)',
@@ -61,7 +61,7 @@ def eval_task(simulate_args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0'],
-                        default='FlatWorld-v0')
-    parser.add_argument('--exp', type=str, default='deepset_complex')
+                        default='PointLtl2-v0')
+    parser.add_argument('--exp', type=str, default='deepset')
     args = parser.parse_args()
     main(args.env, args.exp)

@@ -12,24 +12,6 @@ register(
 )
 
 register(
-    id='LetterEnv-v0.non_myopic',
-    entry_point='envs.letter_world.letter_env:LetterEnv',
-    kwargs=dict(
-        grid_size=7,
-        letters="abcdefghijkl",
-        use_fixed_map=True,
-        use_agent_centric_view=True,
-        map={
-            (0, 2): 'a',
-            (0, 3): 'b',
-            (0, 3): 'b',
-            (3, 3): 'c',
-            (5, 2): 'a',
-        }
-    )
-)
-
-register(
     id='LetterEnv-v0.fixed',
     entry_point='envs.letter_world.letter_env:LetterEnv',
     kwargs=dict(

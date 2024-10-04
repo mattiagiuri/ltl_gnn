@@ -14,8 +14,8 @@ class SearchNode:
 
 
 class BFS(SequenceSearch):
-    def __init__(self, model: nn.Module):
-        super().__init__(model)
+    def __init__(self, model: nn.Module, propositions: set[str]):
+        super().__init__(model, propositions)
 
     def __call__(self, ldba: LDBA, ldba_state: int, obs) -> LDBASequence:
         seqs = self.bfs(ldba, ldba_state, obs)

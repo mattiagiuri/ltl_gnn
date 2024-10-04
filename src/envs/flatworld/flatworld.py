@@ -13,9 +13,6 @@ from gymnasium.core import ActType, ObsType
 
 from ltl.logic import Assignment
 
-sns.set_theme()
-
-
 @dataclass
 class Circle:
     center: np.ndarray

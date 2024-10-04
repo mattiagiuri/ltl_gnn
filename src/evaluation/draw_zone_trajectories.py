@@ -36,7 +36,7 @@ props = set(env.get_propositions())
 search = ExhaustiveSearch(model, props, num_loops=2)
 agent = Agent(model, search=search, propositions=props, verbose=False)
 
-num_episodes = 8
+num_episodes = 4
 
 trajectories = []
 zone_poss = []

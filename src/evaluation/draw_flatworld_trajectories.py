@@ -13,7 +13,10 @@ from model.agent import Agent
 from config import model_configs
 from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
-from visualize.zones import draw_trajectories
+from visualize.zones import  setup_axis
+import seaborn as sns
+
+sns.set_theme(style='whitegrid')
 
 env_name = 'FlatWorld-v0'
 exp = 'deepset_complex'
@@ -23,7 +26,7 @@ random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-sampler = FixedSampler.partial('GF red & GF yellow & GF orange & G !blue')
+sampler = FixedSampler.partial('F (red & magenta) & F (blue & green)')  # FG blue & GF green & GF aqua
 deterministic = False
 
 env = make_env(env_name, sampler, render_mode=None)
@@ -43,7 +46,10 @@ trajectories = []
 steps = []
 success = []
 
-for _ in trange(num_episodes):
+for i in trange(num_episodes):
+    if i > 3:
+        sampler = FixedSampler.partial('(!red U (green & blue & aqua)) & F (orange & (F (red & magenta)))')  # FG blue & GF green & GF aqua
+        env = make_env(env_name, sampler, render_mode=None)
     traj = []
     obs, info = env.reset(), {}
     traj.append(env.agent_pos)
@@ -75,5 +81,6 @@ for i, traj in enumerate(trajectories):
     # setup_axis(ax)
     FlatWorld.render(traj, ax=ax)
 
-plt.tight_layout(pad=2)
+plt.tight_layout(pad=4)
+plt.savefig('/home/mathias/tmp/traj2.pdf', bbox_inches='tight')
 plt.show()

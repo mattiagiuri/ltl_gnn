@@ -12,10 +12,10 @@ def main():
     # env = 'PointLtl2-v0'
     env = 'LetterEnv-v0'
     # env = 'FlatWorld-v0'
-    experiments = ['noactivesampling', 'nocurriculum']
-    # experiments = ['deepltl', 'nocurriculum', 'noactivesampling']
-    # experiments = ['deepset_complex', 'ltl2action', 'deepset_reachstay']
-    name_mapping = {'nodent': 'DeepLTL', 'gcrl': 'GCRL-LTL', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'deepltl': 'DeepLTL', 'deepset_complex': 'DeepLTL'}
+    # experiments = ['noactivesampling', 'nocurriculum']
+    experiments = ['deepltl', 'nocurriculum']
+    # experiments = ['deepset_complex', 'gcrl', 'ltl2action']
+    name_mapping = {'deepltl': 'Curriculum', 'gcrl': 'GCRL-LTL', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping)
     ci = True
 
@@ -31,7 +31,7 @@ def main():
     for label in ax.xaxis.get_ticklabels()[::2]:
         label.set_visible(False)
 
-    # plt.savefig('/home/matier/tmp/curves_flatworld.pdf', bbox_inches='tight')
+    plt.savefig('/home/matier/tmp/curves_ablation.pdf', bbox_inches='tight')
     plt.show()
 
 

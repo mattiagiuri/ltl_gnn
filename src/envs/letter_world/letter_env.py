@@ -204,7 +204,7 @@ def _is_valid_map(map, grid_size, actions):
 
 class LetterEnvRenderer:
     def __init__(self, grid_size: int, render_mode: Literal["human", "path", "rgb_array"] = "human", render_fps=1,
-                 cell_size=60):
+                 cell_size=120):
         self.grid_size = grid_size
         self.cell_size = cell_size  # Size of each cell in pixels
         self.screen_size = self.grid_size * self.cell_size
