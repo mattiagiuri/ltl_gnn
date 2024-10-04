@@ -13,3 +13,13 @@ DeepLTL,GF (aqua & blue) & GF red & GF yellow & G !green,2,7.362
 DeepLTL,GF (aqua & blue) & GF red & GF yellow & G !green,1,7.3
 DeepLTL,GF (aqua & blue) & GF red & GF yellow & G !green,3,7.212
 DeepLTL,GF (aqua & blue) & GF red & GF yellow & G !green,5,7.8
+GCRL-LTL,GF (blue && green) && GF (red && magenta),1,8.032
+GCRL-LTL,GF (blue && green) && GF (red && magenta),2,9.156
+GCRL-LTL,GF (blue && green) && GF (red && magenta),3,9.928
+GCRL-LTL,GF (blue && green) && GF (red && magenta),4,0.0
+GCRL-LTL,GF (blue && green) && GF (red && magenta),5,8.896
+GCRL-LTL,GF (aqua && blue) && GF red && GF yellow && G !green,1,4.848
+GCRL-LTL,GF (aqua && blue) && GF red && GF yellow && G !green,2,4.582
+GCRL-LTL,GF (aqua && blue) && GF red && GF yellow && G !green,3,4.254
+GCRL-LTL,GF (aqua && blue) && GF red && GF yellow && G !green,4,4.68
+GCRL-LTL,GF (aqua && blue) && GF red && GF yellow && G !green,5,4.848
