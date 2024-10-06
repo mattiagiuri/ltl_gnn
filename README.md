@@ -20,6 +20,16 @@ We use _Rabinizer 4_ (https://www7.in.tum.de/~kretinsk/rabinizer4.html) for the 
 ```
 which should print a help message.
 
+### Installing with Docker
+Alternatively, you can use the provided Dockerfile to build a Docker image with all dependencies installed. To build the image, run
+```bash
+docker build -t deepltl .
+```
+To run the image while preserving trained models and logs, you can use the following command:
+```bash
+docker run -it --mount type=bind,src="$(pwd)/experiments",target=/deep-ltl/experiments deepltl
+```
+
 ## Training
 
 To train a model on an environment, run the `train_ppo.py` file in `src/train`. We provide convenience scripts to train a model with the default parameters in our evaluation environments (_LetterWorld_, _ZoneEnv_, and _FlatWorld_). For example, to train a model on the _ZoneEnv_ environment, run
