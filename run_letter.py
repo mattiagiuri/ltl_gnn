@@ -14,7 +14,7 @@ class Args:
     name: str
     seed: int | list[int]
     device: str
-    num_procs: int
+    num_procs: int = 16
     log_csv: bool = True
     log_wandb: bool = False
     save: bool = True

@@ -14,7 +14,7 @@ class Args:
     name: str
     seed: int | list[int]
     device: str
-    num_procs: int
+    num_procs: int = 16
     log_csv: bool = True
     log_wandb: bool = False
     save: bool = True
@@ -44,7 +44,6 @@ def main():
             '--seed', str(seed),
             '--device', args.device,
             '--num_procs', str(args.num_procs),
-            # '--pretraining_experiment', 'seq',
         ]
         if args.log_wandb:
             command.append('--log_wandb')

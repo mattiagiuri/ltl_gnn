@@ -15,7 +15,7 @@ def main():
     df = process_logs(env, experiments, name_mapping)
     ax = sns.relplot(df, x='num_steps', y='return_smooth', kind='line', errorbar='sd', hue='experiment')
     ax.set(ylabel='success rate')
-    plt.savefig(os.path.expanduser('~/tmp/plot.png'))
+    # plt.savefig(os.path.expanduser('~/tmp/plot.png'))
     plt.show()
 
 

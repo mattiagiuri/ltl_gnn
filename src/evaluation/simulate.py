@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
-    gamma = 0.94 if args.env == 'LetterEnv-v0' else 0.998
+    gamma = 0.94 if args.env == 'LetterEnv-v0' else 0.998 if args.env == 'PointLtl2-v0' else 0.98
     return simulate(args.env, gamma, args.exp, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic)
 
 
