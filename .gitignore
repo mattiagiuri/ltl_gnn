@@ -17,4 +17,8 @@ cache
 multiple_results/
 *.fish
 paper_utils
+flatworld.pkl
+letter.pkl
+zones.pkl
+
 
