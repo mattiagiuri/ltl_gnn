@@ -20,16 +20,19 @@ class Args:
     log_wandb: bool = False
     save: bool = True
 
+# TODO: ask about what happens in each of the 3, Flatword seems normal, LetterEnv has a warning, Zones I modified actor
 
 def main():
     args = simple_parsing.parse(Args)
     env = os.environ.copy()
     env['PYTHONPATH'] = 'src/'
     seeds = args.seed if isinstance(args.seed, list) else [args.seed]
+    underlyings = ["FlatWorld-v0", "PointLtl2-v0", "LetterEnv-v0"]
+    underlying = underlyings[0]
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
-            '--env', 'pretraining_PointLtl2-v0',
+            '--env', 'pretraining_'+underlying,
             '--steps_per_process', '512',
             '--batch_size', '1024',
             '--lr', '0.001',
@@ -41,7 +44,8 @@ def main():
             '--save_interval', '1',
             '--epochs', '2',
             '--num_steps', '3_000_000',
-            '--model_config', 'pretraining',
+            '--model_config', 'pretraining_'+underlying,
+            '--curriculum', underlying,
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,

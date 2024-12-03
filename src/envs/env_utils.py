@@ -31,8 +31,12 @@ def make_env(
         underlying = name[len('pretraining_'):]
         underlying_env = make_env(underlying, sampler, max_steps, render_mode)
         propositions = get_env_attr(underlying_env, 'get_propositions')()
-        impossible_assignments = get_env_attr(underlying_env, 'get_impossible_assignments')()
-        env = PretrainingEnv(propositions, impossible_assignments)
+
+        possible_assignments = get_env_attr(underlying_env, 'get_possible_assignments')()
+        # impossible_assignments = get_env_attr(underlying_env, 'get_impossible_assignments')()
+        # TODO: ask what this impossible assignments is for
+        impossible_assignments = set([])
+        env = PretrainingEnv(propositions, impossible_assignments, possible_assignments)
         max_steps = max_steps or 100
     elif is_safety_gym_env(name):
         env = make_safety_gym_env(name, render_mode)

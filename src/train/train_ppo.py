@@ -15,6 +15,7 @@ import torch_ac
 import utils
 from model.model import build_model
 from envs import make_env, get_env_attr
+from preprocessing.vocab import assignment_vocab, var_names
 
 from sequence.samplers import CurriculumSampler, curricula
 from utils import torch_utils
@@ -24,6 +25,8 @@ from utils.logging.text_logger import TextLogger
 from utils.logging.wandb_logger import WandbLogger
 from utils.model_store import ModelStore
 from config import *
+
+from preprocessing import VOCAB
 
 
 class Trainer:
@@ -39,8 +42,15 @@ class Trainer:
             self.model_store.load_vocab()
         else:
             preprocessing.init_vocab(envs[0].get_possible_assignments())
+            preprocessing.vocab.init_vars(envs[0].get_propositions())
             self.model_store.save_vocab()
         # pretrained_model = self.load_pretrained_model()
+
+        print(VOCAB)
+        print(assignment_vocab)
+        print(var_names)
+
+        """TODO: add pretraining config, which only trains the LTLNet to suggest actions that satisfy etc"""
         model = build_model(envs[0], training_status, model_configs[self.args.model_config])
         model.to(self.args.experiment.device)
         print(model.ltl_net)
@@ -95,6 +105,8 @@ class Trainer:
     def make_envs(self, curriculum_stage: int) -> list[gymnasium.Env]:
         utils.set_seed(self.args.experiment.seed)
         envs = []
+
+        # For each process activated sample from the curriculum sampler
         for i in range(self.args.experiment.num_procs):
             curriculum = curricula[self.args.curriculum]
             curriculum.stage_index = curriculum_stage

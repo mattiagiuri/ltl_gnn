@@ -6,11 +6,13 @@ from gymnasium.core import ObsType
 
 from ltl.logic import FrozenAssignment, Assignment
 
+# TODO: ask what are impossible assignments for
 
 class PretrainingEnv(gym.Env):
     metadata = {'render_modes': None}
 
-    def __init__(self, propositions: set[str], impossible_assignments: set[FrozenAssignment]):
+    def __init__(self, propositions: set[str], impossible_assignments: set[FrozenAssignment], possible_assignments: list[Assignment]):
+        self.possible_assignments = possible_assignments
         self.propositions = tuple(sorted(propositions))
         self.impossible_assignments = impossible_assignments
         self.observation_space = gym.spaces.Box(low=0.0, high=0.0, shape=(0,))
@@ -41,3 +43,8 @@ class PretrainingEnv(gym.Env):
 
     def get_impossible_assignments(self) -> set[FrozenAssignment]:
         return self.impossible_assignments
+
+    def get_possible_assignments(self) -> list[Assignment]:
+        # ps = set(self.get_propositions())
+        # return Assignment.zero_or_one_propositions(ps)
+        return self.possible_assignments

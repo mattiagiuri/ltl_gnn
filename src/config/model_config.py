@@ -3,6 +3,7 @@ from typing import Type, Optional
 
 from dataclasses import dataclass
 
+from sympy.logic.boolalg import Boolean
 from torch import nn
 
 from model.env import ConvEnvNet, StandardEnvNet
@@ -58,6 +59,8 @@ class ModelConfig:
     num_rnn_layers: int
     env_net: Optional[AbstractModelConfig]
     set_net: SetNetConfig
+    gnn_mode: bool = False
+    num_gnn_layers: int = 0
 
 
 zones = ModelConfig(
@@ -127,3 +130,47 @@ flatworld = ModelConfig(
         activation=nn.ReLU
     )
 )
+
+flatworld_gnn = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[16, 16],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3
+)
+
+pretraining_flatworld = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    env_net=None,
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3
+)
+
