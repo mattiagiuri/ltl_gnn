@@ -39,6 +39,9 @@ class Trainer:
         training_status, resuming = self.get_training_status()
         envs = self.make_envs(training_status["curriculum_stage"])
         if resuming:
+            # preprocessing.vocab.init_vars(envs[0].get_propositions())
+            preprocessing.init_vocab(envs[0].get_possible_assignments())
+            preprocessing.vocab.init_vars(envs[0].get_propositions())
             self.model_store.load_vocab()
         else:
             preprocessing.init_vocab(envs[0].get_possible_assignments())
@@ -52,6 +55,13 @@ class Trainer:
 
         """TODO: add pretraining config, which only trains the LTLNet to suggest actions that satisfy etc"""
         model = build_model(envs[0], training_status, model_configs[self.args.model_config])
+
+        if model_configs[self.args.model_config].freeze_gnn:
+            gnn_conf = torch.load("src/state_dicts/ltl_net.pth")
+            model.ltl_net.load_state_dict(gnn_conf)
+            for param in model.ltl_net.parameters():
+                param.requires_grad = False
+
         model.to(self.args.experiment.device)
         print(model.ltl_net)
         algo = torch_ac.PPO(envs, model, self.args.experiment.device, self.args.ppo,

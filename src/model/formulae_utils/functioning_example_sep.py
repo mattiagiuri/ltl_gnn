@@ -2,17 +2,22 @@ import torch
 from SyntaxTree import SyntaxTree
 import torch_geometric
 import torch.nn.functional as F
+from visualize_trees import plot_graph
 
 var_names=[1]*5
 assignment_vocab=None
-VOCAB = [1]*15
+VOCAB = [1]*16
 
-sample_vars = ["PAD", "EPSILON", "NULL", "green", "red", "blue", "yellow", "orange", "aqua"]
-sample_vocab = {0: "PAD", 1: "EPSILON", 2: "NULL", 3: "green", 4: "red", 5: "blue", 6: "blue&green", 7:"blue&red", 8: "blue&red&green", 9: "orange",
-                10: "yellow", 11: "aqua", 12: "yellow&orange", 13: "aqua&red", 14: ""}
+sample_vars = ["PAD", "EPSILON", "NULL", "green", "red", "blue", "yellow", "orange", "aqua", "magenta"]
+# sample_vocab = {0: "PAD", 1: "EPSILON", 2: "NULL", 3: "green", 4: "red", 5: "blue", 6: "blue&green", 7:"blue&red", 8: "blue&red&green", 9: "orange",
+#                 10: "yellow", 11: "aqua", 12: "yellow&orange", 13: "aqua&red", 14: ""}
+
+sample_vocab = {0: "PAD", 1: "EPSILON", 2: "NULL", 3: "green", 4: "blue", 5: "aqua", 6: "blue&green", 7: "blue&aqua", 8: "blue&aqua&green", 9: "red&magenta",
+                    10: "yellow", 11: "red", 12: "orange", 13: "magenta", 14: "green&aqua", 15: ""}
 
 tree = SyntaxTree(sample_vars[3:], sample_vocab)
-sample_reach = torch.tensor([[[5, 3, 6], [13, 0, 0], [6, 7, 8]], [[12, 13, 0], [5, 1, 0], [0, 0, 0]], [[8, 7, 0], [6, 7, 9], [0, 0, 0]]], dtype=torch.long)
+
+sample_reach = torch.tensor([[[5, 3, 14], [13, 0, 0], [6, 7, 8]], [[12, 13, 0], [5, 1, 0], [0, 0, 0]], [[8, 7, 0], [6, 7, 9], [0, 0, 0]]], dtype=torch.long)
 sample_avoid = torch.tensor([[[0, 0, 0], [4, 11, 0], [10, 11, 0]], [[7, 6, 0], [11, 10, 0], [0, 0, 0]], [[10, 11, 0], [11, 0, 0], [0, 0, 0]]], dtype=torch.long)
 lens = [3, 2, 2]
 
@@ -35,7 +40,8 @@ Xsa, edgesa, rootsa = tree.process_sequence(sample_avoid, lens, False)
 # assignments = [(1, 0, 0, 1), (0, 1, 0, 1), (1, 1, 0, 1), (0, 0, 0, 1)]
 
 # TODO: add formula for avoiding sequences
-
+# print(tree.embedding_dict)
+# plot_graph(edgesr, {i: tree.embedding_dict[x] for i, x in enumerate(Xsr)})
 
 # print(tree.minimal_formula(assignments))
 # print(tree.syntax_tree(assignments))

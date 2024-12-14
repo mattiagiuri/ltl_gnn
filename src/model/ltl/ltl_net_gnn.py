@@ -45,19 +45,19 @@ class LTLNetGNN(nn.Module):
         # root_embeddings = gnn_embedded.view((dim_1, max_len, self.embedding_dim))
         # print("Reach")
         # print(reach_data)
-        Xr, edgesr, rootsr = self.syntax_treer.process_sequence(reach_data, reach_lens, prop_mode=False)
+        Xr, edgesr, rootsr = self.syntax_treer.process_sequence(reach_data, reach_lens, prop_mode=True)
         # print("Avoid")
         # print(avoid_data)
-        Xa, edgesa, rootsa = self.syntax_treer.process_sequence(avoid_data, avoid_lens, prop_mode=False)
+        Xa, edgesa, rootsa = self.syntax_treer.process_sequence(avoid_data, avoid_lens, prop_mode=True)
 
         Xr = torch.tensor(Xr, dtype=torch.long)
         Xa = torch.tensor(Xa, dtype=torch.long)
 
         embedded_reach = self.embedding(Xr)
-        embedded_avoid=self.embedding(Xa)
+        embedded_avoid = self.embedding(Xa)
 
         gnn_reach = self.gnn(embedded_reach, edgesr)
-        gnn_avoid = self.gnn(embedded_avoid,edgesa)
+        gnn_avoid = self.gnn(embedded_avoid, edgesa)
 
         max_len = max(reach_lens)
         dim_1 = len(rootsr) // max_len

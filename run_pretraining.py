@@ -22,6 +22,7 @@ class Args:
 
 # TODO: ask about what happens in each of the 3, Flatword seems normal, LetterEnv has a warning, Zones I modified actor
 
+
 def main():
     args = simple_parsing.parse(Args)
     env = os.environ.copy()
@@ -45,7 +46,7 @@ def main():
             '--epochs', '2',
             '--num_steps', '3_000_000',
             '--model_config', 'pretraining_'+underlying,
-            '--curriculum', underlying,
+            '--curriculum', 'pretraining_'+underlying,
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,

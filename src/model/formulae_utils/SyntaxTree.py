@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch_geometric
 from sympy import symbols
 from sympy.logic.boolalg import Or, And, Not, simplify_logic
+from model.formulae_utils.DisjointSetUnion import DisjointSetUnion, partition_colors
 
 # TODO: only consider ACTIVE VARIABLES when making formula out of assignments
 
@@ -14,6 +15,7 @@ class SyntaxTree:
         self.sympy_vars = {name: symbols(name) for name in self.variable_names}
         self.assignment_vocab = assignment_vocab
         self.embedding_dict = {i+1: k for i, k in enumerate(variable_names)}
+        self.contexts, self.dsu = partition_colors(list(self.assignment_vocab.values()))
 
         for operator in ["AND", "OR", "NOT"]:
             self.embedding_dict[len(self.embedding_dict)+1] = operator
@@ -43,23 +45,46 @@ class SyntaxTree:
 
         return minimized_formula
 
+    def contextually_minimal_formula(self, assignments_w_context):
+        formulae_in_context = {}
+        for assignment, context in assignments_w_context:
+            if context not in formulae_in_context:
+                formulae_in_context[context] = [assignment]
+
+            else:
+                formulae_in_context[context].append(assignment)
+
+        final_formula = Or(*[self.minimal_formula(assignments, self.contexts[context])
+                             for context, assignments in formulae_in_context.items()])
+
+        return final_formula
+
     @staticmethod
     @memory.cache
     def simplify_formula(formula):
-        return simplify_logic(formula)
+        return simplify_logic(formula, form='dnf')
 
-    def read_assignment(self, var):
+    def read_assignment(self, var, context=False):
         assignment_name = self.assignment_vocab[var.item()]
         cur_assignment = [0 for i in range(len(self.variable_names))]
 
         if "&" in assignment_name:
             and_vars = assignment_name.split("&")
 
+            if context:
+                cur_context = self.dsu.find(and_vars[0])
+
             for name in and_vars:
                 cur_assignment[self.variable_names.index(name)] = 1
 
         else:
             cur_assignment[self.variable_names.index(assignment_name)] = 1
+
+            if context:
+                cur_context = self.dsu.find(assignment_name)
+
+        if context:
+            return cur_assignment, cur_context
 
         return cur_assignment
 
@@ -78,19 +103,28 @@ class SyntaxTree:
 
         return active_vars
 
-    def process_assignments_seq(self, assignment_set_seq):
+    def process_assignments_seq(self, assignment_set_seq, context=False):
         formulae = []
 
         for assignment_set in assignment_set_seq:
-            assignments = [
-                self.read_assignment(var)
-                for var in assignment_set if var.item() not in [0, 1, 2, len(self.assignment_vocab)-1]
-            ]
+            if context:
+                assignments = [
+                    self.read_assignment(var)
+                    for var in assignment_set if var.item() not in [0, 1, 2, len(self.assignment_vocab) - 1]
+                ]
 
-            active_vars = self.get_active_vars(assignment_set)
+                formula = self.contextually_minimal_formula(assignments)
+            else:
+                assignments = [
+                    self.read_assignment(var, context=False)
+                    for var in assignment_set if var.item() not in [0, 1, 2, len(self.assignment_vocab)-1]
+                ]
 
-            formula = self.minimal_formula(assignments, active_vars)
+                active_vars = self.get_active_vars(assignment_set)
 
+                formula = self.minimal_formula(assignments, active_vars)
+
+            # print(formula)
             formulae.append(formula)
 
         return formulae
@@ -113,7 +147,7 @@ class SyntaxTree:
                 for var in assignment_set if var.item() not in [0, 1, 2, len(self.assignment_vocab)-1]
             ])
 
-            formulae.append(simplify_logic(formula))
+            formulae.append(self.simplify_formula(formula))
 
         return formulae
 
@@ -187,7 +221,7 @@ class SyntaxTree:
             else:
                 formulae = self.process_assignments_seq(actual_seq)
 
-            print(formulae)
+            # print(formulae)
 
             for formula in formulae:
                 roots.append(batching_factor)
@@ -223,7 +257,7 @@ class SyntaxTree:
                 formulae_avoid = self.process_assignments_seq(avoid_seq)
 
             formulae = [self.simplify_formula(And(*[r, Not(a)])) for r, a in zip(formulae_reach, formulae_avoid)]
-            print(formulae)
+            # print(formulae)
             # print(formulae_reach)
             # print(formulae_avoid)
             for i, formula in enumerate(formulae):

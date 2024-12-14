@@ -251,3 +251,24 @@ FLATWORLD_CURRICULUM = Curriculum([
         threshold_type=None
     ),
 ])
+
+FLATWORD_PRETRAINING = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[1.0, 0.0],
+        threshold=0.995,
+        threshold_type='mean'
+    )
+    ]
+)

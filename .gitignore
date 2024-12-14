@@ -4,6 +4,7 @@ owl-21.0/
 .idea
 wandb
 experiments
+experiments_to_save
 .pytest_cache
 ldba.png
 ldba.pdf

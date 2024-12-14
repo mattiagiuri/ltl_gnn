@@ -61,6 +61,7 @@ class ModelConfig:
     set_net: SetNetConfig
     gnn_mode: bool = False
     num_gnn_layers: int = 0
+    freeze_gnn: bool = False
 
 
 zones = ModelConfig(
@@ -131,6 +132,66 @@ flatworld = ModelConfig(
     )
 )
 
+pretraining_context_flatworld = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    env_net=None,
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=4
+)
+
+pretraining_flatworld = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    env_net=None,
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=2
+)
+
+pretraining_flatworld_mock = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    env_net=None,
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=False,
+    num_gnn_layers=2
+)
+
 flatworld_gnn = ModelConfig(
     actor=ActorConfig(
         layers=[64, 64, 64],
@@ -151,26 +212,6 @@ flatworld_gnn = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=3
+    num_gnn_layers=2,
+    freeze_gnn=True
 )
-
-pretraining_flatworld = ModelConfig(
-    actor=ActorConfig(
-        layers=[64, 64, 64],
-        activation=nn.ReLU,
-    ),
-    critic=StandardNetConfig(
-        layers=[64, 64],
-        activation=nn.ReLU
-    ),
-    ltl_embedding_dim=16,
-    num_rnn_layers=1,
-    env_net=None,
-    set_net=SetNetConfig(
-        layers=[32, 16],
-        activation=nn.ReLU
-    ),
-    gnn_mode=True,
-    num_gnn_layers=3
-)
-

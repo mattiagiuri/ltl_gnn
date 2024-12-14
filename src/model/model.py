@@ -60,8 +60,10 @@ def build_model(
         env_embedding_dim = obs_shape[0]
 
     if model_config.gnn_mode:
+        # print(len(var_names))
         embedding = nn.Embedding(len(var_names) + 4, model_config.ltl_embedding_dim, padding_idx=0)
-        ltl_net = LTLNetGNN(embedding, model_config.num_rnn_layers, 2, var_names, assignment_vocab)
+        ltl_net = LTLNetGNN(embedding, model_config.num_rnn_layers, model_config.num_gnn_layers, var_names, assignment_vocab)
+        # print(ltl_net.embedding.weight)
     else:
         embedding = nn.Embedding(len(VOCAB), model_config.ltl_embedding_dim, padding_idx=VOCAB['PAD'])
         ltl_net = LTLNet(embedding, model_config.set_net, model_config.num_rnn_layers)
@@ -81,6 +83,9 @@ def build_model(
                                          final_layer_activation=False)
 
     model = Model(actor, critic, ltl_net, env_net)
+
+    # print(training_status['model_state'])
+    # print(model.ltl_net.embedding.weight)
 
     if "model_state" in training_status:
         model.load_state_dict(training_status["model_state"])
@@ -106,7 +111,9 @@ def build_model_gnn(
         env_embedding_dim = obs_shape[0]
 
     embedding = nn.Embedding(len(var_names) + 4, model_config.ltl_embedding_dim, padding_idx=0)
-    ltl_net = LTLNetGNN(embedding, model_config.num_rnn_layers, 2, var_names, assignment_vocab)
+    ltl_net = LTLNetGNN(embedding=embedding, num_rnn_layers=model_config.num_rnn_layers,
+                        num_gnn_layers=model_config.num_gnn_layers, variable_names=var_names,
+                        assignment_vocabulary=assignment_vocab)
 
     if isinstance(env.action_space, gymnasium.spaces.Discrete):
         actor = DiscreteActor(action_dim=action_dim,
