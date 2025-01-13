@@ -149,7 +149,7 @@ pretraining_context_flatworld = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=4
+    num_gnn_layers=5
 )
 
 pretraining_flatworld = ModelConfig(

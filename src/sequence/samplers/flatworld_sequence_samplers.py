@@ -12,6 +12,7 @@ assignments = flatworld.get_possible_assignments()
 assignments.remove(Assignment.zero_propositions(flatworld.get_propositions()))
 all_assignments = [frozenset([a.to_frozen()]) for a in assignments]
 
+
 def get_complete_color_assignments(color: str) -> frozenset[FrozenAssignment]:
     color_assignments = []
     for assignment in flatworld.get_possible_assignments():
@@ -129,4 +130,6 @@ def flatworld_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Ca
 
 
 if __name__ == '__main__':
-    print(flatworld_all_reach_avoid()([]))
+    print(all_assignments)
+    print(flatworld_all_reach_tasks(2)(["a"]))
+    # print(flatworld_all_reach_avoid()())
