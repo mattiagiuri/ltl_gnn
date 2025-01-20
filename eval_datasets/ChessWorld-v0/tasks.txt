@@ -1,2 +1,5 @@
 (!(knight | pawn) U queen)
-(!(queen | knight) U rook)
+(!(pawn | rook) U (!queen & rook & !pawn) & (F knight))
+(!(pawn | rook | knight | bishop) U (queen & rook & !pawn) & (F (bishop | knight))
+((!(bishop | pawn) U (knight & bishop)) & (!pawn U (queen & rook & !pawn)))
+(!(bishop | knight | pawn) U (rook & queen & !pawn))

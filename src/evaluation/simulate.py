@@ -22,8 +22,8 @@ def main():
     parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0', 'ChessWorld-v0'], default='ChessWorld-v0')
     parser.add_argument('--exp', type=str, default='tmp')
     parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--num_episodes', type=int, default=1)
-    parser.add_argument('--formula', type=str, default='(!(knight | pawn) U queen)')  # !(red | green) U magenta  !blue U (magenta & red)
+    parser.add_argument('--num_episodes', type=int, default=6)
+    parser.add_argument('--formula', type=str, default='(!(bishop | knight | pawn) U (rook & queen & !pawn))')  # (!(knight | pawn) U queen)
     parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=True)
@@ -41,9 +41,10 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
 
     sampler = FixedSampler.partial(formula)
     env = make_env(env_name, sampler, render_mode='human' if render else None)
+    all_options = {i: {'init_square': square} for i, square in enumerate(env.FREE_SQUARES)}
+
     init_vocab(env.get_possible_assignments())
     init_vars(env.get_propositions())
-    options = {'init_square': (0, 4)}
 
     config = model_configs[env_name]
     # config = model_configs["gnn_" + env_name]
@@ -79,7 +80,7 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     if not render:
         pbar = tqdm(pbar)
     for i in pbar:
-        obs, info = env.reset(options=options), {}
+        obs, info = env.reset(options=all_options[i]), {}
         # obs, info = env.initial_square_reset(), {}
 
         if render:
