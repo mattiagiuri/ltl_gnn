@@ -26,20 +26,23 @@ def main():
     env['PYTHONPATH'] = 'src/'
     seeds = args.seed if isinstance(args.seed, list) else [args.seed]
     for seed in seeds:
+        prof_file = 'profile_' + str(seed) + '.prof'
         command = [
-            'python', 'src/train/train_ppo.py',
-            '--env', 'FlatWorld-v0',
-            '--steps_per_process', '4096',  # 1024
+            'python',
+            # '-m', 'cProfile', '-o', prof_file,
+            'src/train/train_ppo.py',
+            '--env', 'ChessWorld-v0',
+            '--steps_per_process', '1024',  # 1024
             '--epochs', '10',
-            '--batch_size', '2048',  # 512
+            '--batch_size', '1024',  # 64
             '--discount', '0.98',
             '--gae_lambda', '0.95',
             '--entropy_coef', '0.003',  # 0.003
             '--log_interval', '1',
-            '--save_interval', '2',
+            '--save_interval', '1',
             '--num_steps', '15_000_000',
-            '--model_config', 'FlatWorld-v0',
-            '--curriculum', 'FlatWorld-v0',
+            '--model_config', 'gnn_ChessWorld-v0',
+            '--curriculum', 'ChessWorld-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -58,7 +61,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
         # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name tmp --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name gcn --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
@@ -66,3 +69,5 @@ if __name__ == '__main__':
         wandb.finish()
         # kill_all_wandb_processes()
         sys.exit(0)
+    # finally:
+    #     print("profile file")

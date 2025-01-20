@@ -5,6 +5,7 @@ from graphviz import Source
 from ltl.automata import LDBA, ltl2ldba, ltl2nba
 from ltl.logic import Assignment
 from sequence.search import ExhaustiveSearch
+import os
 
 
 class Color(enum.Enum):
@@ -74,12 +75,15 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
 
 
 if __name__ == '__main__':
+    os.chdir("..")
+    os.chdir("..")
+
     props = {'red', 'magenta', 'blue', 'green', 'aqua', 'yellow', 'orange'}
     f = 'F blue'
 
     ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
     print(f'Finite: {ldba.is_finite_specification()}')
-    draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
+    # draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
     search = ExhaustiveSearch(None, props, num_loops=1)
     seqs = search.all_sequences(ldba, ldba.initial_state)
     print(seqs)

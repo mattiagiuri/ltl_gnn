@@ -6,30 +6,34 @@ from tqdm import tqdm
 
 from envs import make_env
 from ltl import FixedSampler
-from model.model import build_model
+from model.model import build_model, build_model_gnn
 from model.agent import Agent
 from config import model_configs
 from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
+from preprocessing.vocab import init_vocab, init_vars
 import argparse
+from envs.chessworld import ChessWorld
+import os
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0'], default='PointLtl2-v0')
-    parser.add_argument('--exp', type=str, default='deepset')
+    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0', 'ChessWorld-v0'], default='ChessWorld-v0')
+    parser.add_argument('--exp', type=str, default='tmp')
     parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--num_episodes', type=int, default=500)
-    parser.add_argument('--formula', type=str, default='(F blue) & (!blue U (green & F yellow))')  # !(red | green) U magenta  !blue U (magenta & red)
+    parser.add_argument('--num_episodes', type=int, default=1)
+    parser.add_argument('--formula', type=str, default='(!(knight | pawn) U queen)')  # !(red | green) U magenta  !blue U (magenta & red)
     parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument('--gnn', action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
     gamma = 0.94 if args.env == 'LetterEnv-v0' else 0.998 if args.env == 'PointLtl2-v0' else 0.98
-    return simulate(args.env, gamma, args.exp, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic)
+    return simulate(args.env, gamma, args.exp, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic, args.gnn)
 
 
-def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic):
+def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic, gnn):
     env_name = env
     random.seed(seed)
     np.random.seed(seed)
@@ -37,14 +41,30 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
 
     sampler = FixedSampler.partial(formula)
     env = make_env(env_name, sampler, render_mode='human' if render else None)
+    init_vocab(env.get_possible_assignments())
+    init_vars(env.get_propositions())
+    options = {'init_square': (0, 4)}
+
     config = model_configs[env_name]
+    # config = model_configs["gnn_" + env_name]
+    # print(config)
     model_store = ModelStore(env_name, exp, seed, None)
+    model_store.path = "experiments/ppo/ChessWorld-v0/deepsets/1"
+    # model_store.path = "experiments/ppo/ChessWorld-v0/gcn/1"
+
+
     training_status = model_store.load_training_status(map_location='cpu')
     model_store.load_vocab()
-    model = build_model(env, training_status, config)
+
+    if gnn:
+        model = build_model_gnn(env, training_status, config)
+    else:
+        model = build_model(env, training_status, config)
 
     props = set(env.get_propositions())
     search = ExhaustiveSearch(model, props, num_loops=2)
+    # print(search)
+    # return
     agent = Agent(model, search=search, propositions=props, verbose=render)
 
     num_successes = 0
@@ -59,7 +79,9 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     if not render:
         pbar = tqdm(pbar)
     for i in pbar:
-        obs, info = env.reset(), {}
+        obs, info = env.reset(options=options), {}
+        # obs, info = env.initial_square_reset(), {}
+
         if render:
             print(obs['goal'])
         agent.reset()
@@ -110,4 +132,6 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
 
 
 if __name__ == '__main__':
+    # os.chdir("..")
+    # os.chdir("..")
     main()

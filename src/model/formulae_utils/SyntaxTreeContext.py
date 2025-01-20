@@ -90,7 +90,7 @@ class SyntaxTreeContext:
         def cheat_syntax_tree(assignment_set):
             assignments = [
                 self.read_assignment(var)
-                for var in assignment_set if var not in [0, 1, 2, len(self.assignment_vocab) - 1]
+                for var in assignment_set if var not in [0, 1, 2]
             ]
 
             formula = self.contextually_minimal_formula(assignments)
@@ -109,7 +109,9 @@ class SyntaxTreeContext:
 
         for assignment_set in assignment_set_seq:
             tup_assignment = tuple(sorted([i.item() for i in assignment_set
-                                           if i.item() not in [0, 1, 2, len(self.assignment_vocab)-1]]))
+                                           if i.item() not in [0, 1, 2,
+                                                               len(self.assignment_vocab) - 1
+                                                               ]]))
             # assignments = [
             #     self.read_assignment(var)
             #     for var in assignment_set if var.item() not in [0, 1, 2, len(self.assignment_vocab) - 1]
@@ -208,7 +210,8 @@ class SyntaxTreeContext:
         build_graph = lambda reach_set: self.build_syntax_tree(tuple(sorted([i.item() for i in reach_set
                                                                              if i.item() not in
                                                                              [0, 1, 2,
-                                                                              len(self.assignment_vocab) - 1]])))
+                                                                              len(self.assignment_vocab) - 1
+                                                                              ]])))
         all_graphs = list(map(build_graph, all_seqs))
         dl = DataLoader(all_graphs, batch_size=tot_len + 2, shuffle=False)
 

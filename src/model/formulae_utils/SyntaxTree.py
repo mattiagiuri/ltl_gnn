@@ -25,6 +25,13 @@ class SyntaxTree:
         # Will use the built-ind padding-idx of embedding layer to encode FALSE as an avoid sequence (no constraints)
         self.embedding_dict[0] = "FALSE"
 
+        self.in_mem_cache = {(i, j): self.build_syntax_tree((i, j)) for i in range(3, len(assignment_vocab) - 1)
+                             for j in range(3, len(assignment_vocab) - 1)}
+
+        self.in_mem_cache[tuple([])] = self.build_syntax_tree(tuple([]))
+        for i in range(3, len(assignment_vocab) - 1):
+            self.in_mem_cache[(i, )] = self.build_syntax_tree((i, ))
+
     @staticmethod
     def simplify_formula(formula):
         return simplify_logic(formula, form='dnf')
@@ -43,7 +50,9 @@ class SyntaxTree:
 
         for assignment_set in assignment_set_seq:
             tup_assignment = tuple(sorted([i.item() for i in assignment_set
-                                           if i.item() not in [0, 1, 2, len(self.assignment_vocab)-1]]))
+                                           if i.item() not in [0, 1, 2,
+                                           len(self.assignment_vocab) - 1,
+                                           ]]))
             # formula = Or(*[
             #     self.read_proposition(var.item())
             #     for var in assignment_set if var.item() not in [0, 1, 2, len(self.assignment_vocab)-1]
@@ -53,9 +62,9 @@ class SyntaxTree:
 
         return graphs
 
-    def build_syntax_tree(self, assignment_set: tuple[int]):
+    def build_syntax_tree(self, assignment_set):
 
-        @memory.cache
+        # @memory.cache
         def cheat_syntax_tree(assignment_set):
             formula = Or(*[
                 self.read_proposition(var)
@@ -160,9 +169,23 @@ class SyntaxTree:
         all_seqs = seqs.flatten(start_dim=0, end_dim=1)
         tot_len = all_seqs.shape[0]
 
-        build_graph = lambda reach_set: self.build_syntax_tree(tuple(sorted([i.item() for i in reach_set
-                                                                          if i.item() not in
-                                                                          [0, 1, 2, len(self.assignment_vocab) - 1]])))
+        def build_graph(reach_set):
+            reach_tup = tuple(sorted([i.item() for i in reach_set
+                                      if i.item() not in
+                                      [0, 1, 2,
+                                       len(self.assignment_vocab) - 1,
+                                       ]]))
+
+            if len(reach_tup) < 3:
+                return self.in_mem_cache[reach_tup]
+
+            return self.build_syntax_tree(reach_tup)
+
+        # build_graph = lambda reach_set: self.in_mem_cache[tuple(sorted([i.item() for i in reach_set
+        #                                                                   if i.item() not in
+        #                                                                   [0, 1, 2,
+        #                                                                    len(self.assignment_vocab) - 1,
+        #                                                                    ]]))]
         all_graphs = list(map(build_graph, all_seqs))
         dl = DataLoader(all_graphs, batch_size=tot_len+2, shuffle=False)
 

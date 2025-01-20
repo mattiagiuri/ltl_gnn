@@ -13,12 +13,12 @@ sample_vars = ["PAD", "EPSILON", "NULL", "green", "red", "blue", "yellow", "oran
 #                 10: "yellow", 11: "aqua", 12: "yellow&orange", 13: "aqua&red", 14: ""}
 
 sample_vocab = {0: "PAD", 1: "EPSILON", 2: "NULL", 3: "green", 4: "blue", 5: "aqua", 6: "blue&green", 7: "blue&aqua", 8: "blue&aqua&green", 9: "red&magenta",
-                    10: "yellow", 11: "red", 12: "orange", 13: "magenta", 14: "green&aqua", 15: ""}
+                    10: "yellow", 11: "red", 12: "orange", 13: "magenta", 14: "green&aqua", 15: "blank"}
 
 tree = SyntaxTreeContext(sample_vars[3:], sample_vocab)
 
 sample_reach = torch.tensor([[[5, 3, 14], [13, 0, 0], [6, 7, 8]], [[12, 13, 0], [5, 1, 0], [0, 0, 0]], [[8, 7, 0], [6, 7, 9], [0, 0, 0]]], dtype=torch.long)
-sample_avoid = torch.tensor([[[0, 0, 0], [4, 11, 0], [10, 11, 0]], [[7, 6, 0], [11, 10, 0], [0, 0, 0]], [[10, 11, 0], [0, 0, 0], [0, 0, 0]]], dtype=torch.long)
+sample_avoid = torch.tensor([[[0, 0, 0], [4, 11, 0], [10, 11, 0]], [[7, 6, 0], [11, 10, 0], [0, 0, 0]], [[10, 11, 0], [15, 0, 0], [0, 0, 0]]], dtype=torch.long)
 lens = [3, 2, 2]
 
 # print("Assignment mode")

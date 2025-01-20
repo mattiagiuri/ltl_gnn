@@ -9,7 +9,11 @@ model_configs = {
     # "pretraining_PointLtl2-v0": pretraining_zones,
     # "pretraining_LetterEnv-v0": pretraining_letter,
     'pretraining_FlatWorld-v0': pretraining_flatworld,
-    'pretraining_context_FlatWorld-v0': pretraining_context_flatworld
+    'pretraining_context_FlatWorld-v0': pretraining_context_flatworld,
+    'ChessWorld-v0': chessworld,
+    'pretraining_ChessWorld-v0': pretraining_chessworld,
+    'gnn_ChessWorld-v0': chessworld_gnn,
+    'gnn_train_ChessWorld-v0': chessworld_gnn_train
 }
 
 __all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'SetNetConfig', 'model_configs']

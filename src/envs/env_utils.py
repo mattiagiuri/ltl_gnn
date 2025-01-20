@@ -47,6 +47,9 @@ def make_env(
     elif name.startswith('FlatWorld'):
         env = make_flatworld_env()
         max_steps = max_steps or 500
+    elif name.startswith('ChessWorld'):
+        env = make_chessworld_env()
+        max_steps = max_steps or 50
     else:
         raise ValueError(f'Unknown environment: {name}')
 
@@ -89,4 +92,9 @@ def make_flatworld_env():
     import envs.flatworld
 
     env = gymnasium.make('FlatWorld-v0')
+    return env
+
+
+def make_chessworld_env():
+    env = gymnasium.make('ChessWorld-v0')
     return env

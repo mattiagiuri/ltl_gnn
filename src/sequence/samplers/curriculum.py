@@ -7,6 +7,7 @@ import numpy as np
 import torch
 
 from ltl.automata import LDBASequence
+from sequence.samplers.chessworld_sequence_samplers import chessworld_sample_reach_avoid, chessworld_sample_reach
 from sequence.samplers.flatworld_sequence_samplers import flatworld_all_reach_tasks, \
     flatworld_sample_reach_avoid, flatworld_sample_reach_stay, flatworld_sample_reach
 from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_avoid_tasks, all_reach_tasks, \
@@ -267,8 +268,54 @@ FLATWORD_PRETRAINING = Curriculum([
             ),
         ],
         probs=[1.0, 0.0],
-        threshold=0.995,
+        threshold=None,
+        threshold_type=None
+    )
+    ]
+)
+
+CHESSWORLD_CURRICULUM = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid((1, 2), 1, 1),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.6, 0.4],
+        threshold=0.8,
         threshold_type='mean'
+    ),
+    RandomCurriculumStage(
+        sampler=chessworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+        threshold=None,
+        threshold_type=None
+    ),
+])
+
+CHESSWORLD_PRETRAINING = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[1.0, 0.0],
+        threshold=None,
+        threshold_type=None
     )
     ]
 )
