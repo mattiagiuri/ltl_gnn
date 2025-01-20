@@ -22,4 +22,4 @@ flatworld.pkl
 letter.pkl
 zones.pkl
 *.egg-info/
-
+*.prof
