@@ -1,5 +1,15 @@
-(!(knight | pawn) U queen)
-(!(pawn | rook) U (!queen & rook & !pawn) & (F knight))
-(!(pawn | rook | knight | bishop) U (queen & rook & !pawn) & (F (bishop | knight))
-((!(bishop | pawn) U (knight & bishop)) & (!pawn U (queen & rook & !pawn)))
-(!(bishop | knight | pawn) U (rook & queen & !pawn))
+Avoid 2
+A2_1 (!(bishop | knight) U queen) good
+A2_2 (!(pawn | bishop) U (bishop & rook)) good
+A2_3 (!(queen | pawn) U (rook & queen & !pawn)) good
+A2_4 (!(bishop | pawn) U (rook & knight)) good
+A2_5 (!(pawn | knight) U (queen & rook &!pawn) & (F pawn)) good
+A2_6 (!(pawn | rook) U (!queen & rook & !pawn) & (F knight)) good
+Avoid 3
+A3_1 (!(bishop | knight | pawn) U (rook & queen & !pawn)) good
+A3_2 (!(knight | rook | bishop) U (rook & bishop)) alright
+A3_3 (!(bishop | pawn | rook) U (rook & queen & !pawn)) good
+A3_4 (!(bishop | knight | queen) U (rook & queen & !pawn)) good
+Avoid 4
+A4_1 (!(bishop | rook | knight | queen) U (pawn & !queen & !rook)) alright
+A4_2 (!(pawn | rook | knight | bishop) U (queen & rook & !pawn) & (F (bishop | knight))) good
