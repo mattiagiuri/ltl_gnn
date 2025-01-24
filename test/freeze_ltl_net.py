@@ -8,6 +8,9 @@ print(os.getcwd())
 state_dict1 = torch.load("experiments/ppo/ChessWorld-v0/gcn/1/ltl_net.pth")
 state_dict2 = torch.load("experiments/ppo/pretraining_ChessWorld-v0/gcn/1/ltl_net.pth")
 
+# state_dict1 = torch.load("experiments/ppo/ChessWorld-v0/deepsets_full/1/ltl_net.pth")
+# state_dict2 = torch.load("experiments/ppo/ChessWorld-v0/deepsets_prop/1/ltl_net.pth")
+
 if state_dict1.keys() != state_dict2.keys():
     print("The keys in the state dictionaries are different.")
 else:

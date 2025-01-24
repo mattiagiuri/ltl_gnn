@@ -22,7 +22,10 @@ def get_complete_piece_assignments(color: str) -> frozenset[FrozenAssignment]:
 
 
 # for piece in ['queen', 'rook', 'bishop', 'knight', 'pawn']:
-#     all_assignments.append(get_complete_piece_assignments(piece))
+#     complete_piece = get_complete_piece_assignments(piece)
+#     # print(piece)
+#     # print(complete_piece)
+#     all_assignments.append(complete_piece)
 
 
 def chessworld_all_reach_tasks(depth: int) -> Callable:
@@ -131,6 +134,7 @@ def chessworld_sample_reach_avoid(
 
 if __name__ == '__main__':
     print(all_assignments)
-    print(chessworld_all_reach_tasks(2)(["a"]))
+    print(len(all_assignments))
+    # print(chessworld_all_reach_tasks(2)(["a"]))
     # print(chessworld_all_reach_avoid()())
 
