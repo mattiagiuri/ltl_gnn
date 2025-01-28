@@ -43,15 +43,18 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     all_options = {i: {'init_square': square} for i, square in enumerate(env.FREE_SQUARES)}
 
     if not gnn:
-        config = model_configs[env_name]
-        exp = "deepsets_full"
+        try:
+            config = model_configs[env_name]
+        except KeyError:
+            config = model_configs["ChessWorld-v1"]
+        # exp = "deepsets_full"
     else:
         if init_voc:
             init_vocab(env.get_possible_assignments())
             init_vars(env.get_propositions())
 
         config = model_configs["gnn_" + env_name]
-        exp = "gcn"
+        # exp = "gcn"
 
     # print(config)
     model_store = ModelStore(env_name, exp, seed, None)

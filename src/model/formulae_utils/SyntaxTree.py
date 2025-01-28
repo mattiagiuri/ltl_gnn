@@ -29,8 +29,37 @@ class SyntaxTree:
                              for j in range(3, len(assignment_vocab) - 1)}
 
         self.in_mem_cache[tuple([])] = self.build_syntax_tree(tuple([]))
+
         for i in range(3, len(assignment_vocab) - 1):
             self.in_mem_cache[(i, )] = self.build_syntax_tree((i, ))
+
+        self.vars_assignment_sets = {var: (set([i for i, assignment in self.assignment_vocab.items()
+                                                        if var in assignment.split("&")]))
+                                     for var in self.variable_names}
+
+        for i in range(len(self.variable_names)):
+            for j in range(i+1, len(self.variable_names)):
+                var1 = self.variable_names[i]
+                var2 = self.variable_names[j]
+
+                cur_set = self.vars_assignment_sets[var1] | self.vars_assignment_sets[var2]
+                cur_assignment_set = tuple(sorted(list(cur_set)))
+
+                self.in_mem_cache[cur_assignment_set] = self.build_syntax_tree(cur_assignment_set)
+
+        for var, cur_set in self.vars_assignment_sets.items():
+            cur_assignment_set = tuple(sorted(list(cur_set)))
+            self.in_mem_cache[cur_assignment_set] = self.build_syntax_tree(cur_assignment_set)
+
+        for var, cur_set in self.vars_assignment_sets.items():
+            for i in range(3, len(assignment_vocab) - 1):
+                cur_set_complete = cur_set | {i}
+                cur_assignment_set = tuple(sorted(list(cur_set_complete)))
+
+                if cur_assignment_set not in self.in_mem_cache:
+                    self.in_mem_cache[cur_assignment_set] = self.build_syntax_tree(cur_assignment_set)
+
+
 
     @staticmethod
     def simplify_formula(formula):

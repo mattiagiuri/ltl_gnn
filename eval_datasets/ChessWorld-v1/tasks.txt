@@ -1,5 +1,5 @@
 Avoid 2
-A2_1 (!(bishop | knight) U queen) good
+A2_1 (!(bishop | knight) U (queen & bishop)) good
 A2_2 (!(pawn | bishop) U (bishop & rook)) good
 A2_3 (!(queen | pawn) U (rook & queen & !pawn)) good
 A2_4 (!(bishop | pawn) U (rook & knight)) good

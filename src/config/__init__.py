@@ -13,7 +13,11 @@ model_configs = {
     'ChessWorld-v0': chessworld,
     'pretraining_ChessWorld-v0': pretraining_chessworld,
     'gnn_ChessWorld-v0': chessworld_gnn,
-    'gnn_train_ChessWorld-v0': chessworld_gnn_train
+    'gnn_train_ChessWorld-v0': chessworld_gnn_train,
+    'gnn_ChessWorld-v1': chessworld_gnn,
+    'ChessWorld-v1': chessworld,
+    'pretraining_ChessWorld-v1': pretraining_chessworld,
+    'gnn_train_ChessWorld-v1': chessworld_gnn_train
 }
 
 __all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'SetNetConfig', 'model_configs']

@@ -33,7 +33,7 @@ def main():
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
-            '--env', 'pretraining_ChessWorld-v0',
+            '--env', 'pretraining_ChessWorld-v1',
             '--steps_per_process', '512',
             '--batch_size', '1024',
             '--lr', '0.001',
@@ -44,9 +44,9 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--epochs', '2',
-            '--num_steps', '3_000_000',
-            '--model_config', 'pretraining_ChessWorld-v0',
-            '--curriculum', 'pretraining_ChessWorld-v0',
+            '--num_steps', '6_000_000',
+            '--model_config', 'pretraining_ChessWorld-v1',
+            '--curriculum', 'pretraining_ChessWorld-v1',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,

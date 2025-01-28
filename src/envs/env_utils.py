@@ -48,8 +48,17 @@ def make_env(
         env = make_flatworld_env()
         max_steps = max_steps or 500
     elif name.startswith('ChessWorld'):
-        env = make_chessworld_env()
-        max_steps = max_steps or 50
+        if name[-1] == '0':
+            env = make_chessworld_env()
+            max_steps = max_steps or 50
+        elif name[-1] == '1':
+            env = make_chessworld8_env()
+            max_steps = max_steps or 100
+        elif name[-1] == '2':
+            env = make_chessworld8easy_env()
+            max_steps = max_steps or 100
+        else:
+            raise ValueError("Only chessworld v0 or v1")
     else:
         raise ValueError(f'Unknown environment: {name}')
 
@@ -97,4 +106,14 @@ def make_flatworld_env():
 
 def make_chessworld_env():
     env = gymnasium.make('ChessWorld-v0')
+    return env
+
+
+def make_chessworld8_env():
+    env = gymnasium.make('ChessWorld-v1')
+    return env
+
+
+def make_chessworld8easy_env():
+    env = gymnasium.make('ChessWorld-v2')
     return env

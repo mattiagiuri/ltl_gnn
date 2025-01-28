@@ -38,12 +38,13 @@ def draw_ldba(ldba: LDBA, filename='ldba', fmt='pdf', view=True, positive_label=
                 dot += f' color="{Color.ACCEPTING}"'
             dot += ']\n'
     dot += '}'
+    print(dot)
     s = Source(dot, filename=filename, format=fmt)
     s.render(view=view, cleanup=True)
 
 
 # @memory.cache
-def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = True, ldba: bool = True) -> LDBA:
+def construct_ldba_flatworld(formula: str, simplify_labels: bool = False, prune: bool = True, ldba: bool = True) -> LDBA:
     fun = ltl2ldba if ldba else ltl2nba
     ldba = fun(formula, simplify_labels=simplify_labels)
     print('Constructed LDBA.')
@@ -74,16 +75,49 @@ def construct_ldba(formula: str, simplify_labels: bool = False, prune: bool = Tr
     return ldba
 
 
+def construct_ldba_chessworld(formula: str, simplify_labels: bool = False, prune: bool = True, ldba: bool = True) -> LDBA:
+    fun = ltl2ldba if ldba else ltl2nba
+    ldba = fun(formula, simplify_labels=simplify_labels)
+    print('Constructed LDBA.')
+    # assert ldba.check_valid()
+    # print('Checked valid.')
+    if prune:
+        # ldba.prune(Assignment.zero_or_one_propositions(set(ldba.propositions)))
+        props = {'queen', 'rook', 'bishop', 'knight', 'pawn'}
+        ldba.prune([
+            Assignment.where('queen', propositions=props),
+            Assignment.where('rook', propositions=props),
+            Assignment.where('knight', propositions=props),
+            Assignment.where('bishop', propositions=props),
+            Assignment.where('pawn', propositions=props),
+            Assignment.where('queen', 'rook', propositions=props),
+            Assignment.where('queen', 'pawn', propositions=props),
+            Assignment.where('queen', 'rook', 'pawn', propositions=props),
+            # Assignment.where('rook', 'pawn', propositions=props),
+            Assignment.where('rook', 'knight', propositions=props),
+            Assignment.where('rook', 'bishop', propositions=props),
+            Assignment.where('knight', 'bishop', propositions=props),
+            Assignment.zero_propositions(props),
+        ])
+        print('Pruned impossible transitions.')
+    ldba.complete_sink_state()
+    print('Added sink state.')
+    ldba.compute_sccs()
+    return ldba
+
+
 if __name__ == '__main__':
-    os.chdir("..")
-    os.chdir("..")
+    # os.chdir("..")
+    # os.chdir("..")
 
-    props = {'red', 'magenta', 'blue', 'green', 'aqua', 'yellow', 'orange'}
-    f = 'F blue'
+    # props = {'red', 'magenta', 'blue', 'green', 'aqua', 'yellow', 'orange'}
+    props = {'queen', 'rook', 'bishop', 'knight', 'pawn'}
 
-    ldba = construct_ldba(f, simplify_labels=False, prune=True, ldba=True)
+    f = '(!(pawn | rook | knight | bishop) U (queen & rook & !pawn) & (F (bishop | knight)))'
+
+    ldba = construct_ldba_chessworld(f, simplify_labels=False, prune=True, ldba=True)
     print(f'Finite: {ldba.is_finite_specification()}')
-    # draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
+    draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
     search = ExhaustiveSearch(None, props, num_loops=1)
     seqs = search.all_sequences(ldba, ldba.initial_state)
     print(seqs)
