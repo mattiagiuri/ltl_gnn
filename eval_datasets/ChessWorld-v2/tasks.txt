@@ -21,3 +21,12 @@ R2_4 (F knight & (F (pawn & queen & !rook)))
 Reach 3
 R3_1 (F queen & (F bishop & (F pawn)))
 R3_2 (F knight & (F bishop & (F rook)))
+Avoid Easy
+AE_1 (!(bishop | knight) U (queen)) good
+AE_2 (!(pawn | bishop) U (rook)) good
+AE_4 (!(bishop | pawn) U (knight)) good
+AE_5 (!(pawn | knight) U (queen) & (F pawn)) good
+AE_6 (!(pawn | rook) U (rook) & (F knight)) good
+AE_7 (!(bishop | knight | pawn) U (rook)) good
+AE_8 (!(knight | rook | bishop) U (queen)) alright
+AE_9 (!(bishop | knight | queen) U (rook)) good

@@ -34,8 +34,8 @@ def main():
         command = [
             'python', 'src/train/train_ppo.py',
             '--env', 'pretraining_ChessWorld-v1',
-            '--steps_per_process', '512',
-            '--batch_size', '1024',
+            '--steps_per_process', '512', # 512
+            '--batch_size', '1024', # 1024
             '--lr', '0.001',
             '--entropy_coef', '0.0',
             '--discount', '0.5',
@@ -44,8 +44,8 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--epochs', '2',
-            '--num_steps', '6_000_000',
-            '--model_config', 'pretraining_ChessWorld-v1',
+            '--num_steps', '6_000_000', # 6_000_000
+            '--model_config', 'pretraining_stay_ChessWorld-v1',
             '--curriculum', 'pretraining_ChessWorld-v1',
             '--name', args.name,
             '--seed', str(seed),
@@ -64,7 +64,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name gcn --seed 1 --log_csv false --save'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name gcn_stay --seed 1 --log_csv false --save'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

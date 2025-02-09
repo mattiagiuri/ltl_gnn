@@ -4,6 +4,7 @@ import pandas as pd
 import re
 from preprocessing.vocab import init_vocab, init_vars
 import os
+import numpy as np
 
 tasks_path = "eval_datasets/ChessWorld-v1/tasks.txt"
 env = 'ChessWorld-v1'
@@ -47,7 +48,7 @@ def read_tasks():
 def evaluate_chessworld8_gnn(save=False, exp_gnn=exp_gnn):
     global init_voc
     task_list = read_tasks()
-    results = {"Task Set": [], "Task ID": [], "Successes x/6": [], "Avg Steps": [], "Avg Discounted Return": []}
+    results = {"Task Set": [], "Task ID": [], "Successes x/29": [], "Avg Steps": [], "Avg Discounted Return": []}
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
@@ -58,7 +59,7 @@ def evaluate_chessworld8_gnn(save=False, exp_gnn=exp_gnn):
 
             results["Task Set"].append(task_set)
             results["Task ID"].append(name)
-            results["Successes x/6"].append(successes)
+            results["Successes x/29"].append(successes)
             results["Avg Steps"].append(avg_steps)
             results["Avg Discounted Return"].append(adr)
 
@@ -73,7 +74,7 @@ def evaluate_chessworld8_gnn(save=False, exp_gnn=exp_gnn):
 
 def evaluate_chessworld8_deepsets(save=False, exp_deepsets=exp_deepsets):
     task_list = read_tasks()
-    results = {"Task Set": [], "Task ID": [], "Successes x/6": [], "Avg Steps": [], "Avg Discounted Return": []}
+    results = {"Task Set": [], "Task ID": [], "Successes x/29": [], "Avg Steps": [], "Avg Discounted Return": []}
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
@@ -82,7 +83,7 @@ def evaluate_chessworld8_deepsets(save=False, exp_deepsets=exp_deepsets):
 
             results["Task Set"].append(task_set)
             results["Task ID"].append(name)
-            results["Successes x/6"].append(successes)
+            results["Successes x/29"].append(successes)
             results["Avg Steps"].append(avg_steps)
             results["Avg Discounted Return"].append(adr)
 
@@ -95,11 +96,87 @@ def evaluate_chessworld8_deepsets(save=False, exp_deepsets=exp_deepsets):
     return df_results
 
 
+def evaluate_chessworld8_gnn_nondet(save=False, exp_gnn=exp_gnn):
+    global init_voc
+    task_list = read_tasks()
+    results = {"Task Set": [], "Task ID": [], "Avg Successes x/29": [], "Std Successes": [], "Avg Steps": [], "Avg Discounted Return": []}
+
+    for task_set, tasks in task_list.items():
+        for name, task in tasks:
+            cur_successes = []
+            cur_avg_steps = []
+            cur_adr = []
+
+            for _ in range(1):
+                successes, avg_steps, adr = simulate(env, gamma, exp_gnn, seed, num_episodes, task, finite,
+                                                     render, not deterministic, gnn_gnn, init_voc)
+
+                cur_successes.append(successes)
+                cur_avg_steps.append(avg_steps)
+                cur_adr.append(adr)
+
+                if init_voc:
+                    init_voc = False
+
+            results["Task Set"].append(task_set)
+            results["Task ID"].append(name)
+            results["Avg Successes x/29"].append(np.mean(cur_successes))
+            results["Std Successes"].append(np.std(cur_successes))
+            results["Avg Steps"].append(np.mean(cur_avg_steps))
+            results["Avg Discounted Return"].append(np.mean(cur_adr))
+
+    df_results = pd.DataFrame(results)
+    df_results.set_index(["Task Set", "Task ID"], inplace=True)
+
+    if save:
+        df_results.to_csv("results_chessworld/ChessWorld-v1/non_det_" + env + "_" + exp_gnn + ".csv")
+
+    return df_results
+
+
+def evaluate_chessworld8_deepsets_nondet(save=False, exp_deepsets=exp_deepsets):
+    global init_voc
+    task_list = read_tasks()
+    results = {"Task Set": [], "Task ID": [], "Avg Successes x/29": [], "Std Successes": [], "Avg Steps": [],
+               "Avg Discounted Return": []}
+
+    for task_set, tasks in task_list.items():
+        for name, task in tasks:
+            cur_successes = []
+            cur_avg_steps = []
+            cur_adr = []
+
+            for _ in range(1):
+                successes, avg_steps, adr = simulate(env, gamma, exp_deepsets, seed, num_episodes, task, finite,
+                                                     render, not deterministic, gnn_deepsets, init_voc)
+
+                cur_successes.append(successes)
+                cur_avg_steps.append(avg_steps)
+                cur_adr.append(adr)
+
+                if init_voc:
+                    init_voc = False
+
+            results["Task Set"].append(task_set)
+            results["Task ID"].append(name)
+            results["Avg Successes x/29"].append(np.mean(cur_successes))
+            results["Std Successes"].append(np.std(cur_successes))
+            results["Avg Steps"].append(np.mean(cur_avg_steps))
+            results["Avg Discounted Return"].append(np.mean(cur_adr))
+
+    df_results = pd.DataFrame(results)
+    df_results.set_index(["Task Set", "Task ID"], inplace=True)
+
+    if save:
+        df_results.to_csv("results_chessworld/ChessWorld-v1/non_det_" + env + "_" + exp_deepsets + ".csv")
+
+    return df_results
+
 if __name__ == "__main__":
 
-    evaluate_chessworld8_deepsets(True)
-    # evaluate_chessworld_deepsets(True, exp_deepsets_prop)
-    evaluate_chessworld8_gnn(True, exp_gnn)
-    # evaluate_chessworld_gnn(True, exp_gnn_fine)
-    # evaluate_chessworld_gnn(True, exp_gnn_prop)
-    # evaluate_chessworld_gnn(True, "gcn_prop_fine")
+    # evaluate_chessworld8_deepsets(True)
+    # evaluate_chessworld8_deepsets(True, exp_deepsets_prop)
+    # evaluate_chessworld8_gnn(True, exp_gnn)
+    evaluate_chessworld8_deepsets_nondet(True)
+    evaluate_chessworld8_deepsets_nondet(True, exp_deepsets_prop)
+    evaluate_chessworld8_gnn_nondet(True)

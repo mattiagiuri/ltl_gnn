@@ -28,7 +28,7 @@ def main():
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
-            '--env', 'ChessWorld-v2',
+            '--env', 'ChessWorld-v1',
             '--steps_per_process', '2048',  # 1024
             '--epochs', '10',
             '--batch_size', '4096',  # 64
@@ -39,7 +39,7 @@ def main():
             '--save_interval', '1',
             '--num_steps', '15_000_000',
             '--model_config', 'ChessWorld-v1',
-            '--curriculum', 'ChessWorld-v2',
+            '--curriculum', 'stay_ChessWorld-v1',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -58,7 +58,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
         # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name deepsets_full --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name deepsets_stay --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

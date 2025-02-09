@@ -47,7 +47,7 @@ def read_tasks():
 def evaluate_chessworld8_gnn(save=False, exp_gnn=exp_gnn):
     global init_voc
     task_list = read_tasks()
-    results = {"Task Set": [], "Task ID": [], "Successes x/6": [], "Avg Steps": [], "Avg Discounted Return": []}
+    results = {"Task Set": [], "Task ID": [], "Successes x/30": [], "Avg Steps": [], "Avg Discounted Return": []}
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
@@ -58,7 +58,7 @@ def evaluate_chessworld8_gnn(save=False, exp_gnn=exp_gnn):
 
             results["Task Set"].append(task_set)
             results["Task ID"].append(name)
-            results["Successes x/6"].append(successes)
+            results["Successes x/30"].append(successes)
             results["Avg Steps"].append(avg_steps)
             results["Avg Discounted Return"].append(adr)
 
@@ -73,7 +73,7 @@ def evaluate_chessworld8_gnn(save=False, exp_gnn=exp_gnn):
 
 def evaluate_chessworld8_deepsets(save=False, exp_deepsets=exp_deepsets):
     task_list = read_tasks()
-    results = {"Task Set": [], "Task ID": [], "Successes x/6": [], "Avg Steps": [], "Avg Discounted Return": []}
+    results = {"Task Set": [], "Task ID": [], "Successes x/30": [], "Avg Steps": [], "Avg Discounted Return": []}
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
@@ -82,7 +82,7 @@ def evaluate_chessworld8_deepsets(save=False, exp_deepsets=exp_deepsets):
 
             results["Task Set"].append(task_set)
             results["Task ID"].append(name)
-            results["Successes x/6"].append(successes)
+            results["Successes x/30"].append(successes)
             results["Avg Steps"].append(avg_steps)
             results["Avg Discounted Return"].append(adr)
 
@@ -98,8 +98,8 @@ def evaluate_chessworld8_deepsets(save=False, exp_deepsets=exp_deepsets):
 if __name__ == "__main__":
 
     evaluate_chessworld8_deepsets(True)
-    # evaluate_chessworld_deepsets(True, exp_deepsets_prop)
-    # evaluate_chessworld8_gnn(True, exp_gnn)
+    evaluate_chessworld8_deepsets(True, exp_deepsets_prop)
+    evaluate_chessworld8_gnn(True, exp_gnn)
     # evaluate_chessworld_gnn(True, exp_gnn_fine)
     # evaluate_chessworld_gnn(True, exp_gnn_prop)
     # evaluate_chessworld_gnn(True, "gcn_prop_fine")

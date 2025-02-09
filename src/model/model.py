@@ -8,7 +8,7 @@ from config import ModelConfig
 from model.ltl.ltl_net import LTLNet
 from model.ltl.ltl_net_gnn import LTLNetGNN
 from model.mixed_distribution import MixedDistribution
-from preprocessing.vocab import VOCAB, var_names, assignment_vocab
+from preprocessing.vocab import VOCAB, var_names, assignment_vocab, augment_vars
 from model.policy import ContinuousActor
 from model.policy import DiscreteActor
 from utils import torch_utils
@@ -62,7 +62,7 @@ def build_model(
     if model_config.gnn_mode:
         # print(len(var_names))
         embedding = nn.Embedding(len(var_names) + 4, model_config.ltl_embedding_dim, padding_idx=0)
-        ltl_net = LTLNetGNN(embedding, model_config.num_rnn_layers, model_config.num_gnn_layers, var_names, assignment_vocab)
+        ltl_net = LTLNetGNN(embedding, model_config.num_rnn_layers, model_config.num_gnn_layers, var_names, assignment_vocab, model_config.stay_mode)
         # print(ltl_net.embedding.weight)
     else:
         embedding = nn.Embedding(len(VOCAB), model_config.ltl_embedding_dim, padding_idx=VOCAB['PAD'])

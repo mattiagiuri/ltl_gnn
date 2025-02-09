@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+from model.formulae_utils.SyntaxTreeStay import SyntaxTreeStay
 from model.ltl.set_network import SetNetwork
 from preprocessing import BatchedReachAvoidSequences, BatchedSequences, VOCAB, assignment_vocab, var_names
 from model.ltl.gnn import GNN
@@ -14,7 +15,8 @@ class LTLNetGNN(nn.Module):
             num_rnn_layers: int,
             num_gnn_layers: int,
             variable_names: list[str],
-            assignment_vocabulary: dict
+            assignment_vocabulary: dict,
+            stay_mode: bool=False
     ):
         super().__init__()
         self.embedding = embedding
@@ -26,7 +28,10 @@ class LTLNetGNN(nn.Module):
 
         self.embedding_dim = 2*embedding_dim
 
-        self.syntax_treer = SyntaxTree(variable_names, assignment_vocabulary)
+        if not stay_mode:
+            self.syntax_treer = SyntaxTree(variable_names, assignment_vocabulary)
+        else:
+            self.syntax_treer = SyntaxTreeStay(variable_names, assignment_vocabulary)
 
     def forward(self, batched_seqs: tuple[tuple[torch.tensor, torch.tensor], tuple[torch.tensor, torch.tensor]]
                                     | BatchedReachAvoidSequences) -> torch.tensor:

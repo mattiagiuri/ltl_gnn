@@ -17,3 +17,8 @@ def init_vars(variables: list[str]):
     global var_names
     var_names += variables
     # var_names.append("blank")
+
+
+def augment_vars():
+    global var_names
+    var_names += ['EPSILON', 'NULL', 'blank']

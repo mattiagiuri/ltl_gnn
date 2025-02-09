@@ -116,20 +116,20 @@ def chessworld8_sample_reach_avoid(
     return wrapper
 
 
-# def chessworld8_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
-#     def wrapper(propositions: list[str]) -> LDBASequence:
-#         reach = random.choice(all_assignments)
-#         # while len(p.get_true_propositions()) > 1:
-#         #     p = random.choice(assignments)
-#         na = random.randint(*num_avoid)
-#         available = [a for a in all_assignments if a != reach and not reach.issubset(a)]
-#         avoid = random.sample(available, na)
-#         avoid = frozenset.union(*avoid) if len(avoid) > 0 else frozenset()
-#         second_avoid = frozenset.union(*all_assignments).difference(reach).union({Assignment.zero_propositions(propositions).to_frozen()})
-#         task = [(LDBASequence.EPSILON, avoid), (reach, second_avoid)]
-#         return LDBASequence(task, repeat_last=num_stay)
-#
-#     return wrapper
+def chessworld8_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
+    def wrapper(propositions: list[str]) -> LDBASequence:
+        reach = random.choice(all_assignments)
+        # while len(p.get_true_propositions()) > 1:
+        #     p = random.choice(assignments)
+        na = random.randint(*num_avoid)
+        available = [a for a in all_assignments if a != reach and not reach.issubset(a)]
+        avoid = random.sample(available, na)
+        avoid = frozenset.union(*avoid) if len(avoid) > 0 else frozenset()
+        second_avoid = frozenset.union(*all_assignments).difference(reach).union({Assignment.zero_propositions(propositions).to_frozen()})
+        task = [(LDBASequence.EPSILON, avoid), (reach, second_avoid)]
+        return LDBASequence(task, repeat_last=num_stay)
+
+    return wrapper
 
 
 if __name__ == '__main__':

@@ -27,6 +27,8 @@ def make_env(
     from envs.ldba_wrapper import LDBAWrapper
     from envs.ltl_wrapper import LTLWrapper
 
+    # print(sequence)
+
     if name.startswith('pretraining_'):
         underlying = name[len('pretraining_'):]
         underlying_env = make_env(underlying, sampler, max_steps, render_mode)
@@ -64,6 +66,7 @@ def make_env(
 
     propositions = get_env_attr(env, 'get_propositions')()
     sample_task = sampler(propositions)
+    # print(sample_task)
     if not sequence:
         # env = PartiallyOrderedWrapper(env, sample_task)
         env = LTLWrapper(env, sample_task)
