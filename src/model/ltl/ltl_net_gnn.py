@@ -31,6 +31,7 @@ class LTLNetGNN(nn.Module):
         if not stay_mode:
             self.syntax_treer = SyntaxTree(variable_names, assignment_vocabulary)
         else:
+            print("LTL Stay Mode")
             self.syntax_treer = SyntaxTreeStay(variable_names, assignment_vocabulary)
 
     def forward(self, batched_seqs: tuple[tuple[torch.tensor, torch.tensor], tuple[torch.tensor, torch.tensor]]

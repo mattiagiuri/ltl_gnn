@@ -86,7 +86,7 @@ class SyntaxTreeContext:
 
     def build_syntax_tree(self, assignment_set: tuple[int]):
 
-        @memory.cache
+        # @memory.cache
         def cheat_syntax_tree(assignment_set):
             assignments = [
                 self.read_assignment(var)

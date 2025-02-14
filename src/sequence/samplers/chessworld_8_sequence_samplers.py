@@ -21,11 +21,11 @@ def get_complete_piece_assignments(color: str) -> frozenset[FrozenAssignment]:
     return frozenset(color_assignments)
 
 
-# for piece in ['queen', 'rook', 'bishop', 'knight', 'pawn']:
-#     complete_piece = get_complete_piece_assignments(piece)
-#     # print(piece)
-#     # print(complete_piece)
-#     all_assignments.append(complete_piece)
+for piece in ['queen', 'rook', 'bishop', 'knight', 'pawn']:
+    complete_piece = get_complete_piece_assignments(piece)
+    # print(piece)
+    # print(complete_piece)
+    all_assignments.append(complete_piece)
 
 
 def chessworld8_all_reach_tasks(depth: int) -> Callable:

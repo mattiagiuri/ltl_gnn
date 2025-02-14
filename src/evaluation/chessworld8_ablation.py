@@ -106,6 +106,23 @@ def evaluate_chessworld_gcn(task, exp_gnn=exp_gnn, fast=False, model=None):
     return successes
 
 
+def evaluate_chessworld_gcn_prop(task, exp_gnn_prop=exp_gnn_prop, fast=False, model=None):
+    if fast:
+        successes, avg_steps, adr = simulate(env_name, gamma, exp_gnn_prop, seed, num_episodes, task, finite,
+                                             render, deterministic, model, init_voc=False)
+
+        return successes
+
+    global init_voc
+    successes, avg_steps, adr = simulate(env_name, gamma, exp_gnn_prop, seed, num_episodes, task, finite,
+                                         render, deterministic, gnn_gnn, init_voc=init_voc)
+
+    if init_voc:
+        init_voc = False
+
+    return successes
+
+
 def multiset_size_ablation(goal, size_range=range(3, 10)):
     results_gcn = {"successes_mean": [], "successes_std": []}
     results_deepsets = {"successes_mean": [], "successes_std": []}
@@ -148,6 +165,35 @@ def multiset_size_ablation(goal, size_range=range(3, 10)):
     results_df = pd.concat([gcn, deepsets, deepsets_prop], axis=1, keys=["GCN", "Deepsets", "Deepsets (prop training)"])
 
     results_df.to_csv("chessworld8_ablation/" + goal + "/results.csv")
+
+    return results_df
+
+
+def add_multiset_size_ablation(goal, eval_func=evaluate_chessworld_gcn_prop, size_range=range(3, 10), name="GCN (prop training)"):
+    results = {"successes_mean": [], "successes_std": []}
+
+    for size in size_range:
+        all_formulae = all_simple_reach_avoid(env, vars, goal, size)
+        successes = []
+
+        for formula in all_formulae:
+            successes.append(eval_func(formula))
+
+        mean, std = np.mean(successes) / num_episodes, np.std(successes) / (num_episodes ** 2)
+        results["successes_mean"].append(mean)
+        results["successes_std"].append(std)
+
+        os.makedirs("chessworld8_ablation/" + goal, exist_ok=True)
+
+        cur_data = {i: [j[-1]] for i, j in results.items()}
+        path = "chessworld8_ablation/" + goal + "/results_" + str(size) + ".csv"
+
+        _ = augment_results(path, cur_data, name=name)
+
+        print("Done " + str(size))
+
+    path = "chessworld8_ablation/" + goal + "/results.csv"
+    results_df = augment_results(path, results, name=name)
 
     return results_df
 
@@ -201,6 +247,32 @@ def fast_multiset_size_ablation(goal, size_range=range(3, 10)):
     return results_df
 
 
+def augment_results(path, additional_data, name="GCN (prop training)"):
+    df = pd.read_csv(path, index_col=0, header=[0, 1])
+
+    # Simulate additional data (replace this with actual data)
+    # additional_data = {
+    #     "successes_mean": [0.85, 0.78, 0.72, 0.65, 0.58, 0.50, 0.42],  # Example means
+    #     "successes_std": [0.005, 0.006, 0.007, 0.008, 0.009, 0.009, 0.008],  # Example stds
+    # }
+    #
+    # additional_data = {
+    #     "successes_mean": [0.85],  # Example means
+    #     "successes_std": [0.005],  # Example stds
+    # }
+    index = df.index
+
+    new_model_df = pd.DataFrame(additional_data, index=index)
+    new_model_df.columns = pd.MultiIndex.from_product([[name], new_model_df.columns])
+
+    # Concatenate with the original DataFrame
+    df = pd.concat([df, new_model_df], axis=1)
+
+    df.to_csv(path)
+
+    return df
+
+
 if __name__ == "__main__":
     # goal = "(bishop & rook)"
     # goal = "(queen & bishop)"
@@ -208,9 +280,17 @@ if __name__ == "__main__":
     # goal1 = "(pawn)"
     # goal2 = "(knight & rook)"
 
-    goal3 = "(queen & !pawn)"
+    # goal3 = "(queen & !pawn)"
     # results = multiset_size_ablation(goal=goal1, size_range=range(3, 10))
     # print(results)
 
-    results1 = multiset_size_ablation(goal=goal3, size_range=range(3, 10))
-    print(results1)
+    # results1 = multiset_size_ablation(goal=goal3, size_range=range(3, 10))
+    # print(results1)
+
+    goals = ["(knight)", "(pawn)", "(bishop & rook)", "(queen & bishop)", "(knight & rook)"]
+    for goal in goals:
+        print(goal)
+        add_multiset_size_ablation(goal)
+
+    # print(augment_results("chessworld8_ablation/(knight)/results_9.csv", []))
+

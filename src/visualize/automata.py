@@ -113,9 +113,9 @@ if __name__ == '__main__':
     # props = {'red', 'magenta', 'blue', 'green', 'aqua', 'yellow', 'orange'}
     props = {'queen', 'rook', 'bishop', 'knight', 'pawn'}
 
-    f = '(!(pawn | rook | knight | bishop) U (queen & rook & !pawn) & (F (bishop | knight)))'
+    f = 'F queen'
 
-    ldba = construct_ldba_chessworld(f, simplify_labels=False, prune=True, ldba=True)
+    ldba = construct_ldba_chessworld(f, simplify_labels=True, prune=True, ldba=True)
     print(f'Finite: {ldba.is_finite_specification()}')
     draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
     search = ExhaustiveSearch(None, props, num_loops=1)

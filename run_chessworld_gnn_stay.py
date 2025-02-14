@@ -41,8 +41,8 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--num_steps', '30_000_000',
-            '--model_config', 'gnn_ChessWorld-v1',
-            '--curriculum', 'ChessWorld-v1',
+            '--model_config', 'final_stay_ChessWorld-v1',
+            '--curriculum', 'stay_ChessWorld-v1',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -61,7 +61,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
         # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name gcn_prop --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name gcn_stay_cache --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

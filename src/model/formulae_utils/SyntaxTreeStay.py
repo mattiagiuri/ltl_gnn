@@ -7,6 +7,8 @@ from sympy.logic.boolalg import Or, And, Not, simplify_logic
 from model.formulae_utils.DisjointSetUnion import DisjointSetUnion, partition_colors
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
+from model.formulae_utils.ContextMaker import ContextMaker
+
 
 # TODO: only consider ACTIVE VARIABLES when making formula out of assignments
 
@@ -25,39 +27,13 @@ class SyntaxTreeStay:
         # Will use the built-ind padding-idx of embedding layer to encode FALSE as an avoid sequence (no constraints)
         self.embedding_dict[0] = "FALSE"
 
-        self.in_mem_cache = {(i, j): self.build_syntax_tree((i, j)) for i in range(3, len(assignment_vocab) - 1)
-                             for j in range(3, len(assignment_vocab) - 1)}
+        true_vars = set(variable_names) - {'PAD', 'EPSILON', 'NULL', 'blank'}
+        self.context_maker = ContextMaker(assignment_vocab, variable_names, true_vars)
 
-        self.in_mem_cache[tuple([])] = self.build_syntax_tree(tuple([]))
+        self.in_mem_cache = {assignments: self.build_data_from_formula(formula)
+                             for assignments, formula in self.context_maker.generate_cache().items()}
 
-        for i in range(3, len(assignment_vocab) - 1):
-            self.in_mem_cache[(i, )] = self.build_syntax_tree((i, ))
-
-        self.vars_assignment_sets = {var: (set([i for i, assignment in self.assignment_vocab.items()
-                                                        if var in assignment.split("&")]))
-                                     for var in self.variable_names}
-
-        for i in range(len(self.variable_names)):
-            for j in range(i+1, len(self.variable_names)):
-                var1 = self.variable_names[i]
-                var2 = self.variable_names[j]
-
-                cur_set = self.vars_assignment_sets[var1] | self.vars_assignment_sets[var2]
-                cur_assignment_set = tuple(sorted(list(cur_set)))
-
-                self.in_mem_cache[cur_assignment_set] = self.build_syntax_tree(cur_assignment_set)
-
-        for var, cur_set in self.vars_assignment_sets.items():
-            cur_assignment_set = tuple(sorted(list(cur_set)))
-            self.in_mem_cache[cur_assignment_set] = self.build_syntax_tree(cur_assignment_set)
-
-        for var, cur_set in self.vars_assignment_sets.items():
-            for i in range(3, len(assignment_vocab) - 1):
-                cur_set_complete = cur_set | {i}
-                cur_assignment_set = tuple(sorted(list(cur_set_complete)))
-
-                if cur_assignment_set not in self.in_mem_cache:
-                    self.in_mem_cache[cur_assignment_set] = self.build_syntax_tree(cur_assignment_set)
+        print("Done caching")
 
 
 
@@ -107,6 +83,11 @@ class SyntaxTreeStay:
         X, edge_index = cheat_syntax_tree(assignment_set)
 
         # return X, edge_index
+        return Data(x=torch.tensor(X, dtype=torch.long), edge_index=edge_index)
+
+    def build_data_from_formula(self, formula):
+        X, edge_index = self.syntax_tree_from_formula(formula)
+
         return Data(x=torch.tensor(X, dtype=torch.long), edge_index=edge_index)
 
     def syntax_tree_from_formula(self, formula):
@@ -210,6 +191,7 @@ class SyntaxTreeStay:
                 return self.in_mem_cache[reach_tup]
             except KeyError:
                 new_formula = self.build_syntax_tree(reach_tup)
+                print(reach_tup)
                 self.in_mem_cache[reach_tup] = new_formula
 
                 return new_formula

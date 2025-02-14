@@ -474,6 +474,16 @@ CHESSWORLD8_STAY_PRETRAINING = Curriculum([
 
 CHESSWORLD8_SMALL_STAY = Curriculum([
     RandomCurriculumStage(
+        sampler=sample_reach_stay(1, (0, 1)),
+        threshold=0.9,
+        threshold_type='mean'
+    ),
+    RandomCurriculumStage(
+        sampler=sample_reach_stay(3, (0, 1)),
+        threshold=0.9,
+        threshold_type='mean'
+    ),
+    RandomCurriculumStage(
         sampler=sample_reach_stay(5, (0, 1)),
         threshold=0.9,
         threshold_type='mean'
@@ -485,3 +495,47 @@ CHESSWORLD8_SMALL_STAY = Curriculum([
     )
     ]
 )
+
+CHESSWORLD8_STAY_CURRICULUM_PROG = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_reach_avoid((1, 2), 1, 1),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=sample_reach_stay(5, (0, 1)),
+                threshold=0.9,
+                threshold_type='mean'
+            ),
+        ],
+        probs=[0.4, 0.3, 0.3],
+        threshold=0.9,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+                threshold=0.9,
+                threshold_type='mean'
+            ),
+
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_reach_stay(10, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            )
+        ],
+        probs=[0.6, 0.4],
+        threshold=None,
+        threshold_type=None
+    )
+
+])

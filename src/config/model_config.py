@@ -357,7 +357,7 @@ chessworld_gnn_stay_fine = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=3,
+    num_gnn_layers=4,
     freeze_gnn=False,
     stay_mode=True
 )

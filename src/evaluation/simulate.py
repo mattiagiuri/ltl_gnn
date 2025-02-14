@@ -23,7 +23,7 @@ def main():
     parser.add_argument('--exp', type=str, default='gcn')
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--num_episodes', type=int, default=6)
-    parser.add_argument('--formula', type=str, default='(!(bishop | rook | knight | queen) U (pawn & !queen & !rook))')  # (!(knight | pawn) U queen)
+    parser.add_argument('--formula', type=str, default='(F (queen & !rook))')  # (!(knight | pawn) U queen)
     parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=True)

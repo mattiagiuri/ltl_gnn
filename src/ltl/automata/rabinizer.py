@@ -16,6 +16,6 @@ def run_rabinizer(formula: str) -> str:
 
 
 if __name__ == '__main__':
-    f = 'FG a'
+    f = '!(queen | bishop) U (queen & pawn)'
     ldba = run_rabinizer(f)
     print(ldba)
