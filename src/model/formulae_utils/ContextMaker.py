@@ -37,6 +37,8 @@ class ContextMaker:
         self.complete_assignment = set.union(*list(self.complete_var_assignments.values()))
 
         self.cache = {}
+        self.formula_kinds = {}
+        self.blank_formula_kinds = {}
 
     def make_formula(self, assignments_tup):
         clauses = []
@@ -56,15 +58,27 @@ class ContextMaker:
 
         # Combine clauses into a disjunction
         formula = Or(*clauses)
+        # print(assignments_tup)
+        # print(formula)
+        # print(clauses)
 
         # Minimize the formula
         minimized_formula = simplify_logic(formula, form="dnf")
 
         return minimized_formula
 
+    def add_to_kinds_cache(self, assignment_tup, key, name, positive):
+        if key not in self.formula_kinds[name][positive]:
+            self.formula_kinds[name][positive][key] = []
+
+        self.formula_kinds[name][positive][key].append(assignment_tup)
+
     def or_all_vars(self):
         # not_breaking_point = float(len(self.true_vars)) / 2
         tot_added = 0
+        name = "or"
+        self.formula_kinds[name] = {"positive": {}, "negative": {}}
+
         for num_vars in range(1, len(self.true_vars) - 1):
             # if num_vars <= not_breaking_point:
             tuples = list(combinations(self.true_vars, num_vars))
@@ -77,6 +91,8 @@ class ContextMaker:
                     self.cache[all_assignment_tup] = Or(*[self.sympy_vars[var] for var in tup])
                     tot_added += 1
 
+                    self.add_to_kinds_cache(all_assignment_tup, num_vars, name, "positive")
+
                 neg_assignment_set = self.complete_assignment - all_assignment_set
                 neg_assignment_tup = tuple(sorted(list(neg_assignment_set)))
 
@@ -86,6 +102,8 @@ class ContextMaker:
                     self.cache[neg_assignment_tup] = Not(Or(*[self.sympy_vars[var] for var in tup]))
                     tot_added += 1
 
+                    self.add_to_kinds_cache(neg_assignment_tup, num_vars, name, "negative")
+
                     # assert(neg_assignment_set | all_assignment_set == self.complete_assignment)
 
         # print("Or", tot_added)
@@ -94,8 +112,11 @@ class ContextMaker:
         max_intersection = max([len(x.split("&")) for x in self.assignment_vocab.values()])
         tot_added = 0
 
-        for i in range(2, max_intersection + 1):
-            tuples = list(combinations(self.true_vars, i))
+        name = "and"
+        self.formula_kinds[name] = {"positive": {}, "negative": {}}
+
+        for num_vars in range(2, max_intersection + 1):
+            tuples = list(combinations(self.true_vars, num_vars))
 
             for tup in tuples:
                 all_assignment_set = set.intersection(*[self.complete_var_assignments[var] for var in tup])
@@ -109,20 +130,72 @@ class ContextMaker:
                         self.cache[all_assignment_tup] = And(*[self.sympy_vars[var] for var in tup])
                         tot_added += 1
 
+                        self.add_to_kinds_cache(all_assignment_tup, num_vars, name, "positive")
+
                     if neg_assignment_tup not in self.cache:
                         self.cache[neg_assignment_tup] = Not(And(*[self.sympy_vars[var] for var in tup]))
                         tot_added += 1
 
+                        self.add_to_kinds_cache(neg_assignment_tup, num_vars, name, "negative")
+
         # print("And", tot_added)
 
-    def or_x_and_not_y(self, x=2, y=3):
+    def and_y_or_x(self, x=4, y=2):
         tot_added = 0
+
+        name = "or_x_and_y"
+        self.formula_kinds[name] = {"positive": {}, "negative": {}}
+
+        for r1 in range(2, x + 1):
+            for r2 in range(1, y + 1):
+                or_tuples = list(combinations(self.true_vars, r1))
+
+                for or_tup in or_tuples:
+                    or_formula = Or(*[self.sympy_vars[var] for var in or_tup])
+                    or_assignment_set = set.union(*[self.complete_var_assignments[var] for var in or_tup])
+
+                    remaining_vars = list(set(self.true_vars) - set(or_tup))
+                    and_tuples = list(combinations(remaining_vars, r2))
+
+                    for neg_tup in and_tuples:
+                        and_formula = And(*[self.sympy_vars[var] for var in neg_tup])
+                        and_assignment_set = set.intersection(*[self.complete_var_assignments[var] for var in neg_tup])
+
+                        final_assignment_set = or_assignment_set & and_assignment_set
+                        final_assignment_tup = tuple(sorted(list(final_assignment_set)))
+
+                        final_formula = And(*[or_formula, and_formula])
+
+                        if len(final_assignment_set) > 0 and final_assignment_tup not in self.cache:
+
+                            self.cache[final_assignment_tup] = final_formula
+                            tot_added += 1
+
+                            self.add_to_kinds_cache(final_assignment_tup, (r1, r2), name, "positive")
+
+                        opposite_assignment_set = self.complete_assignment - final_assignment_set
+                        opposite_assignment_tup = tuple(sorted(list(opposite_assignment_set)))
+
+                        if len(opposite_assignment_set) < len(self.complete_assignment) and opposite_assignment_tup not in self.cache:
+
+                            self.cache[opposite_assignment_tup] = Not(final_formula)
+                            tot_added += 1
+
+                            self.add_to_kinds_cache(opposite_assignment_tup, (r1, r2), name, "negative")
+
+    def or_x_and_not_y(self, x=3, y=3):
+        tot_added = 0
+        name = "or_x_and_not_y"
+        self.formula_kinds[name] = {"positive": {}, "negative": {}}
+
         for r1 in range(1, x+1):
             for r2 in range(1, y+1):
                 positive_tuples = list(combinations(self.true_vars, r1))
 
                 if (r1 + r2) > len(self.true_vars):
                     continue
+
+                # print(r1, r2)
 
                 for pos_tup in positive_tuples:
                     positive_formula = Or(*[self.sympy_vars[var] for var in pos_tup])
@@ -143,6 +216,8 @@ class ContextMaker:
                             self.cache[final_assignment_tup] = final_formula
                             tot_added += 1
 
+                            self.add_to_kinds_cache(final_assignment_tup, (r1, r2), name, "positive")
+
                         opposite_assignment_set = self.complete_assignment - final_assignment_set
                         opposite_assignment_tup = tuple(sorted(list(opposite_assignment_set)))
 
@@ -150,10 +225,15 @@ class ContextMaker:
                             self.cache[opposite_assignment_tup] = Or(*[Not(positive_formula), negative_formula])
                             tot_added += 1
 
+                            self.add_to_kinds_cache(opposite_assignment_tup, (r1, r2), name, "negative")
+
         # print("X_and_not_y", tot_added)
 
-    def or_nx_and_not_y(self, x=2, y=3):
+    def and_x_and_not_y(self, x=2, y=3):
         tot_added = 0
+        name = "and_x_and_not_y"
+        self.formula_kinds[name] = {"positive": {}, "negative": {}}
+
         for r1 in range(2, x + 1):
             for r2 in range(1, y + 1):
                 positive_tuples = list(combinations(self.true_vars, r1))
@@ -182,6 +262,8 @@ class ContextMaker:
                                 self.cache[final_assignment_tup] = final_formula
                                 tot_added += 1
 
+                                self.add_to_kinds_cache(final_assignment_tup, (r1, r2), name, "positive")
+
                             opposite_assignment_set = self.complete_assignment - final_assignment_set
                             opposite_assignment_tup = tuple(sorted(list(opposite_assignment_set)))
 
@@ -189,7 +271,82 @@ class ContextMaker:
                                 self.cache[opposite_assignment_tup] = Or(*[Not(positive_formula), negative_formula])
                                 tot_added += 1
 
+                                self.add_to_kinds_cache(opposite_assignment_tup, (r1, r2), name, "negative")
+
         # print("Nx_not_y", tot_added)
+
+    def or_x_and_not_ny(self, x=3, y=2, z=2):
+        tot_added = 0
+        name = "or_x_and_not_ny"
+        self.formula_kinds[name] = {"positive": {}, "negative": {}}
+
+        for r1 in range(1, x + 1):
+            for r2 in range(2, y + 1):
+                positive_tuples = list(combinations(self.true_vars, r1))
+
+                if r2 > r1:
+                    continue
+
+                for pos_tup in positive_tuples:
+                    positive_formula = Or(*[self.sympy_vars[var] for var in pos_tup])
+                    positive_assignment_set = set.union(*[self.complete_var_assignments[var] for var in pos_tup])
+
+                    # cur_vars = list(pos_tup)
+
+                    negative_tuples = list(combinations(self.true_vars, r2))
+                    actual_neg_tuples = []
+
+                    for neg_tup in negative_tuples:
+                        cur_neg_set = set.intersection(
+                            *[self.complete_var_assignments[var] for var in neg_tup])
+
+                        relevant_info = set.intersection(*[positive_assignment_set, cur_neg_set])
+
+                        if len(cur_neg_set) > 0 and len(relevant_info) > 0:
+                            actual_neg_tuples.append(neg_tup)
+
+                    for r3 in range(1, z+1):
+                        tot_tups_of_ands = list(combinations(actual_neg_tuples, r3))
+
+                        for tup_of_ands in tot_tups_of_ands:
+                            clauses_and = []
+                            negative_assignment_set = set([])
+
+                            for neg_tup in tup_of_ands:
+                                cur_negative_formula = And(*[self.sympy_vars[var] for var in neg_tup])
+                                cur_neg_assignment_set = set.intersection(
+                                    *[self.complete_var_assignments[var] for var in neg_tup])
+
+                                clauses_and.append(cur_negative_formula)
+
+                                negative_assignment_set = negative_assignment_set | cur_neg_assignment_set
+
+                            if any(all(var in neg_tup for neg_tup in tup_of_ands) for var in self.true_vars):
+                                negative_formula = simplify_logic(Or(*clauses_and))
+                            else:
+                                negative_formula = simplify_logic(Or(*clauses_and), form='dnf')
+
+                            if len(negative_assignment_set) > 0:
+
+                                final_assignment_set = positive_assignment_set - negative_assignment_set
+                                final_assignment_tup = tuple(sorted(list(final_assignment_set)))
+                                final_formula = And(*[positive_formula, Not(negative_formula)])
+
+                                if final_assignment_tup not in self.cache and len(final_assignment_set) > 0:
+                                    self.cache[final_assignment_tup] = final_formula
+                                    tot_added += 1
+
+                                    self.add_to_kinds_cache(final_assignment_tup, (r1, r2, r3), name, "positive")
+
+                                opposite_assignment_set = self.complete_assignment - final_assignment_set
+                                opposite_assignment_tup = tuple(sorted(list(opposite_assignment_set)))
+
+                                if opposite_assignment_tup not in self.cache and len(opposite_assignment_set) < len(
+                                        self.complete_assignment):
+                                    self.cache[opposite_assignment_tup] = Or(*[Not(positive_formula), negative_formula])
+                                    tot_added += 1
+
+                                    self.add_to_kinds_cache(opposite_assignment_tup, (r1, r2, r3), name, "negative")
 
     def complete_pairs(self):
         tot_added = 0
@@ -248,14 +405,42 @@ class ContextMaker:
         for assignments, formula in d.items():
             self.cache[assignments] = formula
 
+        kinds = {}
+
+        for name, d1 in self.formula_kinds.items():
+            cur_name_d = {}
+
+            for pos, pos_d in d1.items():
+                cur_pos_d = {}
+
+                for shape, shape_list in pos_d.items():
+                    cur_shape_list = []
+
+                    for assignments in shape_list:
+                        new_assignments = list(assignments) + [blank_index]
+                        new_assignments = tuple(sorted(new_assignments))
+
+                        cur_shape_list.append(new_assignments)
+
+                    cur_pos_d[shape] = cur_shape_list
+
+                cur_name_d[pos] = cur_pos_d
+
+            kinds[name] = cur_name_d
+
+        self.blank_formula_kinds = kinds
+
+
     def generate_cache(self):
         self.cache[tuple([])] = Or(*[])
 
         self.or_all_vars()
         self.and_all_vars()
-        self.or_nx_and_not_y()
+        self.and_y_or_x()
+        self.and_x_and_not_y()
         self.or_x_and_not_y()
-        self.complete_pairs()
+        self.or_x_and_not_ny()
+        # self.complete_pairs()
         self.add_blanks()
 
         return self.cache
@@ -329,8 +514,8 @@ if __name__ == "__main__":
 
     context_maker.generate_cache()
 
-    # for assignments, formula in context_maker.cache.items():
-    #     print(assignments, formula)
+    for assignments, formula in context_maker.cache.items():
+        print(assignments, formula)
 
     # count_1 = 0
     # count_2 = 0
@@ -375,3 +560,20 @@ if __name__ == "__main__":
         print(i, d[i])
 
     print(len(context_maker.cache))
+
+    # print(context_maker.formula_kinds)
+    # print(context_maker.blank_formula_kinds)
+
+    print()
+    for name, name_d in context_maker.formula_kinds.items():
+        # other_name_d = context_maker.blank_formula_kinds[name]
+
+        print(name)
+        # print(name_d)
+        # print(other_name_d)
+        #
+        # print()
+
+        for shape, _ in name_d["positive"].items():
+            print(shape)
+        print()

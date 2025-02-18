@@ -288,7 +288,7 @@ if __name__ == "__main__":
     # print(results1)
 
     goals = ["(knight)", "(pawn)", "(bishop & rook)", "(queen & bishop)", "(knight & rook)"]
-    for goal in goals:
+    for goal in goals[3:]:
         print(goal)
         add_multiset_size_ablation(goal)
 

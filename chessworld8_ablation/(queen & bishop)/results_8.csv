@@ -1,3 +1,3 @@
-,GCN,GCN,Deepsets,Deepsets,Deepsets (prop training),Deepsets (prop training)
-,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std
-0,0.7176593521421107,0.006576370102801674,0.6032741205154998,0.008036170892409194,0.5478230581678857,0.009514536442498299
+,GCN,GCN,Deepsets,Deepsets,Deepsets (prop training),Deepsets (prop training),GCN (prop training),GCN (prop training)
+,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std
+0,0.7176593521421107,0.0065763701028016,0.6032741205154998,0.0080361708924091,0.5478230581678857,0.0095145364424982,0.6711947056774643,0.00875069960716525

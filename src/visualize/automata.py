@@ -91,7 +91,8 @@ def construct_ldba_chessworld(formula: str, simplify_labels: bool = False, prune
             Assignment.where('bishop', propositions=props),
             Assignment.where('pawn', propositions=props),
             Assignment.where('queen', 'rook', propositions=props),
-            Assignment.where('queen', 'pawn', propositions=props),
+            Assignment.where('queen', 'bishop', propositions=props),
+            Assignment.where('queen', 'pawn', 'bishop', propositions=props),
             Assignment.where('queen', 'rook', 'pawn', propositions=props),
             # Assignment.where('rook', 'pawn', propositions=props),
             Assignment.where('rook', 'knight', propositions=props),
@@ -106,6 +107,10 @@ def construct_ldba_chessworld(formula: str, simplify_labels: bool = False, prune
     return ldba
 
 
+def get_ldba_transitions(ldba):
+    pass
+
+
 if __name__ == '__main__':
     # os.chdir("..")
     # os.chdir("..")
@@ -113,12 +118,16 @@ if __name__ == '__main__':
     # props = {'red', 'magenta', 'blue', 'green', 'aqua', 'yellow', 'orange'}
     props = {'queen', 'rook', 'bishop', 'knight', 'pawn'}
 
-    f = 'F queen'
+    f = '(! (queen | rook) U bishop) & (F knight)'
 
     ldba = construct_ldba_chessworld(f, simplify_labels=True, prune=True, ldba=True)
+    # print(ldba.state_to_transitions)
+    # print(ldba.state_to_incoming_transitions)
     print(f'Finite: {ldba.is_finite_specification()}')
-    draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
+    # draw_ldba(ldba, fmt='png', positive_label=True, self_loops=True)
     search = ExhaustiveSearch(None, props, num_loops=1)
     seqs = search.all_sequences(ldba, ldba.initial_state)
-    print(seqs)
+    # print(seqs)
+    for i in seqs:
+        print(i)
     print(len(seqs))
