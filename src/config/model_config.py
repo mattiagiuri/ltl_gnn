@@ -311,7 +311,7 @@ chessworld_gnn_stay = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=2,
+    num_gnn_layers=3,
     freeze_gnn=True,
     stay_mode=True
 )
@@ -333,7 +333,7 @@ pretraining_chessworld_stay = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=2,
+    num_gnn_layers=3,
     stay_mode=True
 )
 
@@ -357,7 +357,78 @@ chessworld_gnn_stay_fine = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=4,
+    num_gnn_layers=3,
     freeze_gnn=False,
     stay_mode=True
+)
+
+chessworld_gnn_big = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=False,
+    stay_mode=True
+)
+
+chessworld_gnn_big_frozen = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=True,
+    stay_mode=True
+)
+
+chessworld_deepsets_big = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 32],
+        activation=nn.ReLU
+    ),
 )

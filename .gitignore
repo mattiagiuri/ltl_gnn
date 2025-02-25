@@ -24,3 +24,4 @@ zones.pkl
 *.egg-info/
 *.prof
 .ipynb_checkpoints/
+notes/

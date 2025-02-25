@@ -20,7 +20,10 @@ model_configs = {
     'gnn_train_ChessWorld-v1': chessworld_gnn_train,
     'pretraining_stay_ChessWorld-v1': pretraining_chessworld_stay,
     'stay_ChessWorld-v1': chessworld_gnn_stay,
-    'final_stay_ChessWorld-v1': chessworld_gnn_stay_fine
+    'final_stay_ChessWorld-v1': chessworld_gnn_stay_fine,
+    'big_stay_ChessWorld-v1': chessworld_gnn_big,
+    'big_ChessWorld-v1': chessworld_gnn_big_frozen,
+    'big_sets_ChessWorld-v1': chessworld_deepsets_big
 }
 
 __all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'SetNetConfig', 'model_configs']

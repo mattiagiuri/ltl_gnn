@@ -12,7 +12,7 @@ from model.agent import Agent
 from config import model_configs
 from sequence.search import ExhaustiveSearch
 from utils.model_store import ModelStore
-from preprocessing.vocab import init_vocab, init_vars
+from preprocessing.vocab import init_vocab, init_vars, augment_vars
 import argparse
 from envs.chessworld import ChessWorld
 import os
@@ -36,7 +36,8 @@ def main():
     return simulate(args.env, gamma, args.exp, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic, args.gnn, init_voc=True)
 
 
-def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic, gnn, init_voc=False):
+def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic, gnn, cur_config, init_voc=False):
+    print(formula)
     env_name = env
     random.seed(seed)
     np.random.seed(seed)
@@ -46,21 +47,26 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     env = make_env(env_name, sampler, render_mode='human' if render else None)
     all_options = {i: {'init_square': square} for i, square in enumerate(env.FREE_SQUARES)}
 
-    if not gnn:
-        try:
-            config = model_configs[env_name]
-        except KeyError:
-            config = model_configs["ChessWorld-v1"]
-        # exp = "deepsets_full"
-    else:
-        if init_voc:
-            init_vocab(env.get_possible_assignments())
-            init_vars(env.get_propositions())
+    if init_voc:
+        init_vocab(env.get_possible_assignments())
+        init_vars(env.get_propositions())
+        augment_vars()
 
-        try:
-            config = model_configs["gnn_" + env_name]
-        except KeyError:
-            config = model_configs["gnn_ChessWorld-v1"]
+    # if not gnn:
+    #     try:
+    #         config = model_configs[env_name]
+    #     except KeyError:
+    #         config = model_configs["ChessWorld-v1"]
+    #     # exp = "deepsets_full"
+    # else:
+    #
+    #
+    #     try:
+    #         config = model_configs["gnn_" + env_name]
+    #     except KeyError:
+    #         config = model_configs["gnn_ChessWorld-v1"]
+
+    config = model_configs[cur_config]
         # exp = "gcn"
 
     # print(config)
@@ -71,10 +77,7 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     training_status = model_store.load_training_status(map_location='cpu')
     model_store.load_vocab()
 
-    if gnn:
-        model = build_model_gnn(env, training_status, config)
-    else:
-        model = build_model(env, training_status, config)
+    model = build_model(env, training_status, config)
 
     props = set(env.get_propositions())
     search = ExhaustiveSearch(model, props, num_loops=2)
@@ -93,8 +96,8 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     env.reset(seed=seed)
 
     pbar = range(num_episodes)
-    # if not render:
-    #     pbar = tqdm(pbar)
+    if not render:
+        pbar = tqdm(pbar)
     for i in pbar:
         obs, info = env.reset(options=all_options[i]), {}
         # obs, info = env.initial_square_reset(), {}
@@ -122,13 +125,13 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
                     elif 'violation' in info:
                         num_violations += 1
                     rets.append(final_reward * gamma ** (num_steps - 1))
-                    # if not render:
-                    #     pbar.set_postfix({
-                    #         'S': num_successes / (i + 1),
-                    #         'V': num_violations / (i + 1),
-                    #         'ADR': np.mean(rets),
-                    #         'AS': np.mean(steps),
-                    #     })
+                    if not render:
+                        pbar.set_postfix({
+                            'S': num_successes / (i + 1),
+                            'V': num_violations / (i + 1),
+                            'ADR': np.mean(rets),
+                            'AS': np.mean(steps),
+                        })
                 else:
                     num_accepting_visits += info['num_accepting_visits']
                     if not render:
@@ -210,13 +213,13 @@ def simulate_faster(env, gamma, exp, seed, num_episodes, formula, finite, render
                     elif 'violation' in info:
                         num_violations += 1
                     rets.append(final_reward * gamma ** (num_steps - 1))
-                    # if not render:
-                    #     pbar.set_postfix({
-                    #         'S': num_successes / (i + 1),
-                    #         'V': num_violations / (i + 1),
-                    #         'ADR': np.mean(rets),
-                    #         'AS': np.mean(steps),
-                    #     })
+                    if not render:
+                        pbar.set_postfix({
+                            'S': num_successes / (i + 1),
+                            'V': num_violations / (i + 1),
+                            'ADR': np.mean(rets),
+                            'AS': np.mean(steps),
+                        })
                 else:
                     num_accepting_visits += info['num_accepting_visits']
                     if not render:

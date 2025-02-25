@@ -118,16 +118,16 @@ if __name__ == "__main__":
         "(G F (queen & bishop)) & (G F (rook & knight))",
         "F (G (! queen))",
         "(queen => F rook) U (pawn | (rook & knight & (F bishop)))",
-        "(G (F queen)) & (G ! pawn)"
+        "(G (F queen)) & (G ! pawn)",
     ]
 
     annoying_formulae = [
-        "(!(knight) U queen) & (!pawn U knight)",
+        "(!knight U queen) & (!pawn U knight)",
         "(!queen U pawn) & (! bishop U knight)",
         "(! rook U queen) & (! bishop U rook)",
         "(! pawn U knight) & (! rook U bishop)",
         "(! queen U bishop) & (! rook U pawn)"
     ]
 
-    for formula in annoying_formulae:
+    for formula in formulae + annoying_formulae:
         print_formulae_from_seqs(formula, inverse_vocab, context_maker, sample_vocab)

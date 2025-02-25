@@ -488,6 +488,46 @@ class ContextMaker:
 
         return at_least_k_interactions
 
+    def assignment_from_formula(self, formula):
+
+        def inorder(node):
+            if node.is_Atom:
+                try:
+                    return self.complete_var_assignments[str(node)]
+                except KeyError:
+                    if str(node) == "blank":
+                        return {15}
+                    else:
+                        return set([])
+
+            else:
+                if node.func == Or:
+                    return set.union(*[inorder(child) for child in node.args])
+                elif node.func == And:
+                    return set.intersection(*[inorder(child) for child in node.args])
+                elif node.func == Not:
+                    assert (len(node.args) == 1)
+                    return self.complete_assignment - inorder(node.args[0])
+                else:
+                    raise ValueError("Only [And, Or, Not] are acceptable operators")
+
+        return inorder(formula)
+
+    def check_cache_correctness(self):
+        count = 0
+        for tup, formula in self.cache.items():
+            tup_set = set(tup)
+
+            true_assignment = self.assignment_from_formula(formula)
+
+            try:
+                assert (tup_set.issubset(true_assignment) and true_assignment.issubset(tup_set))
+                count += 1
+            except AssertionError:
+                print(tup_set, true_assignment, formula)
+                return False
+        return count
+
 
 if __name__ == "__main__":
     sample_vocab = {0: 'PAD', 1: 'EPSILON', 2: 'NULL', 3: 'queen', 4: 'rook', 5: 'knight', 6: 'bishop', 7: 'pawn',
@@ -514,8 +554,8 @@ if __name__ == "__main__":
 
     context_maker.generate_cache()
 
-    for assignments, formula in context_maker.cache.items():
-        print(assignments, formula)
+    # for assignments, formula in context_maker.cache.items():
+    #     print(assignments, formula)
 
     # count_1 = 0
     # count_2 = 0
@@ -556,24 +596,39 @@ if __name__ == "__main__":
     for assignment in context_maker.cache.keys():
         d[len(assignment)] = d.get(len(assignment), 0) + 1
 
-    for i in range(13):
-        print(i, d[i])
+    """lens for each multiset size"""
+    # for i in range(13):
+    #     print(i, d[i])
 
-    print(len(context_maker.cache))
+    # print(len(context_maker.cache))
 
     # print(context_maker.formula_kinds)
     # print(context_maker.blank_formula_kinds)
 
-    print()
-    for name, name_d in context_maker.formula_kinds.items():
-        # other_name_d = context_maker.blank_formula_kinds[name]
+    """Print some lens utilities"""
+    # print()
+    # cur_count = 0
+    # for name, name_d in context_maker.formula_kinds.items():
+    #     # other_name_d = context_maker.blank_formula_kinds[name]
+    #
+    #     print(name)
+    #     # print(name_d)
+    #     # print(other_name_d)
+    #     #
+    #     # print()
+    #
+    #     for shape, cur_list in name_d["positive"].items():
+    #         if not isinstance(shape, tuple):
+    #             shape = tuple([shape])
+    #
+    #         # if all(x in [1, 2] for x in shape):
+    #         cur_count += len(cur_list)
+    #         print(shape, 2 * len(cur_list), cur_count, 2 * cur_count)
+    #     print()
+    #
+    # for assignment in context_maker.formula_kinds["or_x_and_y"]["positive"][(2, 1)]:
+    #     print(assignment, context_maker.cache[assignment])
 
-        print(name)
-        # print(name_d)
-        # print(other_name_d)
-        #
-        # print()
-
-        for shape, _ in name_d["positive"].items():
-            print(shape)
-        print()
+    final_count = context_maker.check_cache_correctness()
+    print("Cache length:", len(context_maker.cache))
+    print("Cache checked formulae:", final_count)

@@ -36,7 +36,7 @@ def read_tasks():
                 task_dict[line[:-1]] = []
                 cur_set = line[:-1]
             else:
-                name = line[:4]
+                name = line.split()[0]
                 task = re.search(r'\((.*)\)', line).group(0)
                 task_dict[cur_set].append((name, task))
 

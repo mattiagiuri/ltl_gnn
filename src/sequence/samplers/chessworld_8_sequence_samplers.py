@@ -11,6 +11,7 @@ props = set(chessworld.get_propositions())
 assignments = chessworld.get_possible_assignments()
 assignments.remove(Assignment.zero_propositions(chessworld.get_propositions()))
 all_assignments = [frozenset([a.to_frozen()]) for a in assignments]
+pieces_assignments = []
 
 
 def get_complete_piece_assignments(color: str) -> frozenset[FrozenAssignment]:
@@ -26,6 +27,7 @@ for piece in ['queen', 'rook', 'bishop', 'knight', 'pawn']:
     # print(piece)
     # print(complete_piece)
     all_assignments.append(complete_piece)
+    pieces_assignments.append(complete_piece)
 
 
 def chessworld8_all_reach_tasks(depth: int) -> Callable:
@@ -118,15 +120,18 @@ def chessworld8_sample_reach_avoid(
 
 def chessworld8_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
     def wrapper(propositions: list[str]) -> LDBASequence:
-        reach = random.choice(all_assignments)
-        # while len(p.get_true_propositions()) > 1:
-        #     p = random.choice(assignments)
+        nr = random.choice([1, 2])
+        reach = random.sample(pieces_assignments, nr)
+        reach_assignments = frozenset.union(*reach)
+
         na = random.randint(*num_avoid)
-        available = [a for a in all_assignments if a != reach and not reach.issubset(a)]
+        available = [a for a in all_assignments if a not in reach and all(not r.issubset(a) for r in reach)]
         avoid = random.sample(available, na)
         avoid = frozenset.union(*avoid) if len(avoid) > 0 else frozenset()
-        second_avoid = frozenset.union(*all_assignments).difference(reach).union({Assignment.zero_propositions(propositions).to_frozen()})
-        task = [(LDBASequence.EPSILON, avoid), (reach, second_avoid)]
+
+        second_avoid = frozenset.union(*all_assignments).difference(reach_assignments).union({Assignment.zero_propositions(propositions).to_frozen()})
+
+        task = [(LDBASequence.EPSILON, avoid), (reach_assignments, second_avoid)]
         return LDBASequence(task, repeat_last=num_stay)
 
     return wrapper

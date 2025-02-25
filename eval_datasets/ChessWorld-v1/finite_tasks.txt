@@ -1,0 +1,23 @@
+Reach
+R_1 (F (pawn & F(rook & F(knight))))
+R_2 (F ((rook&queen) & (F bishop)))
+R_3 (F (bishop & rook) & (F (bishop & knight)))
+Avoid 2
+A2_1 (!(pawn | bishop) U (bishop & rook)) good
+A2_2 (!(queen | pawn) U (rook & queen)) good
+A2_3 (!(bishop | pawn) U (rook & knight)) good
+A2_4 (!(pawn | knight) U (queen & rook) & (F pawn)) good
+A2_5 (!(bishop | rook) U (pawn) & (F knight)) good
+Avoid 3
+A3_1 (!(bishop | knight | pawn) U (rook & queen)) good
+A3_2 (!(knight | rook | bishop) U (rook & bishop)) alright
+A3_3 (!(bishop | pawn | rook) U (rook & queen)) good
+A3_4 (!(bishop | knight | queen) U (rook & queen)) good
+Reach Avoid General
+RA_1 (F (queen & (!knight U rook)))
+RA_2 (! (knight | rook) U bishop)
+RA_3 (! (bishop | knight) U queen)
+RA_4 (! (rook | bishop) U pawn)
+RA_5 ((!queen U pawn) & (! bishop U knight))
+RA_6 ((! queen U rook) & (!knight U queen))
+RA_7 ((!queen U pawn) & (! bishop U knight) & (!knight U rook))

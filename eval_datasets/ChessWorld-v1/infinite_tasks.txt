@@ -1,0 +1,19 @@
+Reach infinite hard
+RIH_1 (F (G bishop))
+RIH_2 (F (G queen))
+RIH_3 (F (G rook))
+RIH_4 (F (G pawn))
+RIH_5 (F (G knight))
+Reach infinite easier
+RIE_1 (F (G (queen | bishop)))
+RIE_2 (F (G (rook | queen)))
+RIE_3 (F (G (knight | pawn)))
+RIE_4 (F (G (bishop | knight)))
+RIE_5 (F (G (rook | pawn)))
+RIE_6 ((G (F knight)) & (G (F queen)))
+RIE_7 ((G (F pawn)) & (G (F rook)))
+Reach avoid infinite
+RAI_1 ((G (F bishop)) & (G (F knight)) & (G (! rook)))
+RAI_2 ((G (F rook)) & (G (F pawn)) & (G (! knight)))
+RAI_3 (F (G (bishop & !rook)))
+RAI_4 (F (G (knight & !bishop)))
