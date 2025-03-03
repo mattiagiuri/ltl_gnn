@@ -1,0 +1,3 @@
+,Deepsets (0.85),Deepsets (0.85),Deepsets (0.9),Deepsets (0.9),Deepsets (15M),Deepsets (15M),GCN (0.85),GCN (0.85),GCN (0.9),GCN (0.9),GCN (15M),GCN (15M),GCN (defrosted 25M),GCN (defrosted 25M)
+,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std,successes_mean,successes_std
+0,0.1560344827586207,0.1985361859270811,0.1689655172413793,0.2177880368915595,0.3517241379310344,0.2670132507945634,0.4767241379310344,0.25338229260723094,0.496551724137931,0.26984824202087865,0.4732758620689655,0.283408368278818,0.5051724137931035,0.2546301320773156

@@ -25,3 +25,4 @@ zones.pkl
 *.prof
 .ipynb_checkpoints/
 notes/
+quick_fix.py

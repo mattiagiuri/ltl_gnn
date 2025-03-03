@@ -23,7 +23,9 @@ model_configs = {
     'final_stay_ChessWorld-v1': chessworld_gnn_stay_fine,
     'big_stay_ChessWorld-v1': chessworld_gnn_big,
     'big_ChessWorld-v1': chessworld_gnn_big_frozen,
-    'big_sets_ChessWorld-v1': chessworld_deepsets_big
+    'big_sets_ChessWorld-v1': chessworld_deepsets_big,
+    'big_transformer_ChessWorld-v1': chessworld_transformer_big,
+    'frozen_transformer_ChessWorld-v1': chessworld_transformer_frozen
 }
 
 __all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'SetNetConfig', 'model_configs']

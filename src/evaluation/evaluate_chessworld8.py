@@ -235,9 +235,19 @@ if __name__ == "__main__":
     evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_fine', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_fine')
 
+    evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer')
+
+    evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finest', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finest')
+    #
     evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4')
 
     evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_fine',
                                   tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_fine')
+
+    evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest',
+                                  tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest')

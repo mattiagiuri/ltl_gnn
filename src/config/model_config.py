@@ -63,6 +63,7 @@ class ModelConfig:
     num_gnn_layers: int = 0
     freeze_gnn: bool = False
     stay_mode: bool = False
+    set_transformer: bool = False
 
 
 zones = ModelConfig(
@@ -431,4 +432,49 @@ chessworld_deepsets_big = ModelConfig(
         layers=[32, 32],
         activation=nn.ReLU
     ),
+)
+
+chessworld_transformer_big = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 32],
+        activation=nn.ReLU
+    ),
+    set_transformer=True
+)
+
+chessworld_transformer_frozen = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 32],
+        activation=nn.ReLU
+    ),
+    set_transformer=True,
+    freeze_gnn=True
 )

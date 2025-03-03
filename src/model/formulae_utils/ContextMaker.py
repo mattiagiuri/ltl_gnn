@@ -223,6 +223,7 @@ class ContextMaker:
 
                         if opposite_assignment_tup not in self.cache:
                             self.cache[opposite_assignment_tup] = Or(*[Not(positive_formula), negative_formula])
+                            # self.cache [opposite_assignment_tup] = Not(final_formula)
                             tot_added += 1
 
                             self.add_to_kinds_cache(opposite_assignment_tup, (r1, r2), name, "negative")
