@@ -478,3 +478,53 @@ chessworld_transformer_frozen = ModelConfig(
     set_transformer=True,
     freeze_gnn=True
 )
+
+chessworld_gnn_big_prop = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=False,
+    stay_mode=False
+)
+
+chessworld_gnn_big_frozen_prop = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=True,
+    stay_mode=False
+)

@@ -43,8 +43,10 @@ class Trainer:
             preprocessing.init_vocab(envs[0].get_possible_assignments())
             preprocessing.vocab.init_vars(envs[0].get_propositions())
 
-            if model_configs[self.args.model_config].stay_mode:
-                preprocessing.vocab.augment_vars()
+            preprocessing.vocab.augment_vars()
+
+            # if model_configs[self.args.model_config].stay_mode:
+            #     preprocessing.vocab.augment_vars()
 
             self.model_store.load_vocab()
         else:
@@ -52,8 +54,10 @@ class Trainer:
             preprocessing.init_vocab(envs[0].get_possible_assignments())
             preprocessing.vocab.init_vars(envs[0].get_propositions())
 
-            if model_configs[self.args.model_config].stay_mode:
-                preprocessing.vocab.augment_vars()
+            preprocessing.vocab.augment_vars()
+
+            # if model_configs[self.args.model_config].stay_mode:
+            #     preprocessing.vocab.augment_vars()
 
             self.model_store.save_vocab()
         # pretrained_model = self.load_pretrained_model()
@@ -66,7 +70,8 @@ class Trainer:
         model = build_model(envs[0], training_status, model_configs[self.args.model_config])
 
         if model_configs[self.args.model_config].freeze_gnn:
-            gnn_conf = torch.load("src/state_dicts/chess8_encoder_stay_2/ltl_net.pth")
+            # cur_seed = self.args.seed
+            gnn_conf = torch.load(f"src/state_dicts/chess8_formula_big_skip/2/ltl_net.pth")
             model.ltl_net.load_state_dict(gnn_conf)
             for param in model.ltl_net.parameters():
                 param.requires_grad = False

@@ -137,9 +137,55 @@ def chessworld8_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> 
     return wrapper
 
 
+def count_reach_avoid():
+    import itertools
+    import math
+
+    tot = 0
+
+    for nr_1 in [1, 2]:
+        first_reaches = itertools.combinations(all_assignments, nr_1)
+
+        if nr_1 == 2:
+            first_reaches = [(i, j) for i, j in first_reaches if not (i.issubset(j) or j.issubset(i))]
+
+        for last_reach in first_reaches:
+            available_avoid_first = [a for a in all_assignments if a not in last_reach]
+            available_avoid_first = [a for a in available_avoid_first if
+                                     not any([r.issubset(a) for r in last_reach])
+                                     ]
+
+            for na_1 in [0, 1, 2]:
+
+                c1 = math.comb(len(available_avoid_first), na_1)
+
+                # Count depth = 1
+                tot += c1
+
+                for nr_2 in [1, 2]:
+                    second_reaches = itertools.combinations(all_assignments, nr_2)
+
+                    if nr_2 == 2:
+                        second_reaches = [(i, j) for i, j in second_reaches if not (i.issubset(j) or j.issubset(i))]
+
+                    for reach in second_reaches:
+                        available = [a for a in all_assignments if a not in reach and a not in last_reach]
+                        available = [a for a in available if
+                                     not any([r.issubset(a) for r in reach])
+                                     and (len(last_reach) == 0 or not any(
+                                         [r.issubset(a) for r in last_reach]))]
+
+                        for na_2 in [0, 1, 2]:
+                            c2 = math.comb(len(available), na_2)
+                            tot += (c1 * c2)
+
+    return tot
+
+
 if __name__ == '__main__':
     print(all_assignments)
     print(len(all_assignments))
-    # print(chessworld_all_reach_tasks(2)(["a"]))
-    # print(chessworld_all_reach_avoid()())
+    print(len(chessworld8_all_reach_tasks(1)(["a"])))
+    print(len(chessworld8_all_reach_avoid()([])))
 
+    print(count_reach_avoid())

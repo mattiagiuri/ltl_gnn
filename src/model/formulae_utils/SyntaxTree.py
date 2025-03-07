@@ -81,9 +81,7 @@ class SyntaxTree:
 
         for assignment_set in assignment_set_seq:
             tup_assignment = tuple(sorted([i.item() for i in assignment_set
-                                           if i.item() not in [0, 1, 2,
-                                           len(self.assignment_vocab) - 1,
-                                           ]]))
+                                           if i.item() not in [0]]))
             # formula = Or(*[
             #     self.read_proposition(var.item())
             #     for var in assignment_set if var.item() not in [0, 1, 2, len(self.assignment_vocab)-1]
@@ -203,9 +201,7 @@ class SyntaxTree:
         def build_graph(reach_set):
             reach_tup = tuple(sorted([i.item() for i in reach_set
                                       if i.item() not in
-                                      [0, 1, 2,
-                                       len(self.assignment_vocab) - 1,
-                                       ]]))
+                                      [0]]))
 
             # if len(reach_tup) < 3:
             #     return self.in_mem_cache[reach_tup]

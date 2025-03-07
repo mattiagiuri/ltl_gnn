@@ -123,7 +123,12 @@ if __name__ == "__main__":
     ]
 
     annoying_formulae = [
-        "(!knight U queen) & (!pawn U knight)",
+        "!(rook | pawn | bishop) U (queen & !bishop)",
+        "!(bishop | queen) U (rook & !queen)",
+        "!(queen | knight) U (bishop & !knight)",
+        "!(rook | queen) U (pawn & !rook)",
+        "!(bishop | pawn | queen) U (knight & !bishop)"
+        # "(!knight U queen) & (!pawn U knight)",
     #     "(!queen U pawn) & (! bishop U knight)",
     #     "(! rook U queen) & (! bishop U rook)",
     #     "(! pawn U knight) & (! rook U bishop)",

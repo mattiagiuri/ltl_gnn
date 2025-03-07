@@ -281,6 +281,51 @@ def chessworld8_sample_formula_reach_stay(num_stay: int, num_avoid: tuple[int, i
     return wrapper
 
 
+def count_all_formulae():
+    tot = 0
+    tot += len(relevant_formulae_complex)**2
+    tot += len(relevant_formulae_simple)**2
+    tot += len(relevant_formulae_simple)
+    tot += len(relevant_formulae_complex)
+
+    datasets = [piece_avoid_dataset, ands_avoid_dataset]
+    for nr_1 in [1]:
+        if nr_1 == 1:
+            all_assignments = organized_formulae["and"]["positive"][2]
+        else:
+            all_assignments = organized_formulae["or_x_and_y"]["positive"][(nr_1, 1)]
+        all_assignments = [(1, x) for x in all_assignments]
+
+        all_assignments += [(0, x) for x in organized_formulae["or"]["positive"][nr_1]]
+
+        for i, last_reach in all_assignments:
+            # reach_assignment = datasets[i][nr_1][last_reach][last_reach]
+            lra = datasets[i][nr_1][last_reach][last_reach]
+            for na_1 in range(1, 4 - nr_1):
+
+                available_avoid = datasets[i][nr_1][last_reach][na_1]
+                tot += len(available_avoid)
+
+                for nr_2 in [1]:
+                    if nr_2 == 1:
+                        all_assignments_2 = organized_formulae["and"]["positive"][2]
+                    else:
+                        all_assignments_2 = organized_formulae["or_x_and_y"]["positive"][(nr_2, 1)]
+                    all_assignments_2 = [(1, x) for x in all_assignments_2]
+
+                    all_assignments_2 += [(0, x) for x in organized_formulae["or"]["positive"][nr_2]]
+
+                    for j, reach in all_assignments_2:
+                        for na_2 in range(1, 4 - nr_2):
+                            available_avoid_2 = datasets[j][nr_2][reach][na_2]
+
+                            if len(list(last_reach)) > 0:
+                                available_avoid_2 = [x for x in available_avoid_2 if not lra.issubset(x)]
+
+                            tot += len(available_avoid) * len(available_avoid_2)
+
+    return tot
+
 
 if __name__ == "__main__":
     print(actual_assignments_vocab)
@@ -298,3 +343,10 @@ if __name__ == "__main__":
 
     for piece, dk in piece_avoid_dataset[2].items():
         print(piece, dk)
+
+    print(len(final_relevant_formulae_simple))
+    print(len(final_relevant_formulae_complex))
+    print(len(organized_formulae["or_x_and_not_ny"]["positive"][(2, 2, 1)]))
+    print(len(organized_formulae["or_x_and_not_ny"]["positive"][(2, 2, 2)]))
+
+    print(count_all_formulae())
