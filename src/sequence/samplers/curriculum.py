@@ -759,7 +759,7 @@ PRETRAINING_CHESSWORLD8_FORMULA = Curriculum([
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=chessworld8_sample_formula_reach_stay(10, (1, 2)),
+                sampler=chessworld8_sample_formula_reach_stay(5, (1, 2)),
                 threshold=None,
                 threshold_type=None
             ),

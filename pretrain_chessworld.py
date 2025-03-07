@@ -44,7 +44,7 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--epochs', '2',
-            '--num_steps', '6_000_000', # 6_000_000
+            '--num_steps', '600_000', # 6_000_000
             '--model_config', 'big_stay_ChessWorld-v1',
             '--curriculum', 'pretraining_formula_ChessWorld-v1',
             '--name', args.name,
@@ -64,7 +64,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name gcn_formula_big_skip --seed 2 --log_csv false --save'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name gcn_formula_big_skip_p --seed 5 --log_csv false --save'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
