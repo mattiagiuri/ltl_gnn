@@ -44,7 +44,7 @@ def read_tasks(tasks_path=tasks_path):
     return task_dict
 
 
-def evaluate_chessworld8_gnn(cur_config, save=False, exp_gnn=exp_gnn, tasks=tasks_path):
+def evaluate_chessworld8_gnn(cur_config, save=False, exp_gnn=exp_gnn, tasks=tasks_path, seed=seed):
     global init_voc
     task_list = read_tasks(tasks)
     results = {"Task Set": [], "Task ID": [], "Successes x/29": [], "Avg Steps": [], "Avg Discounted Return": []}
@@ -66,12 +66,15 @@ def evaluate_chessworld8_gnn(cur_config, save=False, exp_gnn=exp_gnn, tasks=task
     df_results.set_index(["Task Set", "Task ID"], inplace=True)
 
     if save:
-        df_results.to_csv("results_chessworld/ChessWorld-v1/" + env + "_" + exp_gnn + ".csv")
+        dir_name = "results_chessworld/ChessWorld-v1/" + str(seed)
+        os.makedirs(dir_name, exist_ok=True)
+
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_gnn + ".csv")
 
     return df_results
 
 
-def evaluate_chessworld8_gnn_infinite(cur_config, save=False, exp_gnn=exp_gnn):
+def evaluate_chessworld8_gnn_infinite(cur_config, save=False, exp_gnn=exp_gnn, seed=seed):
     global init_voc
     task_list = read_tasks("eval_datasets/ChessWorld-v1/infinite_tasks.txt")
     results = {"Task Set": [], "Task ID": [], "Accepting visits": []}
@@ -92,12 +95,15 @@ def evaluate_chessworld8_gnn_infinite(cur_config, save=False, exp_gnn=exp_gnn):
     df_results.set_index(["Task Set", "Task ID"], inplace=True)
 
     if save:
-        df_results.to_csv("results_chessworld/ChessWorld-v1/" + env + "_" + exp_gnn + "_inf.csv")
+        dir_name = "results_chessworld/ChessWorld-v1/" + str(seed)
+        os.makedirs(dir_name, exist_ok=True)
+
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_gnn + "_inf.csv")
 
     return df_results
 
 
-def evaluate_chessworld8_deepsets(cur_config, save=False, exp_deepsets=exp_deepsets, tasks=tasks_path):
+def evaluate_chessworld8_deepsets(cur_config, save=False, exp_deepsets=exp_deepsets, tasks=tasks_path, seed=seed):
     task_list = read_tasks(tasks)
     results = {"Task Set": [], "Task ID": [], "Successes x/29": [], "Avg Steps": [], "Avg Discounted Return": []}
 
@@ -116,12 +122,15 @@ def evaluate_chessworld8_deepsets(cur_config, save=False, exp_deepsets=exp_deeps
     df_results.set_index(["Task Set", "Task ID"], inplace=True)
 
     if save:
-        df_results.to_csv("results_chessworld/ChessWorld-v1/" + env + "_" + exp_deepsets + ".csv")
+        dir_name = "results_chessworld/ChessWorld-v1/" + str(seed)
+        os.makedirs(dir_name, exist_ok=True)
+
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_deepsets + ".csv")
 
     return df_results
 
 
-def evaluate_chessworld8_deepsets_infinite(cur_config, save=False, exp_deepsets=exp_deepsets):
+def evaluate_chessworld8_deepsets_infinite(cur_config, save=False, exp_deepsets=exp_deepsets, seed=seed):
     task_list = read_tasks("eval_datasets/ChessWorld-v1/infinite_tasks.txt")
     results = {"Task Set": [], "Task ID": [], "Accepting visits": []}
 
@@ -138,7 +147,10 @@ def evaluate_chessworld8_deepsets_infinite(cur_config, save=False, exp_deepsets=
     df_results.set_index(["Task Set", "Task ID"], inplace=True)
 
     if save:
-        df_results.to_csv("results_chessworld/ChessWorld-v1/" + env + "_" + exp_deepsets + "_inf.csv")
+        dir_name = "results_chessworld/ChessWorld-v1/" + str(seed)
+        os.makedirs(dir_name, exist_ok=True)
+
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_deepsets + "_inf.csv")
 
     return df_results
 
@@ -229,25 +241,44 @@ if __name__ == "__main__":
     # evaluate_chessworld8_deepsets_nondet(True, exp_deepsets_prop)
     # evaluate_chessworld8_gnn_nondet(True)
 
-    evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6')
-
-    evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_fine', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
-    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_fine')
-
-    evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
-    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer')
-
-    evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finest', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
-    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finest')
     #
-    evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_fine', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_fine')
+    #
+    # evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer')
+    #
+    # evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finest', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finest')
+    # #
+    # evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4', tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4')
-
-    evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_fine',
-                                  tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    #
+    # evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_fine',
+    #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_fine')
-
-    evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest',
-                                  tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
+    #
+    # evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest',
+    #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest')
+
+    for cur_seed in range(1, 6):
+        # print(cur_seed)
+        # print("deepsets")
+        # evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest',
+        #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
+        # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest', seed=cur_seed)
+        #
+        # print("gnn")
+        #
+        # evaluate_chessworld8_gnn('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer',
+        #                          tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
+        # evaluate_chessworld8_gnn_infinite('big_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer', seed=cur_seed)
+
+        print("transformer")
+        evaluate_chessworld8_deepsets('big_transformer_ChessWorld-v1', True, 'transformer_stay',
+                                      tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
+        evaluate_chessworld8_deepsets_infinite('big_transformer_ChessWorld-v1', True, 'transformer_stay',
+                                               seed=cur_seed)

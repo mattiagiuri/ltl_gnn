@@ -31,11 +31,11 @@ class SetTransformer(nn.Module):
 
         # x_with_cls = torch.cat([cls_tokens, x], dim=2)
         x_reshaped = x.reshape(batch_size * seqs_length, set_sizes, final_dim)
-        x_reshaped = self.ln2(x_reshaped)
+        x_reshaped = self.ln1(x_reshaped)
 
         attn_output, _ = self.mhsa(x_reshaped, x_reshaped, x_reshaped)
         attn_output = x_reshaped + attn_output
-        attn_output = self.ln1(attn_output)
+        attn_output = self.ln2(attn_output)
 
         ff_output = self.ff(attn_output)
         ff_output = attn_output + ff_output

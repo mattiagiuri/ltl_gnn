@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import json
 import os
 import subprocess
 import sys
@@ -7,7 +6,7 @@ from dataclasses import dataclass
 import simple_parsing
 import wandb
 
-from src.utils.utils import kill_all_wandb_processes
+from utils import kill_all_wandb_processes
 
 
 @dataclass
@@ -15,12 +14,11 @@ class Args:
     name: str
     seed: int | list[int]
     device: str
-    num_procs: int
+    num_procs: int = 16
     log_csv: bool = True
     log_wandb: bool = False
     save: bool = True
-
-# TODO: ask about what happens in each of the 3, Flatword seems normal, LetterEnv has a warning, Zones I modified actor
+    curriculum: str = 'stay_ChessWorld-v1'
 
 
 def main():
@@ -28,25 +26,22 @@ def main():
     env = os.environ.copy()
     env['PYTHONPATH'] = 'src/'
     seeds = args.seed if isinstance(args.seed, list) else [args.seed]
-    underlyings = ["FlatWorld-v0", "PointLtl2-v0", "LetterEnv-v0"]
-    underlying = underlyings[0]
+    curriculum = args.curriculum
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
-            '--env', 'pretraining_ChessWorld-v1',
-            '--steps_per_process', '512', # 512
-            '--batch_size', '4096', # 1024
-            '--lr', '0.001',
-            '--entropy_coef', '0.0',
-            '--discount', '0.5',
-            '--clip_eps', '0.1',
-            '--gae_lambda', '0.5',
+            '--env', 'ChessWorld-v1',
+            '--steps_per_process', '2048',  # 1024
+            '--epochs', '10',
+            '--batch_size', '4096',  # 64
+            '--discount', '0.98',
+            '--gae_lambda', '0.95',
+            '--entropy_coef', '0.003',  # 0.003
             '--log_interval', '1',
             '--save_interval', '1',
-            '--epochs', '2',
-            '--num_steps', '2_000_000', # 6_000_000
-            '--model_config', 'big_transformer_ChessWorld-v1',
-            '--curriculum', 'pretraining_formula_ChessWorld-v1',
+            '--num_steps', '15_000_000',
+            '--model_config', 'frozen_transformer_ChessWorld-v1',
+            '--curriculum', curriculum,
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -64,11 +59,12 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 16 --device cpu --name pre_transformer_formula --seed 5 --log_csv false --save'.split(' ')
+        # change --name tmp to --name whatever_i_want
+        sys.argv += '--num_procs 16 --device cpu --name pre_transformer_formula --seed 1 --log_csv false --save true --curriculum formula_ChessWorld-v1'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
         print('Interrupted!')
         wandb.finish()
-        kill_all_wandb_processes()
+        # kill_all_wandb_processes()
         sys.exit(0)
