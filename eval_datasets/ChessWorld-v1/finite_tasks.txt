@@ -6,8 +6,9 @@ Avoid 2
 A2_1 (!(pawn | bishop) U (bishop & rook)) good
 A2_2 (!(queen | pawn) U (rook & queen)) good
 A2_3 (!(bishop | pawn) U (rook & knight)) good
-A2_4 (!(pawn | knight) U (queen & rook) & (F pawn)) good
-A2_5 (!(bishop | rook) U (pawn) & (F knight)) good
+A2_4 (! (knight | rook) U bishop)
+A2_5 (! (bishop | knight) U queen)
+A2_6 (! (rook | bishop) U pawn)
 Avoid 3
 A3_1 (!(bishop | knight | pawn) U (rook & queen)) good
 A3_2 (!(knight | rook | bishop) U (rook & bishop)) alright
@@ -20,23 +21,23 @@ A4_3 (!(bishop | rook | pawn | queen) U (knight))
 A4_4 (!(bishop | knight | pawn | queen) U (rook))
 A4_5 (!(rook | knight | pawn | queen) U (bishop))
 Avoid 5
-A4_1 (!(bishop | rook | knight | pawn | queen) U (queen & pawn))
-A4_2 (!(bishop | rook | knight | queen | pawn) U (pawn & rook))
-A4_3 (!(bishop | rook | pawn | queen | knight) U (knight & bishop))
-A4_4 (!(bishop | knight | pawn | queen | rook) U (rook & knight))
-A4_5 (!(rook | knight | pawn | queen | bishop) U (bishop & queen))
-A4_6 (!(rook | knight | pawn | queen | bishop) U (rook & queen))
+A5_1 (!(bishop | rook | knight | pawn | queen) U (queen & pawn))
+A5_2 (!(bishop | rook | knight | queen | pawn) U (pawn & rook))
+A5_3 (!(bishop | rook | pawn | queen | knight) U (knight & bishop))
+A5_4 (!(bishop | knight | pawn | queen | rook) U (rook & knight))
+A5_5 (!(rook | knight | pawn | queen | bishop) U (bishop & queen))
+A5_6 (!(rook | knight | pawn | queen | bishop) U (rook & queen))
 Reach Avoid General
 RA_1 (F (queen & (!knight U rook)))
-RA_2 (! (knight | rook) U bishop)
-RA_3 (! (bishop | knight) U queen)
-RA_4 (! (rook | bishop) U pawn)
+RA_2 (!(pawn | knight) U (queen & rook) & (F pawn)) good
+RA_3 (!(bishop | rook) U (pawn) & (F knight)) good
+RA_4 (F (rook & (!bishop U pawn)))
 RA_5 ((!queen U pawn) & (! bishop U knight))
 RA_6 ((! queen U rook) & (!knight U queen))
 RA_7 ((!queen U pawn) & (! bishop U knight) & (!knight U rook))
 Reach Avoid X and not Y
-RXNY_1 (!(rook | bishop) U (queen & !bishop))
-RXNY_2 (!(bishop | queen) U (rook & !pawn))
-RXNY_3 (!(queen | knight) U (bishop & !knight))
-RXNY_4 (!(rook | knight) U (bishop & !queen))
-RXNY_5 !(pawn | queen) U (knight & !bishop)
+RXNY_1 (!(rook | bishop | pawn) U (knight & !rook))
+RXNY_2 (!(queen) U (bishop & !pawn))
+RXNY_3 (!(bishop | knight) U (queen & !knight))
+RXNY_4 (!(rook | knight | queen | pawn) U (bishop & !queen))
+RXNY_5 (!(pawn | queen | rook | knight | bishop) U (rook & !bishop))

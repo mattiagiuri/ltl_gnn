@@ -127,7 +127,9 @@ if __name__ == "__main__":
         "!(bishop | queen) U (rook & !queen)",
         "!(queen | knight) U (bishop & !knight)",
         "!(rook | queen) U (pawn & !rook)",
-        "!(bishop | pawn | queen) U (knight & !bishop)"
+        "!(bishop | pawn | queen) U (knight & !bishop)",
+        # "((rook => F bishop) & (!(queen | knight | pawn) U (bishop & rook )))",
+        "F ((queen & !pawn) & (queen U pawn))"
         # "(!knight U queen) & (!pawn U knight)",
     #     "(!queen U pawn) & (! bishop U knight)",
     #     "(! rook U queen) & (! bishop U rook)",

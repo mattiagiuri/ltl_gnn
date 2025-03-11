@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+import pickle
 import gymnasium as gym
 import gymnasium.spaces as spaces
 
@@ -187,6 +188,13 @@ class ChessWorld8(gym.Env):
     @staticmethod
     def render(trajectory: list[np.ndarray] = None, ax=None):
         pass
+
+    def load_world_info(self, world_info):
+        self.agent_pos = np.array(world_info)
+
+    def save_world_info(self, path):
+        with open(path, 'wb') as file:
+            pickle.dump(tuple(self.agent_pos), file)
 
 
 def hide_ticks(axis):
