@@ -124,10 +124,14 @@ def chessworld8_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> 
         reach = random.sample(pieces_assignments, nr)
         reach_assignments = frozenset.union(*reach)
 
-        na = random.randint(*num_avoid)
-        available = [a for a in all_assignments if a not in reach and all(not r.issubset(a) for r in reach)]
-        avoid = random.sample(available, na)
-        avoid = frozenset.union(*avoid) if len(avoid) > 0 else frozenset()
+        # na = random.randint(*num_avoid)
+        # available = [a for a in all_assignments if a not in reach and all(not r.issubset(a) for r in reach)]
+        # avoid = random.sample(available, na)
+        # avoid = frozenset.union(*avoid) if len(avoid) > 0 else frozenset()
+
+        # avoid = frozenset.union(*all_assignments).difference(reach_assignments)
+        na = random.choice([1, 2, 3, 4])
+        avoid = frozenset.union(*random.sample(pieces_assignments, na)).difference(reach_assignments)
 
         second_avoid = frozenset.union(*all_assignments).difference(reach_assignments).union({Assignment.zero_propositions(propositions).to_frozen()})
 

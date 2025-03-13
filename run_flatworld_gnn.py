@@ -38,8 +38,8 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--num_steps', '15_000_000',
-            '--model_config', 'FlatWorld-v0',
-            '--curriculum', 'stay_FlatWorld-v0',
+            '--model_config', 'frozen_gnn_FlatWorld-v0',
+            '--curriculum', 'formula_FlatWorld-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -58,7 +58,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
         # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name deepsets_stay --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name gcn_big_skip_formula --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

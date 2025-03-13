@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import json
 import os
 import subprocess
 import sys
@@ -6,7 +7,7 @@ from dataclasses import dataclass
 import simple_parsing
 import wandb
 
-from utils import kill_all_wandb_processes
+from src.utils.utils import kill_all_wandb_processes
 
 
 @dataclass
@@ -14,10 +15,12 @@ class Args:
     name: str
     seed: int | list[int]
     device: str
-    num_procs: int = 16
+    num_procs: int
     log_csv: bool = True
     log_wandb: bool = False
     save: bool = True
+
+# TODO: ask about what happens in each of the 3, Flatword seems normal, LetterEnv has a warning, Zones I modified actor
 
 
 def main():
@@ -25,21 +28,25 @@ def main():
     env = os.environ.copy()
     env['PYTHONPATH'] = 'src/'
     seeds = args.seed if isinstance(args.seed, list) else [args.seed]
+    underlyings = ["FlatWorld-v0", "PointLtl2-v0", "LetterEnv-v0"]
+    underlying = underlyings[0]
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
-            '--env', 'FlatWorld-v0',
-            '--steps_per_process', '4096',  # 4096
-            '--epochs', '10',
-            '--batch_size', '4096',  # 2048
-            '--discount', '0.98',
-            '--gae_lambda', '0.95',
-            '--entropy_coef', '0.003',  # 0.003
+            '--env', 'pretraining_FlatWorld-v0',
+            '--steps_per_process', '1024', # 512
+            '--batch_size', '2048', # 1024
+            '--lr', '0.001',
+            '--entropy_coef', '0.0',
+            '--discount', '0.5',
+            '--clip_eps', '0.1',
+            '--gae_lambda', '0.5',
             '--log_interval', '1',
             '--save_interval', '1',
-            '--num_steps', '15_000_000',
-            '--model_config', 'FlatWorld-v0',
-            '--curriculum', 'stay_FlatWorld-v0',
+            '--epochs', '2',
+            '--num_steps', '600_000', # 6_000_000
+            '--model_config', 'big_gnn_FlatWorld-v0',
+            '--curriculum', 'pretraining_formula_FlatWorld-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -57,12 +64,11 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name deepsets_stay --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 8 --device cpu --name gcn_formula_skip_big --seed 2 --log_csv false --save'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
         print('Interrupted!')
         wandb.finish()
-        # kill_all_wandb_processes()
+        kill_all_wandb_processes()
         sys.exit(0)

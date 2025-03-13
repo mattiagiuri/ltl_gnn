@@ -175,31 +175,6 @@ pretraining_flatworld = ModelConfig(
 )
 
 
-flatworld_gnn = ModelConfig(
-    actor=ActorConfig(
-        layers=[64, 64, 64],
-        activation=nn.ReLU,
-    ),
-    critic=StandardNetConfig(
-        layers=[64, 64],
-        activation=nn.ReLU
-    ),
-    ltl_embedding_dim=16,
-    num_rnn_layers=1,
-    env_net=StandardNetConfig(
-        layers=[16, 16],
-        activation=nn.ReLU
-    ),
-    set_net=SetNetConfig(
-        layers=[32, 16],
-        activation=nn.ReLU
-    ),
-    gnn_mode=True,
-    num_gnn_layers=2,
-    freeze_gnn=True
-)
-
-
 chessworld = ModelConfig(
     actor=ActorConfig(
         layers=[64, 64, 64],
@@ -527,4 +502,125 @@ chessworld_gnn_big_frozen_prop = ModelConfig(
     num_gnn_layers=3,
     freeze_gnn=True,
     stay_mode=False
+)
+
+flatworld_gnn_big_frozen = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=True,
+    stay_mode=True
+)
+
+flatworld_gnn_big = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=False,
+    stay_mode=True
+)
+
+flatworld_deepsets_big = ModelConfig(
+    actor=ActorConfig(
+        layers=[128, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[128, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=32,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 32],
+        activation=nn.ReLU
+    )
+)
+
+flatworld_gnn = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[16, 16],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=False,
+    stay_mode=True
+)
+
+frozen_flatworld_gnn = ModelConfig(
+    actor=ActorConfig(
+        layers=[64, 64, 64],
+        activation=nn.ReLU,
+    ),
+    critic=StandardNetConfig(
+        layers=[64, 64],
+        activation=nn.ReLU
+    ),
+    ltl_embedding_dim=16,
+    num_rnn_layers=1,
+    env_net=StandardNetConfig(
+        layers=[16, 16],
+        activation=nn.ReLU
+    ),
+    set_net=SetNetConfig(
+        layers=[32, 16],
+        activation=nn.ReLU
+    ),
+    gnn_mode=True,
+    num_gnn_layers=3,
+    freeze_gnn=False,
+    stay_mode=True
 )

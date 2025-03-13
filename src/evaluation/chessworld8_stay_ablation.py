@@ -6,7 +6,7 @@ from config import model_configs
 from envs.chessworld import ChessWorld, ChessWorld8
 # from evaluation.evaluate_chessworld import evaluate_chessworld_deepsets, evaluate_chessworld_gnn
 from generate_formula_assignments import all_simple_reach_avoid
-from evaluation.simulate import simulate, simulate_faster
+from evaluation.simulate import simulate, simulate_faster, simulate_all
 import numpy as np
 
 from model.model import build_model_gnn, build_model
@@ -102,7 +102,7 @@ def avoid_x(x):
 
 def evaluate_chessworld(task, exp_thing, is_gnn, cur_config, seed=seed):
     global init_voc
-    successes, avg_steps, adr = simulate(env_name, gamma, exp_thing, seed, num_episodes, task, finite,
+    successes, avg_steps, adr = simulate_all(env_name, gamma, exp_thing, seed, num_episodes, task, finite,
                                          render, deterministic, is_gnn, cur_config, init_voc=init_voc)
 
     if init_voc:
@@ -113,11 +113,13 @@ def evaluate_chessworld(task, exp_thing, is_gnn, cur_config, seed=seed):
 
 def chessworld8_many_ablation(models_keys, models_names, is_gnns, cur_configs, seed=1, size_range=range(1, 6)):
 
-    results_dict = {k: {"successes_mean": [], "successes_std": []}
-                    for k in models_keys}
+    # results_dict = {k: {"successes_mean": [], "successes_std": []}
+    #                 for k in models_keys}
+
+    results_dict = {k: {"successes_mean": []} for k in models_keys}
 
     df_index = list(size_range)
-    parent = "chessworld8_ablation/stay_models/" + str(seed)
+    parent = "chessworld8_ablation/stay_update/" + str(seed)
     os.makedirs(parent, exist_ok=True)
 
     for size in size_range:
@@ -126,14 +128,16 @@ def chessworld8_many_ablation(models_keys, models_names, is_gnns, cur_configs, s
         for key, exp_thing, is_gnn, cur_config in zip(models_keys, models_names, is_gnns, cur_configs):
             cur_successes = []
 
-            for formula in all_formulae:
-                cur_successes.append(evaluate_chessworld(formula, exp_thing, is_gnn, cur_config, seed=seed))
+            # for formula in all_formulae:
+            #     cur_successes.append(evaluate_chessworld(formula, exp_thing, is_gnn, cur_config, seed=seed))
 
-            mean = np.mean(cur_successes) / num_episodes
-            std = np.std(cur_successes) / num_episodes
+            mean = evaluate_chessworld(all_formulae, exp_thing, is_gnn, cur_config, seed=seed)
+
+            # mean = np.mean(cur_successes) / num_episodes
+            # std = np.std(cur_successes) / num_episodes
 
             results_dict[key]["successes_mean"].append(mean)
-            results_dict[key]["successes_std"].append(std)
+            # results_dict[key]["successes_std"].append(std)
 
         df_list = [pd.DataFrame({metric: [val[-1]] for metric, val in cur_db.items()})
                    for _, cur_db in results_dict.items()]
@@ -152,22 +156,29 @@ def chessworld8_many_ablation(models_keys, models_names, is_gnns, cur_configs, s
 
 if __name__ == "__main__":
 
-    keys_new = ['Deepsets (0.85)', 'Deepsets (0.9)', 'Deepsets (15M)',
-                'GCN (0.85)', 'GCN (0.9)', 'GCN (15M)',
-                'GCN (defrosted 25M)']
+    # keys_new = ['Deepsets (0.85)', 'Deepsets (0.9)', 'Deepsets (15M)',
+    #             'GCN (0.85)', 'GCN (0.9)', 'GCN (15M)',
+    #             'GCN (defrosted 25M)']
+
+    keys_new = ['Deepsets (large avoid)',
+                'Deepsets (15M)',
+                 'GCN (15M)',
+                ]
 
     model_names = [
-        'deepsets_stay_update_4',
-        'deepsets_stay_update_4_fine',
+        'deepsets_trial_4',
+        # 'deepsets_stay_update_4',
+        # 'deepsets_stay_update_4_fine',
         'deepsets_stay_update_4_finest',
-        'gcn_formula_big_skip_6',
-        'gcn_formula_big_skip_6_fine',
+        # 'gcn_formula_big_skip_6',
+        # 'gcn_formula_big_skip_6_fine',
         'gcn_formula_big_skip_6_finer',
-        'gcn_formula_big_skip_6_finest'
+        # 'gcn_formula_big_skip_6_finest'
     ]
 
-    cur_configs = ["big_sets_ChessWorld-v1"]*3 + ["big_ChessWorld-v1"]*4
+    cur_configs = ["big_sets_ChessWorld-v1"]*2 + ["big_ChessWorld-v1"]*1
 
-    is_gcn = [False]*3 + [True]*4
+    is_gcn = [False]*2 + [True]*1
 
-    chessworld8_many_ablation(keys_new, model_names, is_gcn, cur_configs)
+    for seed in range(5, 6):
+        chessworld8_many_ablation(keys_new, model_names, is_gcn, cur_configs, seed=seed)

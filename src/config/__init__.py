@@ -5,7 +5,7 @@ from .model_config import *
 model_configs = {
     'PointLtl2-v0': zones,
     'LetterEnv-v0': letter,
-    'FlatWorld-v0': flatworld_gnn,
+    'FlatWorld-v0': flatworld,
     # "pretraining_PointLtl2-v0": pretraining_zones,
     # "pretraining_LetterEnv-v0": pretraining_letter,
     'pretraining_FlatWorld-v0': pretraining_flatworld,
@@ -27,7 +27,12 @@ model_configs = {
     'big_transformer_ChessWorld-v1': chessworld_transformer_big,
     'frozen_transformer_ChessWorld-v1': chessworld_transformer_frozen,
     'big_prop_ChessWorld-v1': chessworld_gnn_big_prop,
-    'frozen_big_prop_ChessWorld-v1': chessworld_gnn_big_frozen_prop
+    'frozen_big_prop_ChessWorld-v1': chessworld_gnn_big_frozen_prop,
+    'big_gnn_FlatWorld-v0': flatworld_gnn_big,
+    'frozen_big_gnn_FlatWorld-v0': flatworld_gnn_big_frozen,
+    'big_deepsets_FlatWorld-v0': flatworld_deepsets_big,
+    'gnn_FlatWorld-v0': flatworld_gnn,
+    'frozen_gnn_FlatWorld-v0': frozen_flatworld_gnn
 }
 
 __all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'SetNetConfig', 'model_configs']
