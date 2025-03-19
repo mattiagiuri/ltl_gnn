@@ -1,0 +1,6 @@
+Reach Avoid General
+RA_1 (F ((red & magenta) & F ((blue & green) & F yellow)))
+RA_2 (F (orange & (!red U magenta)))
+RA_3 ((!red U (green & blue & aqua)) & F (orange & (F (red  &magenta))))
+RA_4 (((!yellow & !orange) U (green & blue)) & (!green U magenta))
+RA_5 ((blue => F magenta) U (yellow | ((green & blue) & F orange)))

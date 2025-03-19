@@ -1,1 +1,0 @@
-F ((aqua | yellow) & F ((magenta | green) & F (blue | (blue & green) | (blue & green & aqua))))

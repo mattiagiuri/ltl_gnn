@@ -1,0 +1,12 @@
+(!(orange | blue | aqua | green | magenta | yellow) U red)
+(!(orange | aqua | green | red | magenta | yellow) U blue)
+(!(orange | blue | green | red | magenta | yellow) U aqua)
+Reach Stay Training
+RST_1 (F (G red))
+RST_2 (F (G yellow))
+RST_3 (F (G (green & blue)))
+RST_4 (F (G (orange)))
+Reach Infinite General
+RIG_1 ((G (F magenta)) & (G (F orange)))
+RIG_2 ((G (F (blue & aqua))) & (G (F (yellow))))
+RIG_3 ((G (F (blue))) & (G (F red)) & (G (! green)))

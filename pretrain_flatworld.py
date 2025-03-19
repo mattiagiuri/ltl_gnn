@@ -34,8 +34,8 @@ def main():
         command = [
             'python', 'src/train/train_ppo.py',
             '--env', 'pretraining_FlatWorld-v0',
-            '--steps_per_process', '1024', # 512
-            '--batch_size', '2048', # 1024
+            '--steps_per_process', '2048', # 512
+            '--batch_size', '4096', # 1024
             '--lr', '0.001',
             '--entropy_coef', '0.0',
             '--discount', '0.5',
@@ -44,9 +44,9 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--epochs', '2',
-            '--num_steps', '600_000', # 6_000_000
-            '--model_config', 'big_gnn_FlatWorld-v0',
-            '--curriculum', 'pretraining_formula_FlatWorld-v0',
+            '--num_steps', '2_000_000', # 6_000_000
+            '--model_config', 'gnn_FlatWorld-v0',
+            '--curriculum', 'pretraining_update_FlatWorld-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -64,7 +64,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 8 --device cpu --name gcn_formula_skip_big --seed 2 --log_csv false --save'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name gcn_update_2 --seed 1 --log_csv false --save'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

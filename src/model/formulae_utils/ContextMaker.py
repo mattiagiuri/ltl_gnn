@@ -285,8 +285,8 @@ class ContextMaker:
             for r2 in range(2, y + 1):
                 positive_tuples = list(combinations(self.true_vars, r1))
 
-                if r2 > r1:
-                    continue
+                # if r2 > r1:
+                #     continue
 
                 for pos_tup in positive_tuples:
                     positive_formula = Or(*[self.sympy_vars[var] for var in pos_tup])
@@ -540,6 +540,17 @@ if __name__ == "__main__":
 
     context_maker = ContextMaker(sample_vocab, var_names, true_vars)
 
+    sample_voc_2 = {0: 'PAD', 1: 'EPSILON', 2: 'NULL', 3: 'red', 4: 'magenta', 5: 'magenta&red', 6: 'blue', 7: 'green',
+                    8: 'aqua', 9: 'green&blue', 10: 'green&aqua', 11: 'aqua&blue', 12: 'green&aqua&blue', 13: 'yellow',
+                    14: 'orange', 15: 'blank'}
+
+    var_names_2 = ['aqua', 'blue', 'green', 'magenta', 'orange', 'red', 'yellow', 'EPSILON', 'NULL', 'blank']
+    true_vars_2 = ['aqua', 'blue', 'green', 'magenta', 'orange', 'red', 'yellow']
+
+    cm_2 = ContextMaker(sample_voc_2, var_names_2, true_vars_2)
+    cm_2.generate_cache()
+
+
     # for i, context in context_maker.contexts.items():
     #     print(sample_vocab[i] + ": " + str(context))
 
@@ -633,3 +644,8 @@ if __name__ == "__main__":
     final_count = context_maker.check_cache_correctness()
     print("Cache length:", len(context_maker.cache))
     print("Cache checked formulae:", final_count)
+
+    for x, y in cm_2.cache.items():
+        print(x, y)
+
+    print(cm_2.make_formula((6, 7, 9, 10, 11)))

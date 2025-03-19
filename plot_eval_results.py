@@ -1,6 +1,34 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
+def plot_results(env, exp_list, labels, colors, seed_list=None):
+
+    if seed_list is None:
+        seed_list = [list(range(1, 6)) for _ in range(len(exp_list))]
+
+    for i, (exp, seeds) in enumerate(zip(exp_list, seed_list)):
+        dfs = [pd.read_csv(f"eval_results/{env}/{exp}/{i}.csv", header=0) for i in seeds]
+
+        mean_df = pd.concat(dfs).groupby(level=0).mean()
+        std_df = pd.concat(dfs).groupby(level=0).std()
+
+        mean_dfs.append(mean_df)
+        std_dfs.append(std_df)
+
+        plt.plot(mean_df.index, mean_df["return"], label=labels[i], color=colors[i])  # Mean line
+        plt.fill_between(mean_df.index,
+                         mean_df["return"] - std_df["return"],
+                         mean_df["return"] + std_df["return"],
+                         color=colors[i], alpha=0.2)
+
+    plt.xlabel("Number of Training Steps")
+    plt.ylabel("ADR")
+    plt.title("ADR over time +- one std")
+    plt.legend(title="Models")
+    plt.show()
+
+
 dfs_gcn = [pd.read_csv(f"eval_results/ChessWorld-v1/gcn_formula_big_skip_6_finer/{i}.csv", header=0) for i in range(1, 6)]
 dfs_dps = [pd.read_csv(f"eval_results/ChessWorld-v1/deepsets_stay_update_4_finest/{i}.csv", header=0) for i in range(1, 6)]
 dfs_tfs = [pd.read_csv(f"eval_results/ChessWorld-v1/transformer_stay/{i}.csv", header=0) for i in range(1, 6)]
@@ -38,3 +66,6 @@ plt.ylabel("ADR")
 plt.title("ADR over time +- one std")
 plt.legend(title="Models")
 plt.show()
+
+
+plot_results('FlatWorld-v0', ['deepsets_stay', 'gcn_update_2'], ['Deepsets', 'GCN (no pre)'], ['red', 'blue'])

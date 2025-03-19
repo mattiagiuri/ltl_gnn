@@ -12,6 +12,8 @@ from sequence.samplers.chessworld8_easy_sequence_samplers import chessworld8easy
 from sequence.samplers.chessworld_8_sequence_samplers import chessworld8_sample_reach_avoid, chessworld8_sample_reach, \
     chessworld8_sample_reach_stay
 from sequence.samplers.chessworld_sequence_samplers import chessworld_sample_reach_avoid, chessworld_sample_reach
+from sequence.samplers.flatworld_formula_samplers_update import flatworld_sample_reach_update, \
+    flatworld_sample_reach_avoid_update, flatworld_sample_reach_stay_update
 from sequence.samplers.flatworld_formula_sequence_samplers import flatworld_sample_simple_reach, \
     flatworld_sample_complex_reach, flatworld_sample_formulae_reach_avoid, flatworld_sample_formula_reach_stay
 from sequence.samplers.flatworld_sequence_samplers import flatworld_all_reach_tasks, \
@@ -827,26 +829,26 @@ FLATWORLD_STAY_CURRICULUM = Curriculum([
             ),
         ],
         probs=[0.8, 0.2],
-        threshold=0.85,
-        threshold_type='mean'
-    ),
-    MultiRandomStage(  # 3
-        stages=[
-            RandomCurriculumStage(
-                sampler=flatworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
-                threshold=None,
-                threshold_type=None
-            ),
-            RandomCurriculumStage(
-                sampler=flatworld_sample_reach_stay(20, (0, 2)),
-                threshold=None,
-                threshold_type=None
-            ),
-        ],
-        probs=[0.8, 0.2],
         threshold=None,
         threshold_type=None
     ),
+    # MultiRandomStage(  # 3
+    #     stages=[
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_reach_stay(20, (0, 2)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #     ],
+    #     probs=[0.8, 0.2],
+    #     threshold=None,
+    #     threshold_type=None
+    # ),
 ])
 
 FLATWORLD_FORMULA_CURRICULUM = Curriculum([
@@ -907,47 +909,47 @@ FLATWORLD_FORMULA_CURRICULUM = Curriculum([
 
         ],
         probs=[0.8, 0.2],
-        threshold=0.85,
-        threshold_type='mean'
-    ),
-    MultiRandomStage(  # 0
-        stages=[
-            RandomCurriculumStage(
-                sampler=flatworld_sample_formulae_reach_avoid((1, 2), 1, (1, 2)),
-                threshold=None,
-                threshold_type=None,
-
-            ),
-            RandomCurriculumStage(
-                sampler=flatworld_sample_formula_reach_stay(20, (1, 2)),
-                threshold=None,
-                threshold_type=None
-            ),
-
-        ],
-        probs=[0.8, 0.2],
-        threshold=0.85,
-        threshold_type='mean'
-    ),
-    MultiRandomStage(  # 0
-        stages=[
-            RandomCurriculumStage(
-                sampler=flatworld_sample_formulae_reach_avoid((1, 2), 1, (1, 2)),
-                threshold=None,
-                threshold_type=None,
-
-            ),
-            RandomCurriculumStage(
-                sampler=flatworld_sample_formula_reach_stay(20, (1, 2)),
-                threshold=None,
-                threshold_type=None
-            ),
-
-        ],
-        probs=[0.8, 0.2],
         threshold=None,
         threshold_type=None
     ),
+    # MultiRandomStage(  # 0
+    #     stages=[
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_formulae_reach_avoid((1, 2), 1, (1, 2)),
+    #             threshold=None,
+    #             threshold_type=None,
+    #
+    #         ),
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_formula_reach_stay(20, (1, 2)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #
+    #     ],
+    #     probs=[0.8, 0.2],
+    #     threshold=0.85,
+    #     threshold_type='mean'
+    # ),
+    # MultiRandomStage(  # 0
+    #     stages=[
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_formulae_reach_avoid((1, 2), 1, (1, 2)),
+    #             threshold=None,
+    #             threshold_type=None,
+    #
+    #         ),
+    #         RandomCurriculumStage(
+    #             sampler=flatworld_sample_formula_reach_stay(20, (1, 2)),
+    #             threshold=None,
+    #             threshold_type=None
+    #         ),
+    #
+    #     ],
+    #     probs=[0.8, 0.2],
+    #     threshold=None,
+    #     threshold_type=None
+    # ),
     ]
 )
 
@@ -987,6 +989,100 @@ PRETRAINING_FLATWORLD_FORMULA = Curriculum([
         ],
         # probs=[0.13, 0.13, 0.35, 0.13, 0.13, 0.13],
         probs=[0.15, 0.15, 0.4, 0.15, 0.15],
+        threshold=None,
+        threshold_type=None
+    ),
+    ]
+)
+
+PRETRAINING_FLATWORLD_FORMULA_UPDATE = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_avoid_update((1, 2), 1, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_stay_update(5, (0, 1)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_stay_update(10, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            # RandomCurriculumStage(
+            #     sampler=flatworld_sample_formula_reach_stay(20, (1, 2)),
+            #     threshold=None,
+            #     threshold_type=None
+            # )
+        ],
+        # probs=[0.13, 0.13, 0.35, 0.13, 0.13, 0.13],
+        probs=[0.2, 0.4, 0.2, 0.2],
+        threshold=None,
+        threshold_type=None
+    ),
+    ]
+)
+
+FLATWORLD_FORMULA_UPDATE = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_avoid_update((1, 2), 1, 1),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.4, 0.6],
+        threshold=0.8,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_avoid_update((1, 2), 1, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_stay_update(5, (0, 1)),
+                threshold=None,
+                threshold_type=None
+            ),
+
+        ],
+        probs=[0.8, 0.2],
+        threshold=0.85,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_avoid_update((1, 2), 1, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_stay_update(10, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+
+        ],
+        probs=[0.8, 0.2],
         threshold=None,
         threshold_type=None
     ),

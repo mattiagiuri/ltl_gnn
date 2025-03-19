@@ -175,7 +175,7 @@ def simulate_all(env, gamma, exp, seed, num_episodes, formulae, finite, render, 
     return np.mean(all_successes) / len(all_options), np.mean(all_steps) / len(all_options), np.mean(all_adr) / len(all_options)
 
 
-def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic, gnn, cur_config, init_voc=False):
+def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic, gnn, cur_config, init_voc=False, chess=False):
     print(formula)
     env_name = env
     random.seed(seed)
@@ -184,7 +184,9 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
 
     sampler = FixedSampler.partial(formula)
     env = make_env(env_name, sampler, render_mode='human' if render else None)
-    all_options = {i: {'init_square': square} for i, square in enumerate(env.FREE_SQUARES)}
+
+    if chess:
+        all_options = {i: {'init_square': square} for i, square in enumerate(env.FREE_SQUARES)}
 
     if init_voc:
         init_vocab(env.get_possible_assignments())
@@ -238,8 +240,10 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     if not render:
         pbar = tqdm(pbar)
     for i in pbar:
-        obs, info = env.reset(options=all_options[i]), {}
-        # obs, info = env.initial_square_reset(), {}
+        if chess:
+            obs, info = env.reset(options=all_options[i]), {}
+        else:
+            obs, info = env.reset(), {}
 
         if render:
             print(obs['goal'])

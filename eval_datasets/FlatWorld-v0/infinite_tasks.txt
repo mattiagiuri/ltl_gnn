@@ -1,0 +1,7 @@
+Reach Avoid Inifnite
+RAI_1 ((G (F (blue & green))) & (G (F (red & magenta))))
+RAI_2 ((G (F (aqua & blue))) & (G (F red)) & (G (F yellow)) & (G (!green)))
+RAI_3 (F (G blue))
+RAI_4 ((F (G blue)) & (F yellow & (F green)))
+RAI_5 ((F (G magenta)) & (G (!yellow)))
+RAI_6 (G ((green | yellow) => (F blue)) & (F (G (green | magenta))))
