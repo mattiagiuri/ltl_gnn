@@ -86,7 +86,8 @@ class LtlWalls(Geom):  # pylint: disable=too-many-instance-attributes
         x, y, _ = list(self.agent.pos)
         cost = {
             'wall_sensor': self.wall_sensor(x, y),
-            'cost_ltl_walls': 0
+            'cost_ltl_walls': 0,
+            'agent_pos': np.array([x, y]),
         }
         if x >= self.collision_threshold or x <= -self.collision_threshold or y >= self.collision_threshold or y <= -self.collision_threshold:
             cost['cost_ltl_walls'] = 1

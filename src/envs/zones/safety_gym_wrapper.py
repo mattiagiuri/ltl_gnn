@@ -14,7 +14,7 @@ class SafetyGymWrapper(gymnasium.Wrapper):
     A wrapper from safety gymnasium LTL environments to the gymnasium API.
     """
 
-    def __init__(self, env: Any, wall_sensor=True):
+    def __init__(self, env: Any, wall_sensor=True, agent_pos=True):
         super().__init__(env)
         self.render_parameters.camera_name = 'track'
         self.render_parameters.width = 256
@@ -29,12 +29,17 @@ class SafetyGymWrapper(gymnasium.Wrapper):
         self.observation_space = spaces.Dict(env.observation_space)  # copy the observation space
         if wall_sensor:
             self.observation_space['wall_sensor'] = Box(low=0.0, high=1.0, shape=(4,), dtype=np.float64)
+        if agent_pos:
+            self.observation_space['agent_pos'] = Box(low=-np.inf, high=np.inf, shape=(2,), dtype=np.float64)
         self.last_dist = None
 
     def step(self, action: ActType):
         obs, reward, cost, terminated, truncated, info = super().step(action)
         if 'wall_sensor' in info:
             obs['wall_sensor'] = info['wall_sensor']
+        if 'agent_pos' in info:
+            obs['agent_pos'] = info['agent_pos']
+            print(f'agent_pos: {obs["agent_pos"]}')
         info['propositions'] = {c for c in self.colors if info[f'cost_zones_{c}'] > 0}
         if 'cost_ltl_walls' in info:
             terminated = terminated or info['cost_ltl_walls'] > 0
@@ -47,6 +52,7 @@ class SafetyGymWrapper(gymnasium.Wrapper):
         obs, info = super().reset(seed=seed, options=options)
         info['propositions'] = []
         obs['wall_sensor'] = np.array([0, 0, 0, 0])
+        obs['agent_pos'] = np.array([0, 0])
         return obs, info
 
     def get_propositions(self) -> list[str]:
