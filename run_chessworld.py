@@ -37,9 +37,9 @@ def main():
             '--entropy_coef', '0.003',  # 0.003
             '--log_interval', '1',
             '--save_interval', '1',
-            '--num_steps', '15_000_000',
+            '--num_steps', '2_000_000',
             '--model_config', 'big_sets_ChessWorld-v1',
-            '--curriculum', 'stay_ChessWorld-v1',
+            '--curriculum', 'racing_formula_ChessWorld-v1',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -58,7 +58,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
         # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name deepsets_trial_4 --seed 4 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name deepsets_race --seed 3 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

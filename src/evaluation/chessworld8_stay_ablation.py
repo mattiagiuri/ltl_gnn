@@ -143,13 +143,23 @@ def chessworld8_many_ablation(models_keys, models_names, is_gnns, cur_configs, s
                    for _, cur_db in results_dict.items()]
         cur_df_save = pd.concat(df_list, axis=1, keys=models_keys)
 
-        cur_df_save.to_csv(parent + "/results_" + str(size) + ".csv")
+        cur_df_name = parent + "/results_" + str(size) + ".csv"
+
+        old_df_save = pd.read_csv(cur_df_name, header=[0, 1], index_col=0)
+
+        cur_df_save = pd.concat([old_df_save, cur_df_save], axis=1)
+        cur_df_save.to_csv(cur_df_name)
 
         print("Done " + str(size))
 
     final_dfs = [pd.DataFrame(res, index=df_index) for _, res in results_dict.items()]
     results_df = pd.concat(final_dfs, axis=1, keys=models_keys)
-    results_df.to_csv(parent + "/results.csv")
+
+    final_name = parent + "/results.csv"
+    old_final_df = pd.read_csv(final_name, header=[0, 1], index_col=0)
+
+    results_df = pd.concat([old_final_df, results_df], axis=1)
+    results_df.to_csv(final_name)
 
     return results_df
 
@@ -160,25 +170,32 @@ if __name__ == "__main__":
     #             'GCN (0.85)', 'GCN (0.9)', 'GCN (15M)',
     #             'GCN (defrosted 25M)']
 
-    keys_new = ['Deepsets (large avoid)',
-                'Deepsets (15M)',
-                 'GCN (15M)',
-                ]
+    # keys_new = ['Deepsets (large avoid)',
+    #             'Deepsets (15M)',
+    #              'GCN (15M)',
+    #             ]
 
-    model_names = [
-        'deepsets_trial_4',
-        # 'deepsets_stay_update_4',
-        # 'deepsets_stay_update_4_fine',
-        'deepsets_stay_update_4_finest',
-        # 'gcn_formula_big_skip_6',
-        # 'gcn_formula_big_skip_6_fine',
-        'gcn_formula_big_skip_6_finer',
-        # 'gcn_formula_big_skip_6_finest'
-    ]
+    keys_new = ["Deepsets (formula)"]
 
-    cur_configs = ["big_sets_ChessWorld-v1"]*2 + ["big_ChessWorld-v1"]*1
+    # model_names = [
+    #     'deepsets_trial_4',
+    #     # 'deepsets_stay_update_4',
+    #     # 'deepsets_stay_update_4_fine',
+    #     'deepsets_stay_update_4_finest',
+    #     # 'gcn_formula_big_skip_6',
+    #     # 'gcn_formula_big_skip_6_fine',
+    #     'gcn_formula_big_skip_6_finer',
+    #     # 'gcn_formula_big_skip_6_finest'
+    # ]
 
-    is_gcn = [False]*2 + [True]*1
+    model_names = ["deepsets_update_2"]
 
-    for seed in range(5, 6):
+    # cur_configs = ["big_sets_ChessWorld-v1"]*2 + ["big_ChessWorld-v1"]*1
+
+    cur_configs = ["big_sets_ChessWorld-v1"]
+    # is_gcn = [False]*2 + [True]*1
+
+    is_gcn = [False]
+
+    for seed in range(1, 6):
         chessworld8_many_ablation(keys_new, model_names, is_gcn, cur_configs, seed=seed)

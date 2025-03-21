@@ -68,4 +68,6 @@ plt.legend(title="Models")
 plt.show()
 
 
-plot_results('FlatWorld-v0', ['deepsets_stay', 'gcn_update_2'], ['Deepsets', 'GCN (no pre)'], ['red', 'blue'])
+# plot_results('FlatWorld-v0', ['deepsets_stay', 'gcn_update_2'], ['Deepsets', 'GCN (no pre)'], ['red', 'blue'])
+
+plot_results('ChessWorld-v1', ['deepsets_update_2', 'gcn_formula_big_skip_6_finer'], ['Deepsets', 'GCN'], ['red', 'blue'])

@@ -9,6 +9,8 @@ import torch
 from ltl.automata import LDBASequence
 from sequence.samplers.chessworld8_easy_sequence_samplers import chessworld8easy_sample_reach_avoid, \
     chessworld8easy_sample_reach
+from sequence.samplers.chessworld8_formula_samplers_update import chessworld_sample_reach_update, \
+    chessworld_sample_reach_avoid_update, chessworld_sample_reach_stay_update, chessworld_sample_difficult_ra_update
 from sequence.samplers.chessworld_8_sequence_samplers import chessworld8_sample_reach_avoid, chessworld8_sample_reach, \
     chessworld8_sample_reach_stay
 from sequence.samplers.chessworld_sequence_samplers import chessworld_sample_reach_avoid, chessworld_sample_reach
@@ -740,6 +742,25 @@ CHESSWORLD8_FORMULA_CURRICULUM = Curriculum([
         threshold=0.95,
         threshold_type='mean'
     ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_formulae_reach_avoid((1, 2), 1, (1, 2)),
+                threshold=None,
+                threshold_type=None,
+
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_formula_reach_stay(10, (1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+
+        ],
+        probs=[0.8, 0.2],
+        threshold=None,
+        threshold_type=None
+    ),
     ]
 )
 
@@ -1085,6 +1106,195 @@ FLATWORLD_FORMULA_UPDATE = Curriculum([
         probs=[0.8, 0.2],
         threshold=None,
         threshold_type=None
+    ),
+    ]
+)
+
+
+CHESSWORLD8_FORMULA_UPDATE = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid_update((1, 2), 1, 1),
+                threshold=None,
+                threshold_type=None
+            ),
+        RandomCurriculumStage(
+                sampler=chessworld_sample_difficult_ra_update(1),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.4, 0.4, 0.2],
+        threshold=0.8,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid_update((1, 2), 1, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_difficult_ra_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_stay_update(5, (0, 1)),
+                threshold=None,
+                threshold_type=None
+            ),
+
+        ],
+        probs=[0.6, 0.2, 0.2],
+        threshold=0.85,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid_update((1, 2), 1, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_difficult_ra_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_stay_update(10, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+
+        ],
+        probs=[0.6, 0.2, 0.2],
+        threshold=None,
+        threshold_type=None
+    ),
+    ]
+)
+
+PRETRAINING_CHESSWORLD8_FORMULA_UPDATE = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid_update((1, 2), 1, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        RandomCurriculumStage(
+                sampler=chessworld_sample_difficult_ra_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        RandomCurriculumStage(
+                sampler=chessworld_sample_reach_stay_update(10, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        RandomCurriculumStage(
+                sampler=chessworld_sample_reach_stay_update(5, (0, 1)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.2, 0.2, 0.2, 0.2, 0.2],
+        threshold=None,
+        threshold_type=None
+    ),
+])
+
+RACING_FORMULA_CHESSWORLD8 = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_simple_reach((1, 2), (1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_complex_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld8_sample_formulae_reach_avoid((1, 2), 1, (1, 2)),
+                threshold=None,
+                threshold_type=None
+            )
+        ],
+        probs=[0.2, 0.2, 0.6],
+        threshold=0.85,
+        threshold_type='mean'
+    ),
+
+    RandomCurriculumStage(
+        sampler=chessworld8_sample_formulae_reach_avoid((1, 2), 1, (1, 2)),
+        threshold=None,
+        threshold_type=None,
+
+    ),
+])
+
+RACING_FORMULA_CHESSWORLD8_UPDATE = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid_update((1, 2), 1, 1),
+                threshold=None,
+                threshold_type=None
+            ),
+        RandomCurriculumStage(
+                sampler=chessworld_sample_difficult_ra_update(1),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.4, 0.4, 0.2],
+        threshold=0.8,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_avoid_update((1, 2), 1, (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_difficult_ra_update((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=chessworld_sample_reach_stay_update(5, (0, 1)),
+                threshold=None,
+                threshold_type=None
+            ),
+
+        ],
+        probs=[0.6, 0.2, 0.2],
+        threshold=0.85,
+        threshold_type='mean'
     ),
     ]
 )
