@@ -1,0 +1,20 @@
+Task Set,Task ID,Accepting visits
+Reach infinite training,RIT_1,96.34482758620689
+Reach infinite training,RIT_2,96.27586206896552
+Reach infinite training,RIT_3,96.37931034482759
+Reach infinite training,RIT_4,96.58620689655173
+Reach infinite training,RIT_5,95.96551724137932
+Reach infinite training,RIT_6,95.20689655172414
+Reach infinite training,RIT_7,96.37931034482759
+Reach infinite training,RIT_8,96.48275862068965
+Reach infinite training,RIT_9,95.06896551724138
+Reach infinite training,RIT_10,96.62068965517241
+Reach avoid always eventually,RAE_1,34.689655172413794
+Reach avoid always eventually,RAE_2,40.03448275862069
+Reach avoid always eventually,RAE_3,42.51724137931034
+Reach avoid always eventually,RAE_4,90.17241379310344
+Reach stay infinite,RSI_1,4.103448275862069
+Reach stay infinite,RSI_2,87.20689655172414
+Reach stay infinite,RSI_3,96.24137931034483
+Reach stay infinite,RSI_4,96.20689655172414
+Reach stay infinite,RSI_5,96.24137931034483

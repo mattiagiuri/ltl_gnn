@@ -107,7 +107,7 @@ if __name__ == "__main__":
     context_maker.generate_cache()
 
     formulae = [
-        "(!(bishop | rook | knight | pawn) U (queen))",
+        # "(!(bishop | rook | knight | pawn) U (queen))",
         # "F (queen & (!knight U rook))",
         # "F ((queen & bishop) & F ((knight & rook) & F bishop))",
         # "(! knight U (queen & pawn & rook)) & (F(bishop & F (rook & knight)))",
@@ -131,11 +131,17 @@ if __name__ == "__main__":
         # "((rook => F bishop) & (!(queen | knight | pawn) U (bishop & rook )))",
         # "F ((queen & !pawn) & (queen U pawn))"
         # "(!knight U queen) & (!pawn U knight)",
-    #     "(!queen U pawn) & (! bishop U knight)",
-    #     "(! rook U queen) & (! bishop U rook)",
-    #     "(! pawn U knight) & (! rook U bishop)",
-    #     "(! queen U bishop) & (! rook U pawn)"
-        '!rook U (queen & !pawn)'
+        # "(!queen U pawn) & (! bishop U knight)",
+        # "(! rook U queen) & (! bishop U rook)",
+        # "(! pawn U knight) & (! rook U bishop)",
+        # "(! queen U bishop) & (! rook U pawn)",
+        # "! queen U (bishop & (! rook U pawn))"
+        "(!(pawn | knight)U(queen & rook) & (F pawn))",
+        "(!(bishop | rook)U(pawn) & (F knight))",
+        "(F(rook & (!bishop U pawn)))",
+        "((!queen U pawn) & (! bishop U knight))",
+        "((! queen U rook) & (!knight U queen))",
+        "((!queen U pawn) & (! bishop U knight) & (!knight U rook))"
     ]
 
     for formula in formulae + annoying_formulae:

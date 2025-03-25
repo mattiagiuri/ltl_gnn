@@ -13,9 +13,6 @@ def plot_results(env, exp_list, labels, colors, seed_list=None):
         mean_df = pd.concat(dfs).groupby(level=0).mean()
         std_df = pd.concat(dfs).groupby(level=0).std()
 
-        mean_dfs.append(mean_df)
-        std_dfs.append(std_df)
-
         plt.plot(mean_df.index, mean_df["return"], label=labels[i], color=colors[i])  # Mean line
         plt.fill_between(mean_df.index,
                          mean_df["return"] - std_df["return"],
@@ -67,7 +64,17 @@ plt.title("ADR over time +- one std")
 plt.legend(title="Models")
 plt.show()
 
+#
+# plot_results('FlatWorld-v0', ['deepsets_stay', 'gcn_update_2', 'deepsets_update'],
+#              ['Deepsets', 'GCN (no pre)', 'Deepsets (prop curriculum)'],
+#              ['red', 'blue', 'orange'])
 
-# plot_results('FlatWorld-v0', ['deepsets_stay', 'gcn_update_2'], ['Deepsets', 'GCN (no pre)'], ['red', 'blue'])
+# plot_results('ChessWorld-v1', ['deepsets_update_2', 'gcn_formula_big_skip_6_finer'], ['Deepsets', 'GCN'], ['red', 'blue'])
 
-plot_results('ChessWorld-v1', ['deepsets_update_2', 'gcn_formula_big_skip_6_finer'], ['Deepsets', 'GCN'], ['red', 'blue'])
+plot_results('ChessWorld-v1', ['gcn_formula_big_skip_6_finer', 'deepsets_update_2',
+                               'deepsets_formula_update', 'gcn_formula_update'],
+             ['GCN (cache curriculum)', 'Deepsets (cache curriculum)', 'Deepsets (prop curriculum)', 'GCN (prop curriculum)'],
+             ['blue', 'red', 'orange', 'black'])
+
+
+# plot_results('ChessWorld-v1', ['deepsets_race_update', 'gcn_race_update'], ['Deepsets (2M)', 'GCN (2M)'], ['orange', 'black'])

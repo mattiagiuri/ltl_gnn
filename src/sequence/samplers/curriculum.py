@@ -1285,16 +1285,11 @@ RACING_FORMULA_CHESSWORLD8_UPDATE = Curriculum([
                 threshold=None,
                 threshold_type=None
             ),
-            RandomCurriculumStage(
-                sampler=chessworld_sample_reach_stay_update(5, (0, 1)),
-                threshold=None,
-                threshold_type=None
-            ),
 
         ],
-        probs=[0.6, 0.2, 0.2],
-        threshold=0.85,
-        threshold_type='mean'
+        probs=[0.75, 0.25],
+        threshold=None,
+        threshold_type=None
     ),
     ]
 )

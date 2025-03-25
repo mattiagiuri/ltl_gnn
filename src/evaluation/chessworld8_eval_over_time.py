@@ -67,7 +67,7 @@ config = None
 
 def aux(status):
     global env
-    model = build_model(env.envs[0], status, deepsets_config)
+    model = build_model(env.envs[0], status, gcn_config)
     s, v, num_steps, adr = eval_model(model, env, num_eval_episodes, deterministic, gamma)
     return status['num_steps'], s, v, num_steps, adr
 

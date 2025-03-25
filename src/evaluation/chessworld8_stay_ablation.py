@@ -175,7 +175,7 @@ if __name__ == "__main__":
     #              'GCN (15M)',
     #             ]
 
-    keys_new = ["Deepsets (formula)"]
+    keys_new = ["Deepsets (2M)", "GCN (2M)"]
 
     # model_names = [
     #     'deepsets_trial_4',
@@ -188,14 +188,14 @@ if __name__ == "__main__":
     #     # 'gcn_formula_big_skip_6_finest'
     # ]
 
-    model_names = ["deepsets_update_2"]
+    model_names = ["deepsets_race_update", "gcn_race_update"]
 
     # cur_configs = ["big_sets_ChessWorld-v1"]*2 + ["big_ChessWorld-v1"]*1
 
-    cur_configs = ["big_sets_ChessWorld-v1"]
+    cur_configs = ["big_sets_ChessWorld-v1"] + ["big_ChessWorld-v1"]
     # is_gcn = [False]*2 + [True]*1
 
-    is_gcn = [False]
+    is_gcn = [False, True]
 
     for seed in range(1, 6):
         chessworld8_many_ablation(keys_new, model_names, is_gcn, cur_configs, seed=seed)

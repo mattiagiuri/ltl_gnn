@@ -1,3 +1,3 @@
-,Deepsets (large avoid),Deepsets (15M),GCN (15M),Deepsets (formula)
-,successes_mean,successes_mean,successes_mean,successes_mean
-0,0.1724137931034483,0.0935960591133005,0.3891625615763547,0.3793103448275862
+,Deepsets (large avoid),Deepsets (15M),GCN (15M),Deepsets (formula),Deepsets (formula update),GCN (formula update),Deepsets (2M),GCN (2M)
+,successes_mean,successes_mean,successes_mean,successes_mean,successes_mean,successes_mean,successes_mean,successes_mean
+0,0.1724137931034483,0.0935960591133005,0.3891625615763547,0.3793103448275862,0.5369458128078818,0.5566502463054187,0.40394088669950734,0.5172413793103449

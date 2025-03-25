@@ -273,14 +273,19 @@ if __name__ == "__main__":
 
         # evaluate_deepsets('FlatWorld-v0', True, 'deepsets_stay',
         #                               tasks='eval_datasets/FlatWorld-v0/finite_tasks.txt', seed=cur_seed)
-        evaluate_deepsets_infinite('FlatWorld-v0', True, 'deepsets_stay',
-                                               seed=cur_seed)
+        # evaluate_deepsets_infinite('FlatWorld-v0', True, 'deepsets_stay',
+        #                                        seed=cur_seed)
 
-        print("gnn")
+        evaluate_deepsets('FlatWorld-v0', True, 'deepsets_update',
+                                      tasks='eval_datasets/FlatWorld-v0/finite_tasks.txt', seed=cur_seed)
+        evaluate_deepsets_infinite('FlatWorld-v0', True, 'deepsets_update',
+                                   seed=cur_seed)
+
+        # print("gnn")
 
         # evaluate_gnn('gnn_FlatWorld-v0', True, 'gcn_update_2',
         #                          tasks='eval_datasets/FlatWorld-v0/finite_tasks.txt', seed=cur_seed)
-        evaluate_gnn_infinite('gnn_FlatWorld-v0', True, 'gcn_update_2', seed=cur_seed)
+        # evaluate_gnn_infinite('gnn_FlatWorld-v0', True, 'gcn_update_2', seed=cur_seed)
         #
         # print("transformer")
         # evaluate_chessworld8_deepsets('big_transformer_ChessWorld-v1', True, 'transformer_stay',
