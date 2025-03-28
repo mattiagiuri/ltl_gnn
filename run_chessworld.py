@@ -58,7 +58,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
         # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name deepsets_race_update --seed 5 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name deepsets_race_update --seed 3 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
