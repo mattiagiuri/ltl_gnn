@@ -1,4 +1,4 @@
-from evaluation.simulate import simulate
+from evaluation.simulate import simulate, simulate_flat
 from envs.chessworld import ChessWorld
 import pandas as pd
 import re
@@ -51,7 +51,7 @@ def evaluate_gnn(cur_config, save=False, exp_gnn=exp_gnn, tasks=tasks_path, seed
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
-            successes, avg_steps, adr = simulate(env, gamma, exp_gnn, seed, num_episodes, task, finite,
+            successes, avg_steps, adr = simulate_flat(env, gamma, exp_gnn, seed, num_episodes, task, finite,
                                                  render, deterministic, gnn_gnn, cur_config, init_voc)
             if init_voc:
                 init_voc = False
@@ -69,7 +69,7 @@ def evaluate_gnn(cur_config, save=False, exp_gnn=exp_gnn, tasks=tasks_path, seed
         dir_name = "results_flatworld/FlatWorld-v0/" + str(seed)
         os.makedirs(dir_name, exist_ok=True)
 
-        df_results.to_csv(dir_name + "/" + env + "_" + exp_gnn + ".csv")
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_gnn + "2.csv")
 
     return df_results
 
@@ -81,7 +81,7 @@ def evaluate_gnn_infinite(cur_config, save=False, exp_gnn=exp_gnn, seed=seed):
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
-            acc_visits = simulate(env, gamma, exp_gnn, seed, num_episodes, task, not finite,
+            acc_visits = simulate_flat(env, gamma, exp_gnn, seed, num_episodes, task, not finite,
                                                  render, not deterministic, gnn_gnn, cur_config, init_voc)
             if init_voc:
                 init_voc = False
@@ -98,7 +98,7 @@ def evaluate_gnn_infinite(cur_config, save=False, exp_gnn=exp_gnn, seed=seed):
         dir_name = "results_flatworld/FlatWorld-v0/" + str(seed)
         os.makedirs(dir_name, exist_ok=True)
 
-        df_results.to_csv(dir_name + "/" + env + "_" + exp_gnn + "_inf.csv")
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_gnn + "_inf2.csv")
 
     return df_results
 
@@ -109,7 +109,7 @@ def evaluate_deepsets(cur_config, save=False, exp_deepsets=exp_deepsets, tasks=t
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
-            successes, avg_steps, adr = simulate(env, gamma, exp_deepsets, seed, num_episodes, task, finite,
+            successes, avg_steps, adr = simulate_flat(env, gamma, exp_deepsets, seed, num_episodes, task, finite,
                                                  render, deterministic, gnn_deepsets, cur_config)
 
             results["Task Set"].append(task_set)
@@ -125,7 +125,7 @@ def evaluate_deepsets(cur_config, save=False, exp_deepsets=exp_deepsets, tasks=t
         dir_name = "results_flatworld/FlatWorld-v0/" + str(seed)
         os.makedirs(dir_name, exist_ok=True)
 
-        df_results.to_csv(dir_name + "/" + env + "_" + exp_deepsets + ".csv")
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_deepsets + "2.csv")
 
     return df_results
 
@@ -136,7 +136,7 @@ def evaluate_deepsets_infinite(cur_config, save=False, exp_deepsets=exp_deepsets
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
-            acc_visits = simulate(env, gamma, exp_deepsets, seed, num_episodes, task, not finite,
+            acc_visits = simulate_flat(env, gamma, exp_deepsets, seed, num_episodes, task, not finite,
                                                  render, not deterministic, gnn_deepsets, cur_config)
 
             results["Task Set"].append(task_set)
@@ -150,7 +150,7 @@ def evaluate_deepsets_infinite(cur_config, save=False, exp_deepsets=exp_deepsets
         dir_name = "results_flatworld/FlatWorld-v0/" + str(seed)
         os.makedirs(dir_name, exist_ok=True)
 
-        df_results.to_csv(dir_name + "/" + env + "_" + exp_deepsets + "_inf.csv")
+        df_results.to_csv(dir_name + "/" + env + "_" + exp_deepsets + "_inf2.csv")
 
     return df_results
 
@@ -271,22 +271,22 @@ if __name__ == "__main__":
         #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
         # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest', seed=cur_seed)
 
-        # evaluate_deepsets('FlatWorld-v0', True, 'deepsets_stay',
-        #                               tasks='eval_datasets/FlatWorld-v0/finite_tasks.txt', seed=cur_seed)
-        # evaluate_deepsets_infinite('FlatWorld-v0', True, 'deepsets_stay',
-        #                                        seed=cur_seed)
-
-        evaluate_deepsets('FlatWorld-v0', True, 'deepsets_update',
+        evaluate_deepsets('FlatWorld-v0', True, 'deepsets_stay',
                                       tasks='eval_datasets/FlatWorld-v0/finite_tasks.txt', seed=cur_seed)
-        evaluate_deepsets_infinite('FlatWorld-v0', True, 'deepsets_update',
-                                   seed=cur_seed)
+        evaluate_deepsets_infinite('FlatWorld-v0', True, 'deepsets_stay',
+                                               seed=cur_seed)
 
-        # print("gnn")
+        # evaluate_deepsets('FlatWorld-v0', True, 'deepsets_update',
+        #                               tasks='eval_datasets/FlatWorld-v0/finite_tasks.txt', seed=cur_seed)
+        # evaluate_deepsets_infinite('FlatWorld-v0', True, 'deepsets_update',
+        #                            seed=cur_seed)
+
+        print("gnn")
 
         # evaluate_gnn('gnn_FlatWorld-v0', True, 'gcn_update_2',
         #                          tasks='eval_datasets/FlatWorld-v0/finite_tasks.txt', seed=cur_seed)
         # evaluate_gnn_infinite('gnn_FlatWorld-v0', True, 'gcn_update_2', seed=cur_seed)
-        #
+
         # print("transformer")
         # evaluate_chessworld8_deepsets('big_transformer_ChessWorld-v1', True, 'transformer_stay',
         #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)

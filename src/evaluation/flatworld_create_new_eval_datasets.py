@@ -14,7 +14,7 @@ from ltl.samplers.super_sampler import SuperSampler
 
 env_name = 'FlatWorld-v0'
 seed = 1
-num_episodes = 1
+num_episodes = 50
 random.seed(seed)
 np.random.seed(seed)
 torch.random.manual_seed(seed)
@@ -37,7 +37,7 @@ def main():
             for i in range(num_episodes):
                 counter = num_episodes * c + i
                 obs = env.reset()
-                env.save_world_info(f'{path}/worlds1/world_info_{counter}.pkl')
+                env.save_world_info(f'{path}/worlds3/world_info_{counter}.pkl')
                 formula = obs['goal']
                 # with open(f'{path}/updated_tasks.txt', 'a+') as f:
                 #     f.write(formula)
@@ -47,6 +47,7 @@ def main():
                 #     f.write(str(ltl2action_formula))
                 #     f.write('\n')
             c += 1
+            break
 
 
 if __name__ == '__main__':

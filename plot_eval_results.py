@@ -71,10 +71,15 @@ plt.show()
 
 # plot_results('ChessWorld-v1', ['deepsets_update_2', 'gcn_formula_big_skip_6_finer'], ['Deepsets', 'GCN'], ['red', 'blue'])
 
-plot_results('ChessWorld-v1', ['gcn_formula_big_skip_6_finer', 'deepsets_update_2',
-                               'deepsets_formula_update', 'gcn_formula_update'],
-             ['GCN (cache curriculum)', 'Deepsets (cache curriculum)', 'Deepsets (prop curriculum)', 'GCN (prop curriculum)'],
-             ['blue', 'red', 'orange', 'black'])
+# plot_results('ChessWorld-v1', ['gcn_formula_big_skip_6_finer', 'deepsets_update_2',
+#                                'deepsets_formula_update', 'gcn_formula_update'],
+#              ['GCN (cache curriculum)', 'Deepsets (cache curriculum)', 'Deepsets (prop curriculum)', 'GCN (prop curriculum)'],
+#              ['blue', 'red', 'orange', 'black'])
 
 
 # plot_results('ChessWorld-v1', ['deepsets_race_update', 'gcn_race_update'], ['Deepsets (2M)', 'GCN (2M)'], ['orange', 'black'])
+
+
+plot_results('ChessWorld-v1', ['gcn_race_update', 'deepsets_race_update',],
+             ['GCN', 'Deepsets'],
+             ['black', 'orange'])

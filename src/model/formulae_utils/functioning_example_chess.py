@@ -11,12 +11,13 @@ var_names=[1]*5
 assignment_vocab=None
 VOCAB = [1]*16
 
-sample_vars = ["PAD", "EPSILON", "NULL", "green", "red", "blue", "yellow", "orange", "aqua", "magenta", "blank"]
+sample_vars = ["PAD", "EPSILON", "NULL", "queen", "rook", "knight", "bishop", "pawn", "blank"]
 # sample_vocab = {0: "PAD", 1: "EPSILON", 2: "NULL", 3: "green", 4: "red", 5: "blue", 6: "blue&green", 7:"blue&red", 8: "blue&red&green", 9: "orange",
 #                 10: "yellow", 11: "aqua", 12: "yellow&orange", 13: "aqua&red", 14: ""}
 
-sample_vocab = {0: "PAD", 1: "EPSILON", 2: "NULL", 3: "green", 4: "blue", 5: "aqua", 6: "blue&green", 7: "blue&aqua", 8: "blue&aqua&green", 9: "red&magenta",
-                    10: "yellow", 11: "red", 12: "orange", 13: "magenta", 14: "green&aqua", 15: "blank"}
+sample_vocab = {0: 'PAD', 1: 'EPSILON', 2: 'NULL', 3: 'queen', 4: 'rook', 5: 'knight', 6: 'bishop', 7: 'pawn',
+                    8: 'queen&rook', 9: 'queen&bishop', 10: 'queen&pawn&bishop', 11: 'queen&pawn&rook',
+                    12: 'knight&rook', 13: 'bishop&rook', 14: 'knight&bishop', 15: 'blank'}
 
 tree = SyntaxTreeStay(sample_vars[1:], sample_vocab)
 print(tree.variable_names)
@@ -27,8 +28,8 @@ print(tree.embedding_dict)
 # lens = [3, 2, 2]
 
 
-sample_reach = torch.tensor([[[6, 7, 8], [13, 9, 0]]], dtype=torch.long)
-sample_avoid = torch.tensor([[[9, 0, 0], [4, 6, 0]]], dtype=torch.long)
+sample_reach = torch.tensor([[[3, 4, 8, 12, 11, 0, 0], [3, 4, 8, 9, 12, 11, 13]]], dtype=torch.long)
+sample_avoid = torch.tensor([[[5, 12, 14, 0, 0, 0, 0], [9, 10, 11, 0, 0, 0, 0]]], dtype=torch.long)
 lens = [2]
 
 # print("Assignment mode")

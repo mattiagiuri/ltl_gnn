@@ -17,7 +17,7 @@ def plot_graph(edge_index, labels=None, node_size=500, font_size=12):
     edges = edge_index.t().tolist()
 
     # Create a NetworkX graph
-    G = nx.Graph()
+    G = nx.DiGraph()
     G.add_edges_from(edges)
     # print(G.nodes)
 

@@ -1,0 +1,6 @@
+Task Set,Task ID,Successes,Avg Steps,Avg Discounted Return
+Reach Avoid General,RA_1,50,71.92,0.24482876374850907
+Reach Avoid General,RA_2,50,52.02,0.370645530633269
+Reach Avoid General,RA_3,47,62.38297872340426,0.27530599039234044
+Reach Avoid General,RA_4,41,35.78048780487805,0.4167453439480075
+Reach Avoid General,RA_5,50,33.96,0.5492149036354735

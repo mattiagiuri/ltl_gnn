@@ -62,9 +62,14 @@ class FlatWorld(gym.Env):
     ) -> tuple[ObsType, dict[str, Any]]:
         if seed is not None:
             self.rng = np.random.default_rng(seed)
-        self.agent_pos = self.rng.uniform(low=-2., high=2., size=(2,))
-        while len(self.get_active_propositions()) > 0:
+
+        if options:
+            self.load_world_info(options['world_info'])
+        else:
             self.agent_pos = self.rng.uniform(low=-2., high=2., size=(2,))
+            while len(self.get_active_propositions()) > 0:
+                self.agent_pos = self.rng.uniform(low=-2., high=2., size=(2,))
+
         return self.agent_pos.copy(), {'propositions': set()}
 
     def step(self, action: ActType) -> tuple[ObsType, float, bool, bool, dict[str, Any]]:
