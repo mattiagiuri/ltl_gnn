@@ -7,6 +7,7 @@ from gymnasium.core import ActType, WrapperObsType
 from gymnasium.spaces import Box
 
 from ltl.logic import Assignment
+from envs.zones.quadrants import Quadrant
 
 
 class SafetyGymWrapper(gymnasium.Wrapper):
@@ -39,7 +40,6 @@ class SafetyGymWrapper(gymnasium.Wrapper):
             obs['wall_sensor'] = info['wall_sensor']
         if 'agent_pos' in info:
             obs['agent_pos'] = info['agent_pos']
-            print(f'agent_pos: {obs["agent_pos"]}')
         info['propositions'] = {c for c in self.colors if info[f'cost_zones_{c}'] > 0}
         if 'cost_ltl_walls' in info:
             terminated = terminated or info['cost_ltl_walls'] > 0
@@ -51,6 +51,7 @@ class SafetyGymWrapper(gymnasium.Wrapper):
     ) -> tuple[WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
         info['propositions'] = []
+        info['zone_quadrants'] = self.get_zone_quadrants()
         obs['wall_sensor'] = np.array([0, 0, 0, 0])
         obs['agent_pos'] = np.array([0, 0])
         return obs, info
@@ -60,3 +61,20 @@ class SafetyGymWrapper(gymnasium.Wrapper):
 
     def get_possible_assignments(self) -> list[Assignment]:
         return Assignment.zero_or_one_propositions(set(self.get_propositions()))
+
+    def get_zone_quadrants(self):
+        zone_quadrants = {}
+        for color in self.colors:
+            quadrants = set()
+            for idx in [0, 1]:
+                x, y = self.zone_positions[f"{color}_zone{idx}"]
+                if x <= 0 and y >= 0:
+                    quadrants.add(Quadrant.TOP_LEFT)
+                elif x >= 0 and y >= 0:
+                    quadrants.add(Quadrant.TOP_RIGHT)
+                elif x <= 0 and y <= 0:
+                    quadrants.add(Quadrant.BOTTOM_LEFT)
+                elif x >= 0 and y <= 0:
+                    quadrants.add(Quadrant.BOTTOM_RIGHT)
+            zone_quadrants[color] = quadrants
+        return zone_quadrants
