@@ -4,6 +4,7 @@ import gymnasium
 from gymnasium import spaces
 from gymnasium.core import WrapperObsType, WrapperActType
 
+from envs.zones.quadrants import Quadrant
 from ltl.automata import LDBASequence
 from ltl.logic import Assignment
 
@@ -13,7 +14,7 @@ class SequenceWrapper(gymnasium.Wrapper):
     Wrapper that adds a reach-avoid sequence of propositions to the observation space.
     """
 
-    def __init__(self, env: gymnasium.Env, sample_sequence: Callable[[], LDBASequence], partial_reward=False):
+    def __init__(self, env: gymnasium.Env, sample_sequence: Callable[[dict[str, list[Quadrant]]], LDBASequence], partial_reward=False):
         super().__init__(env)
         self.observation_space = spaces.Dict({
             'features': env.observation_space,
