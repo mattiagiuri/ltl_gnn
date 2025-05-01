@@ -12,6 +12,7 @@ observation = env.reset(seed=1)
 print(observation)
 print(f'Goal: {observation["goal"]}')
 print(env.get_zone_quadrants())
+print(env.get_agent_quadrant())
 print(env.get_propositions())
 init_vocab(env.get_possible_assignments())
 init_vars(env.get_propositions())
@@ -19,22 +20,13 @@ init_vars(env.get_propositions())
 print(assignment_vocab)
 print(var_names)
 
-print()
-
-
-for i in range(10):
+for i in range(5000):
     action = env.action_space.sample()
     observation, reward, terminated, info = env.step(action)
-    print(info['agent_pos'])
-    # print(type(info['agent_pos']))
-
-    print(info['propositions'])
 
     if terminated:
         print(f'Success: {"success" in info}')
         observation = env.reset()
         print(f'Goal: {observation["goal"]}')
-        print(env.get_zone_quadrants())
-        print(Quadrant.TOP_LEFT in env.get_zone_quadrants()['blue'])
 
 env.close()

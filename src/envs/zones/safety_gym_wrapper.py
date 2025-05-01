@@ -62,9 +62,8 @@ class SafetyGymWrapper(gymnasium.Wrapper):
     ) -> tuple[WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
         info['propositions'] = []
-        info['zone_quadrants'] = self.get_zone_quadrants()
         obs['wall_sensor'] = np.array([0, 0, 0, 0])
-        obs['agent_pos'] = np.array([0, 0])
+        obs['agent_pos'] = self.agent_pos[:2]
         return obs, info
 
     def get_propositions(self) -> list[str]:
@@ -101,14 +100,24 @@ class SafetyGymWrapper(gymnasium.Wrapper):
         for color in self.colors:
             quadrants = set()
             for idx in [0, 1]:
-                x, y = self.zone_positions[f"{color}_zone{idx}"]
-                if x <= 0 and y >= 0:
-                    quadrants.add(Quadrant.TOP_LEFT)
-                elif x >= 0 and y >= 0:
-                    quadrants.add(Quadrant.TOP_RIGHT)
-                elif x <= 0 and y <= 0:
-                    quadrants.add(Quadrant.BOTTOM_LEFT)
-                elif x >= 0 and y <= 0:
-                    quadrants.add(Quadrant.BOTTOM_RIGHT)
+                pos = self.zone_positions[f"{color}_zone{idx}"]
+                quadrants.add(self.pos_to_quadrant(pos))
             zone_quadrants[color] = quadrants
         return zone_quadrants
+
+    def get_agent_quadrant(self):
+        return self.pos_to_quadrant(self.agent_pos[:2])
+
+    @staticmethod
+    def pos_to_quadrant(pos):
+        x, y = pos
+        if x <= 0 <= y:
+            return Quadrant.TOP_LEFT
+        elif x >= 0 and y >= 0:
+            return Quadrant.TOP_RIGHT
+        elif x <= 0 and y <= 0:
+            return Quadrant.BOTTOM_LEFT
+        elif x >= 0 >= y:
+            return Quadrant.BOTTOM_RIGHT
+        else:
+            assert False
