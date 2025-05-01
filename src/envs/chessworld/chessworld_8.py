@@ -47,7 +47,7 @@ class ChessWorld8(gym.Env):
         #
         # print(free - self.FREE_SQUARES)
         # print(self.FREE_SQUARES - free)
-        # print((set([(i, j) for i in range(7) for j in range(7)]) -
+        # print((set([(i, j) for i in range(8) for j in range(8)]) -
         #              set.union(*[attacked for attacked in self.ATTACKED_SQUARES.values()])
         #             ))
         assert (self.FREE_SQUARES ==

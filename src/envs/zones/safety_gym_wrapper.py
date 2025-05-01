@@ -27,6 +27,8 @@ class SafetyGymWrapper(gymnasium.Wrapper):
             if key.endswith('zones_lidar'):
                 color = key.split('_')[0]
                 self.colors.add(color)
+
+        self.areas = ['right', 'top']
         self.observation_space = spaces.Dict(env.observation_space)  # copy the observation space
         if wall_sensor:
             self.observation_space['wall_sensor'] = Box(low=0.0, high=1.0, shape=(4,), dtype=np.float64)
@@ -40,7 +42,16 @@ class SafetyGymWrapper(gymnasium.Wrapper):
             obs['wall_sensor'] = info['wall_sensor']
         if 'agent_pos' in info:
             obs['agent_pos'] = info['agent_pos']
-        info['propositions'] = {c for c in self.colors if info[f'cost_zones_{c}'] > 0}
+
+        quadrant_props = []
+        x_agent, y_agent = info['agent_pos']
+
+        if x_agent >= 0:
+            quadrant_props.append('right')
+        if y_agent >= 0:
+            quadrant_props.append('top')
+
+        info['propositions'] = {c for c in self.colors if info[f'cost_zones_{c}'] > 0} | set(quadrant_props)
         if 'cost_ltl_walls' in info:
             terminated = terminated or info['cost_ltl_walls'] > 0
             reward = -1. if info['cost_ltl_walls'] > 0 else 0.
@@ -57,10 +68,33 @@ class SafetyGymWrapper(gymnasium.Wrapper):
         return obs, info
 
     def get_propositions(self) -> list[str]:
-        return sorted(self.colors)
+        return list(sorted(self.colors)) + self.areas
 
     def get_possible_assignments(self) -> list[Assignment]:
-        return Assignment.zero_or_one_propositions(set(self.get_propositions()))
+        # return Assignment.zero_or_one_propositions(set(self.get_propositions()))
+        props = set(self.get_propositions())
+        return [
+            Assignment.where('blue', propositions=props),
+            Assignment.where('green', propositions=props),
+            Assignment.where('magenta', propositions=props),
+            Assignment.where('yellow', propositions=props),
+            Assignment.where('right', propositions=props),
+            Assignment.where('top', propositions=props),
+            Assignment.where('blue', 'right', propositions=props),
+            Assignment.where('green', 'right', propositions=props),
+            Assignment.where('magenta', 'right', propositions=props),
+            Assignment.where('yellow', 'right', propositions=props),
+            Assignment.where('blue', 'top', propositions=props),
+            Assignment.where('green', 'top', propositions=props),
+            Assignment.where('magenta', 'top', propositions=props),
+            Assignment.where('yellow', 'top', propositions=props),
+            Assignment.where('right', 'top', propositions=props),
+            Assignment.where('blue', 'right', 'top', propositions=props),
+            Assignment.where('green', 'right', 'top', propositions=props),
+            Assignment.where('magenta', 'right', 'top', propositions=props),
+            Assignment.where('yellow', 'right', 'top', propositions=props),
+            Assignment.zero_propositions(props),
+        ]
 
     def get_zone_quadrants(self):
         zone_quadrants = {}
