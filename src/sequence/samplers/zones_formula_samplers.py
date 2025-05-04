@@ -24,15 +24,28 @@ areas_only = {}
 opposites = {'right': 'left', 'left': 'right', 'top': 'bottom', 'bottom': 'top'}
 
 
+# possible_avoids_from_location = {
+#     ('right', ): ['left', 'left&top', 'bottom&left'],
+#     ('left', ): ['right', 'right&top', 'bottom&right'],
+#     ('bottom', ): ['top', 'left&top', 'right&top'],
+#     ('top', ): ['bottom', 'bottom&left', 'bottom&right'],
+#     ('right', 'top'): ['bottom', 'bottom&left', 'bottom&right', 'left', 'left&top'],
+#     ('bottom', 'right'): ['left', 'bottom&left', 'right&top', 'top', 'left&top'],
+#     ('bottom', 'left'): ['right', 'right&top', 'bottom&right', 'top', 'left&top'],
+#     ('left', 'top'): ['bottom', 'bottom&left', 'bottom&right', 'right', 'right&top'],
+#
+# }
+
+
 possible_avoids_from_location = {
-    ('right', ): ['left', 'left&top', 'bottom&left'],
-    ('left', ): ['right', 'right&top', 'bottom&right'],
-    ('bottom', ): ['top', 'left&top', 'right&top'],
-    ('top', ): ['bottom', 'bottom&left', 'bottom&right'],
-    ('right', 'top'): ['bottom', 'bottom&left', 'bottom&right', 'left', 'left&top'],
-    ('bottom', 'right'): ['left', 'bottom&left', 'right&top', 'top', 'left&top'],
-    ('bottom', 'left'): ['right', 'right&top', 'bottom&right', 'top', 'left&top'],
-    ('left', 'top'): ['bottom', 'bottom&left', 'bottom&right', 'right', 'right&top'],
+    ('right', ): ['left'],
+    ('left', ): ['right'],
+    ('bottom', ): ['top'],
+    ('top', ): ['bottom'],
+    ('right', 'top'): ['bottom', 'left'],
+    ('bottom', 'right'): ['left', 'top'],
+    ('bottom', 'left'): ['right', 'top'],
+    ('left', 'top'): ['bottom', 'right'],
 
 }
 
@@ -81,7 +94,8 @@ all_ors = reach_ors[1]
 all_ands = []
 all_ands_dict = {}
 
-for i in range(2, 4):
+# originally (2, 4)
+for i in range(2, 3):
     for key_tup in itertools.combinations(list(complete_var_assignments.keys()), i):
         tup = [complete_var_assignments[cur_key] for cur_key in key_tup]
         and_set = frozenset.intersection(*tup)
@@ -93,13 +107,15 @@ for i in range(2, 4):
 # print(len(all_ands))
 # print(all_ands)
 
-all_pairs = itertools.combinations(list(complete_var_assignments.values()), 2)
+# all_pairs = itertools.combinations(list(complete_var_assignments.values()), 2)
 
-reach_x_and_not_y = [x - y for x, y in all_pairs if len(x & y) > 0] + [y - x for x, y in all_pairs if len(x & y) > 0]
+all_pairs = [(x, y) for x in areas_only.values() for y in colors_only.values()]
+# reach_x_and_not_y = [x - y for x, y in all_pairs if len(x & y) > 0] + [y - x for x, y in all_pairs if len(x & y) > 0]
+reach_x_and_not_y = [x - y for x, y in all_pairs if len(x & y) > 0]
 
 all_reach = all_ands + reach_x_and_not_y + all_ors
 
-all_reach_difficult = all_ors + all_ands
+# all_reach_difficult = all_ors + all_ands
 
 # print(len(all_reach))
 
@@ -237,7 +253,8 @@ def zonenv_sample_reach_avoid(
 
             not_in_reach = False
 
-            mode = random.choice(['or', 'and', 'x_not_y'])
+            # mode = random.choice(['or', 'and', 'x_not_y'])
+            mode = random.choice(['or', 'and'])
 
             ra_encoding = []
 
@@ -330,7 +347,7 @@ def zonenv_sample_reach_avoid(
 
                 avoid_keys_areas = agent_and_color_sample(agent_quadrant, color_quadrant)
 
-                if na > 1:
+                if na > 1 and '&' not in avoid_keys_areas[0]:
                     avoid_keys_colors = random.sample(list(set(colors_only.keys()) - {reach_key}), na-1)
                 else:
                     avoid_keys_colors = []
@@ -435,7 +452,7 @@ def zonenv_sample_reach_avoid(
 
                 avoid_keys_areas = agent_and_color_sample(agent_quadrant, color_quadrant)
 
-                if na > 1:
+                if na > 1 and '&' not in avoid_keys_areas[0]:
                     avoid_keys_colors = random.sample(list(set(colors_only.keys()) - {reach_key}), na - 1)
                 else:
                     avoid_keys_colors = []
@@ -545,3 +562,10 @@ if __name__ == '__main__':
     print("TEST")
     for _ in range(5):
         print(agent_and_color_sample(Quadrant.BOTTOM_LEFT, Quadrant.TOP_RIGHT))
+
+
+    print('Lengths')
+    print(len(all_reach))
+    print(len(all_ors))
+    print(len(all_ands))
+    print(len(reach_x_and_not_y))
