@@ -14,7 +14,7 @@ from model.formulae_utils.ContextMaker import ContextMaker
 
 
 class SyntaxTreeStay:
-    def __init__(self, variable_names, assignment_vocab):
+    def __init__(self, variable_names, assignment_vocab, augment_neg=()):
         self.variable_names = variable_names
         self.sympy_vars = {name: symbols(name) for name in self.variable_names}
         self.assignment_vocab = assignment_vocab
@@ -28,7 +28,7 @@ class SyntaxTreeStay:
         self.embedding_dict[0] = "FALSE"
 
         true_vars = set(variable_names) - {'PAD', 'EPSILON', 'NULL', 'blank'}
-        self.context_maker = ContextMaker(assignment_vocab, variable_names, true_vars)
+        self.context_maker = ContextMaker(assignment_vocab, variable_names, true_vars, augment_neg=augment_neg)
 
         self.in_mem_cache = {assignments: self.build_data_from_formula(formula)
                              for assignments, formula in self.context_maker.generate_cache().items()}

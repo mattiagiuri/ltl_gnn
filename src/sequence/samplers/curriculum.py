@@ -6,6 +6,7 @@ from typing import Literal, Callable, Optional
 import numpy as np
 import torch
 
+from envs.zones.quadrants import Quadrant
 from ltl.automata import LDBASequence
 from sequence.samplers.chessworld8_easy_sequence_samplers import chessworld8easy_sample_reach_avoid, \
     chessworld8easy_sample_reach
@@ -25,6 +26,7 @@ from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_av
 
 from sequence.samplers.chessworld8_formula_samplers import chessworld8_sample_simple_reach, \
     chessworld8_sample_complex_reach, chessworld8_sample_formulae_reach_avoid, chessworld8_sample_formula_reach_stay
+from sequence.samplers.zones_formula_samplers import zonenv_sample_reach_avoid, zonenv_sample_reach
 
 
 @dataclass
@@ -83,7 +85,7 @@ class ExplicitCurriculumStage(CurriculumStage):
 @dataclass
 class RandomCurriculumStage(CurriculumStage):
     """A curriculum stage in which tasks are sampled randomly."""
-    sampler: Callable[[list[str]], LDBASequence]
+    sampler: Callable[[list[str]], LDBASequence] | Callable[[list[str], dict[str, list[Quadrant]]], LDBASequence]
 
     def sample(self, propositions: list[str]) -> LDBASequence:
         return self.sampler(propositions)
@@ -91,6 +93,8 @@ class RandomCurriculumStage(CurriculumStage):
     def update_task_success(self, task_success: dict[LDBASequence, float]) -> None:
         pass
 
+    def sample_new_zones(self, propositions: list[str], info_dict: dict[str, list[Quadrant]]):
+        return self.sampler(propositions, info_dict)
 
 @dataclass
 class MultiRandomStage(CurriculumStage):
@@ -105,6 +109,9 @@ class MultiRandomStage(CurriculumStage):
     def update_task_success(self, task_success: dict[LDBASequence, float]) -> None:
         pass
 
+    def sample_new_zones(self, propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
+        stage = np.random.choice(self.stages, p=self.probs)
+        return stage.sample_new_zones(propositions, info_dict)
 
 class Curriculum:
     def __init__(self, stages: list[CurriculumStage]):
@@ -122,6 +129,9 @@ class Curriculum:
 
     def sample(self, propositions: list[str]) -> LDBASequence:
         return self.current_stage.sample(propositions)
+
+    def sample_new_zones(self, propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
+        return self.current_stage.sample_new_zones(propositions, info_dict)
 
     def update_task_success(self, task_success: dict[LDBASequence, float], verbose=False) -> None:
         if self.current_stage.threshold is None:
@@ -1291,5 +1301,65 @@ RACING_FORMULA_CHESSWORLD8_UPDATE = Curriculum([
         threshold=None,
         threshold_type=None
     ),
+    ]
+)
+
+
+ZONES_UPDATE_CURRICULUM = Curriculum([
+    RandomCurriculumStage(
+        sampler=zonenv_sample_reach((1, 2)),
+        threshold=0.8,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach_avoid((1, 2), 1, 1),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.6, 0.4],
+        threshold=0.8,
+        threshold_type='mean'
+    ),
+    RandomCurriculumStage(
+        sampler=flatworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+        threshold=None,
+        threshold_type=None
+    ),
+    ]
+)
+
+
+ZONES_UPDATE_PRETRAINING_CURRICULUM = Curriculum([
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach_avoid((1, 2), 1, 1),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=flatworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.3, 0.3, 0.4],
+        threshold=None,
+        threshold_type=None
+    ),
+
     ]
 )

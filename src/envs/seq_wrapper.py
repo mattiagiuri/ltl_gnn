@@ -14,7 +14,7 @@ class SequenceWrapper(gymnasium.Wrapper):
     Wrapper that adds a reach-avoid sequence of propositions to the observation space.
     """
 
-    def __init__(self, env: gymnasium.Env, sample_sequence: Callable[[dict[str, list[Quadrant]]], LDBASequence], partial_reward=False):
+    def __init__(self, env: gymnasium.Env, sample_sequence: Callable[[dict[str, list[Quadrant]]], LDBASequence], partial_reward=False, areas_mode=False):
         super().__init__(env)
         self.observation_space = spaces.Dict({
             'features': env.observation_space,
@@ -26,6 +26,7 @@ class SequenceWrapper(gymnasium.Wrapper):
         self.partial_reward = partial_reward
         self.obs = None
         self.info = None
+        self.areas_mode = areas_mode
 
     def step(self, action: WrapperActType) -> tuple[WrapperObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         if (action == LDBASequence.EPSILON).all():
@@ -63,7 +64,17 @@ class SequenceWrapper(gymnasium.Wrapper):
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[
         WrapperObsType, dict[str, Any]]:
         obs, info = super().reset(seed=seed, options=options)
-        self.goal_seq = self.sample_sequence()
+
+        if self.areas_mode:
+            all_areas = self.get_zone_quadrants()
+            agent_quadrant = self.get_agent_quadrant()
+
+            all_areas['agent'] = agent_quadrant
+            # print(all_areas)
+            self.goal_seq = self.sample_sequence(all_areas)
+        else:
+            self.goal_seq = self.sample_sequence()
+
         self.num_reached = 0
         obs = self.complete_observation(obs, info)
         self.obs = obs

@@ -4,12 +4,17 @@ from itertools import combinations
 
 
 class ContextMaker:
-    def __init__(self, assignment_vocab, var_names, true_vars):
+    def __init__(self, assignment_vocab, var_names, true_vars, augment_neg=()):
         self.contexts = {}
         self.assignment_vocab = assignment_vocab
         self.var_names = var_names
         self.sympy_vars = {name: symbols(name) for name in self.var_names}
-        self.true_vars = true_vars
+        # print(self.sympy_vars)
+
+        try:
+            self.true_vars = true_vars + list(augment_neg)
+        except TypeError:
+            self.true_vars = true_vars | set(augment_neg)
 
         self.ids = {assignment: set(assignment.split("&")) for assignment in assignment_vocab.values()}
 
@@ -28,11 +33,22 @@ class ContextMaker:
 
         for var in self.true_vars:
             cur_assignment_set = []
-            for assignment, assignment_name in self.assignment_vocab.items():
-                if var in assignment_name.split("&"):
-                    cur_assignment_set.append(assignment)
+
+            if '!' in var:
+                actual_var = var.split('!')[1]
+                self.sympy_vars[var] = Not(*[self.sympy_vars[actual_var]])
+
+                for assignment, assignment_name in self.assignment_vocab.items():
+                    if (actual_var not in assignment_name.split("&")) and (assignment_name not in ['PAD', 'EPSILON', 'NULL']):
+                        cur_assignment_set.append(assignment)
+            else:
+                for assignment, assignment_name in self.assignment_vocab.items():
+                    if var in assignment_name.split("&"):
+                        cur_assignment_set.append(assignment)
 
             self.complete_var_assignments[var] = set(cur_assignment_set)
+
+        print(self.sympy_vars)
 
         self.complete_assignment = set.union(*list(self.complete_var_assignments.values()))
 
@@ -276,7 +292,7 @@ class ContextMaker:
 
         # print("Nx_not_y", tot_added)
 
-    def or_x_and_not_ny(self, x=3, y=2, z=2):
+    def or_x_and_not_ny(self, x=3, y=3, z=2):
         tot_added = 0
         name = "or_x_and_not_ny"
         self.formula_kinds[name] = {"positive": {}, "negative": {}}
@@ -397,14 +413,17 @@ class ContextMaker:
         d = {}
 
         for assignments, formula in self.cache.items():
-            new_assignments = list(assignments) + [blank_index]
+            new_assignments = list(set(list(assignments) + [blank_index]))
             new_assignments = tuple(sorted(new_assignments))
 
             blank = self.sympy_vars['blank']
-            d[new_assignments] = Or(*[formula, blank])
+
+            if new_assignments not in self.cache:
+                d[new_assignments] = Or(*[formula, blank])
 
         for assignments, formula in d.items():
-            self.cache[assignments] = formula
+            if assignments not in self.cache:
+                self.cache[assignments] = formula
 
         kinds = {}
 

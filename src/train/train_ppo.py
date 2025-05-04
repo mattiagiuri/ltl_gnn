@@ -18,6 +18,7 @@ from envs import make_env, get_env_attr
 from preprocessing.vocab import assignment_vocab, var_names
 
 from sequence.samplers import CurriculumSampler, curricula
+from sequence.samplers.curriculum_sampler import NewZonesCurriculumSampler
 from utils import torch_utils
 from utils.logging.file_logger import FileLogger
 from utils.logging.multi_logger import MultiLogger
@@ -139,8 +140,13 @@ class Trainer:
             curriculum = curricula[self.args.curriculum]
             curriculum.stage_index = curriculum_stage
             self.text_logger.important_info(f"Curriculum stage: {curriculum.stage_index}")
-            sampler = CurriculumSampler.partial(curriculum)
-            envs.append(make_env(self.args.experiment.env, sampler, sequence=True))
+
+            if self.args.areas_mode:
+                sampler = NewZonesCurriculumSampler.partial(curriculum)
+            else:
+                sampler = CurriculumSampler.partial(curriculum)
+
+            envs.append(make_env(self.args.experiment.env, sampler, sequence=True, areas_mode=self.args.areas_mode))
         # Set different seeds for each environment. The seed offset is used to ensure that the seeds do not overlap.
         seed_offset = 100 * self.args.experiment.seed
         seeds = [seed_offset + i for i in range(self.args.experiment.num_procs)]
@@ -209,6 +215,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--log_csv", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--log_wandb", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--save', action=argparse.BooleanOptionalAction, default=True)
+    # important below, put default to false after fixing
+    parser.add_argument('--areas_mode', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
 
     if args.experiment.device == 'gpu':

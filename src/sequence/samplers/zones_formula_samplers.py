@@ -8,6 +8,7 @@ from ltl.logic import Assignment, FrozenAssignment
 from envs import make_env
 from envs.zones.quadrants import Quadrant
 from ltl.samplers import AvoidSampler
+import time
 
 sampler = AvoidSampler.partial(depth=2, num_conjuncts=1)
 zone_env = make_env('PointLtl2Debug-v0', sampler, render_mode='human', max_steps=2000)
@@ -17,7 +18,26 @@ props = set(zone_env.get_propositions())
 assignments = zone_env.get_possible_assignments()
 # assignments.remove(Assignment.zero_propositions(zone_env.get_propositions()))
 all_assignments = [frozenset([a.to_frozen()]) for a in assignments]
-complete_var_assignments = []
+complete_var_assignments = {}
+colors_only = {}
+areas_only = {}
+opposites = {'right': 'left', 'left': 'right', 'top': 'bottom', 'bottom': 'top'}
+
+
+possible_avoids_from_location = {
+    ('right', ): ['left', 'left&top', 'bottom&left'],
+    ('left', ): ['right', 'right&top', 'bottom&right'],
+    ('bottom', ): ['top', 'left&top', 'right&top'],
+    ('top', ): ['bottom', 'bottom&left', 'bottom&right'],
+    ('right', 'top'): ['bottom', 'bottom&left', 'bottom&right', 'left', 'left&top'],
+    ('bottom', 'right'): ['left', 'bottom&left', 'right&top', 'top', 'left&top'],
+    ('bottom', 'left'): ['right', 'right&top', 'bottom&right', 'top', 'left&top'],
+    ('left', 'top'): ['bottom', 'bottom&left', 'bottom&right', 'right', 'right&top'],
+
+}
+
+
+always_reachable_assignments = {('top',), ('right',), (), ('right', 'top')}
 
 complete_assignment = frozenset.union(*all_assignments)
 
@@ -45,25 +65,35 @@ def get_complete_var_assignments(cur_var: str) -> frozenset[FrozenAssignment]:
 for variable in ['blue', 'green', 'magenta', 'yellow', 'right', 'top', 'left', 'bottom']:
     cur_var_assignment = get_complete_var_assignments(variable)
     all_assignments.append(cur_var_assignment)
-    complete_var_assignments.append(cur_var_assignment)
+    complete_var_assignments[variable] = cur_var_assignment
+
+    if variable in ['blue', 'green', 'magenta', 'yellow']:
+        colors_only[variable] = cur_var_assignment
+    else:
+        areas_only[variable] = cur_var_assignment
 
 
-reach_ors = {i: [frozenset.union(*x) for x in itertools.combinations(complete_var_assignments, i)] for i in range(1, 3)}
-all_ors = reach_ors[1] + reach_ors[2]
+reach_ors = {i: [frozenset.union(*x) for x in itertools.combinations(list(complete_var_assignments.values()), i)
+                 if frozenset.union(*x) != complete_assignment] for i in range(1, 3)}
+# all_ors = reach_ors[1] + reach_ors[2]
+all_ors = reach_ors[1]
 
 all_ands = []
+all_ands_dict = {}
 
 for i in range(2, 4):
-    for tup in itertools.combinations(complete_var_assignments, i):
+    for key_tup in itertools.combinations(list(complete_var_assignments.keys()), i):
+        tup = [complete_var_assignments[cur_key] for cur_key in key_tup]
         and_set = frozenset.intersection(*tup)
 
         if len(and_set) > 0 and and_set not in all_ands:
             all_ands.append(and_set)
+            all_ands_dict['&'.join(sorted(key_tup))] = and_set
 
 # print(len(all_ands))
 # print(all_ands)
 
-all_pairs = itertools.combinations(complete_var_assignments, 2)
+all_pairs = itertools.combinations(list(complete_var_assignments.values()), 2)
 
 reach_x_and_not_y = [x - y for x, y in all_pairs if len(x & y) > 0] + [y - x for x, y in all_pairs if len(x & y) > 0]
 
@@ -74,8 +104,66 @@ all_reach_difficult = all_ors + all_ands
 # print(len(all_reach))
 
 
+def check_feasible_reach(task: frozenset[FrozenAssignment], info_dict):
+
+    def fix_label(assignment_label):
+        return tuple(sorted([i.strip() for i in assignment_label.split("&") if (len(i) > 0 and '!' not in i)]))
+
+    task_labs = set([fix_label(fr.to_label()) for fr in task])
+    # print(task_labs)
+
+    def check_feasible_assignment(assignment_list):
+        # print('nontrivial')
+        assignment_set = set(assignment_list)
+
+        color = assignment_set & {'blue', 'green', 'magenta', 'yellow'}
+        rest = assignment_set - color
+
+        color_id = list(color)[0]
+        relevant_quadrants = info_dict[color_id]
+
+        if len(assignment_set) == 1:
+            return Quadrant.BOTTOM_LEFT in relevant_quadrants
+
+        elif rest == {'right'}:
+            return Quadrant.BOTTOM_RIGHT in relevant_quadrants
+
+        elif rest == {'top'}:
+            return Quadrant.TOP_LEFT in relevant_quadrants
+
+        else:
+            return Quadrant.TOP_RIGHT in relevant_quadrants
+
+    if len(task_labs & always_reachable_assignments) > 0:
+        return True
+
+    return any(check_feasible_assignment(task_label) for task_label in task_labs)
+
+
+def agent_and_color_sample(agent_quadrant, color_quadrant):
+    quadrant_to_keys = {
+        (Quadrant.TOP_LEFT, Quadrant.TOP_LEFT): ['bottom', 'right'],
+        (Quadrant.TOP_RIGHT, Quadrant.TOP_RIGHT): ['bottom', 'left'],
+        (Quadrant.BOTTOM_LEFT, Quadrant.BOTTOM_LEFT): ['top', 'right'],
+        (Quadrant.BOTTOM_RIGHT, Quadrant.BOTTOM_RIGHT): ['left', 'top'],
+        (Quadrant.TOP_LEFT, Quadrant.TOP_RIGHT): ['bottom'],
+        (Quadrant.TOP_LEFT, Quadrant.BOTTOM_LEFT): ['right'],
+        (Quadrant.TOP_LEFT, Quadrant.BOTTOM_RIGHT): [random.choice(['right&top', 'bottom&left'])],
+        (Quadrant.TOP_RIGHT, Quadrant.BOTTOM_LEFT): [random.choice(['left&top', 'bottom&right'])],
+        (Quadrant.TOP_RIGHT, Quadrant.BOTTOM_RIGHT): ['left'],
+        (Quadrant.BOTTOM_LEFT, Quadrant.BOTTOM_RIGHT): ['top'],
+    }
+
+    try:
+        return quadrant_to_keys[(agent_quadrant, color_quadrant)]
+
+    except KeyError:
+
+        return quadrant_to_keys[(color_quadrant, agent_quadrant)]
+
+
 def zonenv_all_reach_tasks(depth: int) -> Callable:
-    def wrapper(propositions: list[str]) -> list[LDBASequence]:
+    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> list[LDBASequence]:
         reachs = all_reach
 
         def rec(depth: int):
@@ -99,13 +187,22 @@ def zonenv_all_reach_tasks(depth: int) -> Callable:
 
 
 def zonenv_sample_reach(depth: int | tuple[int, int]) -> Callable:
-    def wrapper(propositions: list[str]) -> LDBASequence:
+    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
+        # start = time.time()
         d = random.randint(*depth) if isinstance(depth, tuple) else depth
         reach = random.choice(all_reach)
         task = [(reach, frozenset())]
         for _ in range(d - 1):
-            reach = random.choice([a for a in all_reach if not reach.issubset(a)])
+            possible_reach = [a for a in all_reach if (not reach.issubset(a))]
+            reach = random.choice(possible_reach)
+
+            while not check_feasible_reach(reach, info_dict):
+                reach = random.choice(possible_reach)
+            # reach = random.choice([a for a in all_reach if (not reach.issubset(a)) ])
             task.append((reach, frozenset()))
+
+        # end = time.time()
+        # print(end-start)
         return LDBASequence(task)
 
     return wrapper
@@ -129,8 +226,9 @@ def zonenv_sample_reach_avoid(
         num_avoid: int | tuple[int, int],
         not_reach_same_as_last: bool = False
 ) -> Callable[[list[str]], LDBASequence]:
-    def wrapper(propositions: list[str]) -> LDBASequence:
-        def sample_one(last_reach, cur_d):
+    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
+
+        def sample_one_color(last_reach, cur_d):
             # nr = random.randint(*num_reach) if isinstance(num_reach, tuple) else num_reach
             na = random.randint(*num_avoid) if isinstance(num_avoid, tuple) else num_avoid
 
@@ -141,47 +239,249 @@ def zonenv_sample_reach_avoid(
 
             mode = random.choice(['or', 'and', 'x_not_y'])
 
+            ra_encoding = []
+
             if mode == 'and':
-                available_reach = [a for a in all_ands if
-                                   not last_reach.issubset(a)] if not_reach_same_as_last else all_ands
+                available_reach = [k for k, a in all_ands_dict.items() if
+                                   (not last_reach.issubset(a)) and check_feasible_reach(a, info_dict)] if not_reach_same_as_last else [k for k, a in all_ands_dict.items()
+                                                                                                                                        if check_feasible_reach(a, info_dict)]
+
+                reach_key = random.choice(available_reach)
+                ra_encoding.append(reach_key)
+
+                reach = all_ands_dict[reach_key]
+
             else:
 
-                available_reach = [a for a in complete_var_assignments if
-                                   not last_reach.issubset(a)] if not_reach_same_as_last else complete_var_assignments
+                available_reach = [k for k, a in complete_var_assignments.items() if
+                                   not last_reach.issubset(a)] if not_reach_same_as_last else list(complete_var_assignments.keys())
+
+                reach_key = random.choice(available_reach)
+                ra_encoding.append(reach_key)
+
+                reach = complete_var_assignments[reach_key]
 
                 if mode != "or":
                     not_in_reach = True
 
-            reach = random.choice(available_reach)
+            # reach = random.choice(available_reach)
 
-            available_avoid = [a for a in complete_var_assignments if (not last_reach.issubset(a)) or len(last_reach) == 0]
-            try:
-                avoid = frozenset.union(*random.sample(available_avoid, na)).difference(reach) if na > 0 else frozenset()
-            except ValueError:
-                print('Reach', reach)
-                print('Last reach', last_reach)
-                print('Available avoid', available_avoid)
+            if na > 0:
+                available_avoid = [k for k, a in colors_only.items() if (not last_reach.issubset(a)) or len(last_reach) == 0]
+                avoid_keys = random.sample(available_avoid, na)
+
+                ra_encoding.append(set(avoid_keys) - {reach_key})
+
+                avoid = frozenset.union(*[colors_only[avoid_key] for avoid_key in avoid_keys]).difference(reach)
+            else:
+                ra_encoding.append(())
+                avoid = frozenset()
+
+            # try:
+            #     avoid = frozenset.union(*random.sample(available_avoid, na)).difference(reach) if na > 0 else frozenset()
+            # except ValueError:
+            #     print('Reach', reach)
+            #     print('Last reach', last_reach)
+            #     print('Available avoid', available_avoid)
 
             if not_in_reach:
-                reach_minus = random.choice([x for x in complete_var_assignments if not reach.issubset(x)])
-                reach = reach - reach_minus
+                reach_minus_list = [k for k, x in areas_only.items() if (not reach.issubset(x))
+                                    and check_feasible_reach(reach - x, info_dict)]
 
-            return reach, avoid
+                if len(reach_minus_list) > 0:
+
+                    reach_minus_key = random.choice(reach_minus_list)
+                    reach_minus = complete_var_assignments[reach_minus_key]
+                    reach = reach - reach_minus
+
+                    ra_encoding.append(reach_minus_key)
+                else:
+                    ra_encoding.append(None)
+
+            else:
+                ra_encoding.append(None)
+
+            return reach, avoid, ra_encoding
+
+        def sample_one_area(last_reach, last_ra_encoding):
+            na = random.randint(*num_avoid) if isinstance(num_avoid, tuple) else num_avoid
+
+            ra_encoding = []
+
+            def retrieve_areas(area_key):
+                try:
+                    return areas_only[area_key]
+                except KeyError:
+                    return all_ands_dict[area_key]
+
+            if na == 0:
+                reach_key = random.choice(list(colors_only.keys()))
+                reach = colors_only[reach_key]
+
+                ra_encoding = [reach_key, set([]), None]
+
+                return reach, frozenset(), ra_encoding
+
+            if not last_ra_encoding:
+                agent_quadrant = info_dict['agent']
+
+                reach_key = random.choice(list(colors_only.keys()))
+                color_quadrant = random.choice(list(info_dict[reach_key]))
+
+                avoid_keys_areas = agent_and_color_sample(agent_quadrant, color_quadrant)
+
+                if na > 1:
+                    avoid_keys_colors = random.sample(list(set(colors_only.keys()) - {reach_key}), na-1)
+                else:
+                    avoid_keys_colors = []
+
+                avoid_assignment_sets = [retrieve_areas(ak) for ak in avoid_keys_areas] + [colors_only[ak] for ak in avoid_keys_colors]
+                avoid_keys = avoid_keys_areas + avoid_keys_colors
+
+                reach = colors_only[reach_key]
+                avoid = frozenset.union(*avoid_assignment_sets).difference(reach)
+
+                ra_encoding.append(reach_key)
+                ra_encoding.append(set(avoid_keys))
+
+            elif any(prop in opposites for prop in last_ra_encoding[0].split("&")):
+                last_reach_props = last_ra_encoding[0].split("&")
+
+                possible_avoids = possible_avoids_from_location[tuple(sorted([x for x in last_reach_props if x in opposites]))]
+
+                possible_reach = [k for k, a in colors_only.items() if
+                                  not last_reach.issubset(a)] if not_reach_same_as_last else list(colors_only.keys())
+                reach_key = random.choice(possible_reach)
+                reach = colors_only[reach_key]
+
+                possible_avoids = list(filter(lambda x: check_feasible_reach(reach.difference(retrieve_areas(x)),
+                                                                             info_dict), possible_avoids))
+
+                c = 0
+                while len(possible_avoids) == 0:
+                    reach_key = random.choice(possible_reach)
+                    reach = colors_only[reach_key]
+
+                    possible_avoids = list(filter(lambda x: check_feasible_reach(
+                        reach.difference(retrieve_areas(x)),
+                        info_dict), possible_avoids))
+
+                    c += 1
+
+                    if c == 10:
+                        raise AssertionError('seems impossible to sample')
+
+                avoid_key_area = random.choice(possible_avoids)
+                avoid_color_keys = []
+
+                if na > 1:
+                    possible_avoid_colors = [x for x, a in colors_only.items() if not last_reach.issubset(a)]
+                    avoid_color_keys = random.sample(possible_avoid_colors, na-1)
+
+                all_avoid_sets = ([retrieve_areas(avoid_key_area)]
+                                  + [colors_only[ck] for ck in avoid_color_keys])
+                avoid = frozenset.union(*all_avoid_sets).difference(reach)
+
+                avoid_keys = set([avoid_key_area] + avoid_color_keys) - {reach_key}
+
+
+                ra_encoding.append(reach_key)
+                ra_encoding.append(avoid_keys)
+
+            else:
+                """If !color U color choose a quadrant of the color as starting position for the agent (diff task)
+                and sample as before (random other color and quadrant of color)
+                
+                If !area U color, check which possible color quadrants are possible first and then do as above
+                
+                Should be able to handle both at once: let prev_c be the last color. If info_dic"""
+
+                prev_c = last_ra_encoding[0]
+
+                if len(info_dict[prev_c]) == 1:
+                    agent_quadrant = list(info_dict[prev_c])[0]
+
+                else:
+                    def reconstruct_assignment_set(proposition_encodings):
+                        assignment_set = []
+
+                        for prop in proposition_encodings:
+                            try:
+                                assignment_set.append(complete_var_assignments[prop])
+                            except KeyError:
+                                assignment_set.append(all_ands_dict[prop])
+
+                        return frozenset.union(*assignment_set)
+
+
+                    agent_quadrant = None
+                    prev_task = last_reach.difference(reconstruct_assignment_set(last_ra_encoding[1]))
+
+                    for possible_agent_quadrant in list(info_dict[prev_c]):
+                        new_info_dict = {k: v for k, v in info_dict.items()}
+                        new_info_dict[prev_c] = {possible_agent_quadrant}
+
+                        if check_feasible_reach(prev_task, new_info_dict):
+                            agent_quadrant = possible_agent_quadrant
+                            break
+
+                    if not agent_quadrant:
+                        print(last_ra_encoding)
+                        print(info_dict)
+                        raise AssertionError('Prev task impossible')
+
+                reach_key = random.choice(list(colors_only.keys()))
+                color_quadrant = random.choice(list(info_dict[reach_key]))
+
+                avoid_keys_areas = agent_and_color_sample(agent_quadrant, color_quadrant)
+
+                if na > 1:
+                    avoid_keys_colors = random.sample(list(set(colors_only.keys()) - {reach_key}), na - 1)
+                else:
+                    avoid_keys_colors = []
+
+                avoid_assignment_sets = [retrieve_areas(ak) for ak in avoid_keys_areas] + [colors_only[ak] for ak in
+                                                                                       avoid_keys_colors]
+                avoid_keys = avoid_keys_areas + avoid_keys_colors
+
+                reach = colors_only[reach_key]
+                avoid = frozenset.union(*avoid_assignment_sets).difference(reach)
+
+                ra_encoding.append(reach_key)
+                ra_encoding.append(set(avoid_keys))
+
+            ra_encoding.append(None)
+            return reach, avoid, ra_encoding
 
         d = random.randint(*depth) if isinstance(depth, tuple) else depth
         last_reach = frozenset()
+        last_ra_encoding = None
+        mode = 0
+
         seq = []
         for cur_d in range(d):
-            reach, avoid = sample_one(last_reach, cur_d)
+            # if mode == 0:
+            #     mode = random.choice([0, 1])
+            # else:
+            #     mode = 0
+
+            mode = random.choice([0, 1])
+
+            if mode == 0:
+                reach, avoid, ra_encoding = sample_one_color(last_reach, cur_d)
+            else:
+                reach, avoid, ra_encoding = sample_one_area(last_reach, last_ra_encoding)
+
             seq.append((reach, avoid))
             last_reach = reach
+            last_ra_encoding = ra_encoding
         return LDBASequence(seq)
 
     return wrapper
 
 
 def zonenv_sample_difficult_ra_update(depth: int | tuple[int, int]) -> Callable:
-    def wrapper(propositions: list[str]) -> LDBASequence:
+    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
         d = random.randint(*depth) if isinstance(depth, tuple) else depth
         reach = random.choice(all_reach_difficult)
         avoid = complete_assignment.difference(reach)
@@ -195,7 +495,7 @@ def zonenv_sample_difficult_ra_update(depth: int | tuple[int, int]) -> Callable:
 
 
 def zonenv_sample_reach_stay_update(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
-    def wrapper(propositions: list[str]) -> LDBASequence:
+    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
         mode = random.choice([1, 2, 3, 4])
         reach_minus = None
 
@@ -223,4 +523,25 @@ def zonenv_sample_reach_stay_update(num_stay: int, num_avoid: tuple[int, int]) -
 
 
 if __name__ == '__main__':
-    print(all_assignments)
+    # print(all_assignments)
+
+    sample_info_dict = {'blue': {Quadrant.TOP_RIGHT, Quadrant.TOP_LEFT}, 'green': {Quadrant.BOTTOM_LEFT},
+                        'magenta': {Quadrant.BOTTOM_RIGHT, Quadrant.TOP_LEFT}, 'yellow': {Quadrant.BOTTOM_LEFT, Quadrant.TOP_LEFT}}
+
+    print(all_ands_dict['green&top'])
+    print(check_feasible_reach(all_ands_dict['green&top'], sample_info_dict))
+
+    always_possible = ['blue', 'green', 'magenta', 'yellow', 'right', 'top', 'left', 'bottom', 'right&top',
+                       'bottom&right', 'bottom&left', 'left&top']
+
+    for test_task in always_possible:
+        print(test_task)
+        if '&' not in test_task:
+            assert(check_feasible_reach(complete_var_assignments[test_task], sample_info_dict))
+        else:
+            # print(all_ands_dict[test_task])
+            assert(check_feasible_reach(all_ands_dict[test_task], sample_info_dict))
+
+    print("TEST")
+    for _ in range(5):
+        print(agent_and_color_sample(Quadrant.BOTTOM_LEFT, Quadrant.TOP_RIGHT))

@@ -20,7 +20,8 @@ def make_env(
         sampler: Callable[[list[str]], Callable],
         max_steps: Optional[int] = None,
         render_mode: str | None = None,
-        sequence=False
+        sequence=False,
+        areas_mode=False
 ):
     from envs.pretraining.pretraining_env import PretrainingEnv
     from envs.seq_wrapper import SequenceWrapper
@@ -72,7 +73,7 @@ def make_env(
         env = LTLWrapper(env, sample_task)
         env = LDBAWrapper(env)
     else:
-        env = SequenceWrapper(env, sample_task)
+        env = SequenceWrapper(env, sample_task, areas_mode=areas_mode)
     env = TimeLimit(env, max_episode_steps=max_steps)
     env = RemoveTruncWrapper(env)
     return env
