@@ -371,24 +371,34 @@ def zonenv_sample_reach_avoid(
                 reach_key = random.choice(possible_reach)
                 reach = colors_only[reach_key]
 
-                possible_avoids = list(filter(lambda x: check_feasible_reach(reach.difference(retrieve_areas(x)),
+                cur_possible_avoids = list(filter(lambda x: check_feasible_reach(reach.difference(retrieve_areas(x)),
                                                                              info_dict), possible_avoids))
 
-                c = 0
-                while len(possible_avoids) == 0:
-                    reach_key = random.choice(possible_reach)
+                prev = {reach_key}
+                while len(cur_possible_avoids) == 0:
+                    sampling_reach_set = set(possible_reach) - prev
+
+                    if len(sampling_reach_set) == 0:
+                        print("warning: difficult sampling")
+                        print(last_reach_props, possible_avoids_from_location[
+                            tuple(sorted([x for x in last_reach_props if x in opposites]))])
+                        print(info_dict)
+                        ra_encoding.append(reach_key)
+                        ra_encoding.append(set([]))
+                        ra_encoding.append(None)
+
+                        return reach, frozenset(), ra_encoding
+
+                    reach_key = random.choice(list(sampling_reach_set))
+
+                    prev.add(reach_key)
                     reach = colors_only[reach_key]
 
-                    possible_avoids = list(filter(lambda x: check_feasible_reach(
+                    cur_possible_avoids = list(filter(lambda x: check_feasible_reach(
                         reach.difference(retrieve_areas(x)),
                         info_dict), possible_avoids))
 
-                    c += 1
-
-                    if c == 10:
-                        raise AssertionError('seems impossible to sample')
-
-                avoid_key_area = random.choice(possible_avoids)
+                avoid_key_area = random.choice(cur_possible_avoids)
                 avoid_color_keys = []
 
                 if na > 1:
@@ -545,6 +555,8 @@ if __name__ == '__main__':
     sample_info_dict = {'blue': {Quadrant.TOP_RIGHT, Quadrant.TOP_LEFT}, 'green': {Quadrant.BOTTOM_LEFT},
                         'magenta': {Quadrant.BOTTOM_RIGHT, Quadrant.TOP_LEFT}, 'yellow': {Quadrant.BOTTOM_LEFT, Quadrant.TOP_LEFT}}
 
+
+
     print(all_ands_dict['green&top'])
     print(check_feasible_reach(all_ands_dict['green&top'], sample_info_dict))
 
@@ -569,3 +581,19 @@ if __name__ == '__main__':
     print(len(all_ors))
     print(len(all_ands))
     print(len(reach_x_and_not_y))
+
+
+    def retrieve_areas_test(area_key):
+        try:
+            return areas_only[area_key]
+        except KeyError:
+            return all_ands_dict[area_key]
+
+    sample_info_dict_2 = {'green': {Quadrant.TOP_RIGHT}, 'magenta': {Quadrant.BOTTOM_RIGHT, Quadrant.TOP_RIGHT},
+                        'blue': {Quadrant.BOTTOM_LEFT, Quadrant.BOTTOM_RIGHT},
+                        'yellow': {Quadrant.BOTTOM_LEFT, Quadrant.TOP_LEFT}, 'agent': Quadrant.TOP_LEFT}
+
+    for c, a in colors_only.items():
+        r = retrieve_areas_test('right')
+
+        print(check_feasible_reach(a.difference(r), sample_info_dict_2))
