@@ -248,8 +248,8 @@ def zonenv_sample_reach_avoid(
             # nr = random.randint(*num_reach) if isinstance(num_reach, tuple) else num_reach
             na = random.randint(*num_avoid) if isinstance(num_avoid, tuple) else num_avoid
 
-            if cur_d == 0:
-                na += 1
+            # if cur_d == 0:
+            #     na += 1
 
             not_in_reach = False
 
