@@ -438,6 +438,9 @@ def zonenv_sample_reach_avoid(
                             except KeyError:
                                 assignment_set.append(all_ands_dict[prop])
 
+                        if len(assignment_set) == 0:
+                            return frozenset()
+
                         return frozenset.union(*assignment_set)
 
 
