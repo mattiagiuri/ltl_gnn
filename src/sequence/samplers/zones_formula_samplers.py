@@ -24,6 +24,13 @@ areas_only = {}
 opposites = {'right': 'left', 'left': 'right', 'top': 'bottom', 'bottom': 'top'}
 
 
+agent_quadrant_to_assignment = {
+    Quadrant.TOP_RIGHT: Assignment.where('right', 'top', propositions=props).to_frozen(),
+    Quadrant.TOP_LEFT: Assignment.where('top', propositions=props).to_frozen(),
+    Quadrant.BOTTOM_RIGHT: Assignment.where('right', propositions=props).to_frozen(),
+    Quadrant.BOTTOM_LEFT: Assignment.zero_propositions(props).to_frozen()
+}
+
 # possible_avoids_from_location = {
 #     ('right', ): ['left', 'left&top', 'bottom&left'],
 #     ('left', ): ['right', 'right&top', 'bottom&right'],
@@ -127,6 +134,7 @@ def check_feasible_reach(task: frozenset[FrozenAssignment], info_dict):
 
     task_labs = set([fix_label(fr.to_label()) for fr in task])
     # print(task_labs)
+    # print([fr.to_label() for fr in task])
 
     def check_feasible_assignment(assignment_list):
         # print('nontrivial')
@@ -154,6 +162,19 @@ def check_feasible_reach(task: frozenset[FrozenAssignment], info_dict):
         return True
 
     return any(check_feasible_assignment(task_label) for task_label in task_labs)
+
+
+def check_nontrivial(agent_quadrant, reach, depth):
+    if depth > 0:
+        return True
+
+    trivializing_assignment = agent_quadrant_to_assignment[agent_quadrant]
+    # trivial_set = frozenset([trivializing_assignment])
+
+    # if trivializing_assignment in reach:
+    #     print(trivializing_assignment, reach, trivial_set & reach)
+
+    return not (trivializing_assignment in reach)
 
 
 def agent_and_color_sample(agent_quadrant, color_quadrant):
@@ -206,13 +227,23 @@ def zonenv_sample_reach(depth: int | tuple[int, int]) -> Callable:
     def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
         # start = time.time()
         d = random.randint(*depth) if isinstance(depth, tuple) else depth
-        reach = random.choice(all_reach)
-        task = [(reach, frozenset())]
-        for _ in range(d - 1):
-            possible_reach = [a for a in all_reach if (not reach.issubset(a))]
+        # reach = random.choice(all_reach)
+        # task = [(reach, frozenset())]
+
+        reach = None
+        task = []
+
+        agent_quadrant = info_dict['agent']
+        for cur_d in range(d):
+
+            if cur_d == 0:
+                possible_reach = [a for a in all_reach]
+            else:
+                possible_reach = [a for a in all_reach if (not reach.issubset(a))]
+
             reach = random.choice(possible_reach)
 
-            while not check_feasible_reach(reach, info_dict):
+            while not (check_feasible_reach(reach, info_dict) and check_nontrivial(agent_quadrant, reach, cur_d)):
                 reach = random.choice(possible_reach)
             # reach = random.choice([a for a in all_reach if (not reach.issubset(a)) ])
             task.append((reach, frozenset()))
@@ -257,11 +288,12 @@ def zonenv_sample_reach_avoid(
             mode = random.choice(['or', 'and'])
 
             ra_encoding = []
+            agent_quadrant = info_dict['agent']
 
             if mode == 'and':
                 available_reach = [k for k, a in all_ands_dict.items() if
-                                   (not last_reach.issubset(a)) and check_feasible_reach(a, info_dict)] if not_reach_same_as_last else [k for k, a in all_ands_dict.items()
-                                                                                                                                        if check_feasible_reach(a, info_dict)]
+                                   (not last_reach.issubset(a)) and check_feasible_reach(a, info_dict) and check_nontrivial(agent_quadrant, a, cur_d)] if not_reach_same_as_last else [k for k, a in all_ands_dict.items()
+                                                                                                                                        if (check_feasible_reach(a, info_dict) and check_nontrivial(agent_quadrant, a, cur_d))]
 
                 reach_key = random.choice(available_reach)
                 ra_encoding.append(reach_key)
@@ -271,7 +303,7 @@ def zonenv_sample_reach_avoid(
             else:
 
                 available_reach = [k for k, a in complete_var_assignments.items() if
-                                   not last_reach.issubset(a)] if not_reach_same_as_last else list(complete_var_assignments.keys())
+                                   (not last_reach.issubset(a)) and check_nontrivial(agent_quadrant, a, cur_d)] if not_reach_same_as_last else [k for k, a in complete_var_assignments.items() if check_nontrivial(agent_quadrant, a, cur_d)]
 
                 reach_key = random.choice(available_reach)
                 ra_encoding.append(reach_key)
@@ -291,7 +323,7 @@ def zonenv_sample_reach_avoid(
 
                 avoid = frozenset.union(*[colors_only[avoid_key] for avoid_key in avoid_keys]).difference(reach)
             else:
-                ra_encoding.append(())
+                ra_encoding.append(set([]))
                 avoid = frozenset()
 
             # try:
@@ -600,3 +632,6 @@ if __name__ == '__main__':
         r = retrieve_areas_test('right')
 
         print(check_feasible_reach(a.difference(r), sample_info_dict_2))
+
+    print(all_ands_dict['bottom&left'])
+    # print(tuple(sorted([i.strip() for i in all_ands_dict['bottom&left'].to_label().split("&") if (len(i) > 0 and '!' not in i)])))

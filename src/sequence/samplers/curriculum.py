@@ -1351,7 +1351,7 @@ ZONES_UPDATE_PRETRAINING_CURRICULUM = Curriculum([
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=flatworld_sample_reach_avoid((1, 2), (1, 2), (0, 2)),
+                sampler=zonenv_sample_reach_avoid((1, 2), 1, (0, 2)),
                 threshold=None,
                 threshold_type=None
             ),
