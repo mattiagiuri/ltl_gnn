@@ -50,7 +50,8 @@ class ContextMaker:
 
         print(self.sympy_vars)
 
-        self.complete_assignment = set.union(*list(self.complete_var_assignments.values()))
+        self.complete_assignment = set.union(*list(self.complete_var_assignments.values())) | {
+            len(assignment_vocab) - 1}
 
         self.cache = {}
         self.formula_kinds = {}
