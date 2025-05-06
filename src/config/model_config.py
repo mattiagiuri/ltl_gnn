@@ -68,7 +68,7 @@ class ModelConfig:
 
 zones = ModelConfig(
     actor=ActorConfig(
-        layers=[128, 64, 64],
+        layers=[64, 64, 64],
         activation=dict(
             hidden=nn.ReLU,
             output=nn.Tanh
@@ -79,7 +79,7 @@ zones = ModelConfig(
         layers=[64, 64],
         activation=nn.Tanh
     ),
-    ltl_embedding_dim=32,
+    ltl_embedding_dim=16,
     num_rnn_layers=1,
     env_net=StandardNetConfig(
         layers=[128, 64],
@@ -627,7 +627,7 @@ frozen_flatworld_gnn = ModelConfig(
 
 zones_update = ModelConfig(
     actor=ActorConfig(
-        layers=[128, 64, 64],
+        layers=[64, 64, 64],
         activation=dict(
             hidden=nn.ReLU,
             output=nn.Tanh
@@ -638,7 +638,7 @@ zones_update = ModelConfig(
         layers=[64, 64],
         activation=nn.Tanh
     ),
-    ltl_embedding_dim=32,
+    ltl_embedding_dim=16,
     num_rnn_layers=1,
     env_net=StandardNetConfig(
         layers=[128, 64],
@@ -649,7 +649,7 @@ zones_update = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=4,
+    num_gnn_layers=3,
     freeze_gnn=False,
     stay_mode=True
 )

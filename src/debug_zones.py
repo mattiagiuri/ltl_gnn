@@ -31,13 +31,13 @@ init_vars(env.get_propositions())
 print(assignment_vocab)
 print(var_names)
 
-# for i in range(100):
-#     action = env.action_space.sample()
-#     observation, reward, terminated, info = env.step(action)
-#
-#     if terminated:
-#         print(f'Success: {"success" in info}')
-#         observation = env.reset()
-#         print(f'Goal: {observation["goal"]}')
+for i in range(1000):
+    action = env.action_space.sample()
+    observation, reward, terminated, info = env.step(action)
+
+    if terminated:
+        print(f'Success: {"success" in info}')
+        observation = env.reset()
+        print(f'Goal: {observation["goal"]}')
 
 env.close()
