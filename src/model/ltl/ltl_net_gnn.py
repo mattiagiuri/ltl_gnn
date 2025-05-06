@@ -33,11 +33,12 @@ class LTLNetGNN(nn.Module):
         else:
             print("LTL Stay Mode")
             augment_neg = []
+            print(augment_neg, 'augment_neg')
 
-            if 'right' in variable_names:
-                augment_neg.append('!right')
-            if 'top' in variable_names:
-                augment_neg.append('!top')
+            # if 'right' in variable_names:
+            #     augment_neg.append('!right')
+            # if 'top' in variable_names:
+            #     augment_neg.append('!top')
             self.syntax_treer = SyntaxTreeStay(variable_names, assignment_vocabulary, augment_neg=augment_neg)
 
     def forward(self, batched_seqs: tuple[tuple[torch.tensor, torch.tensor], tuple[torch.tensor, torch.tensor]]

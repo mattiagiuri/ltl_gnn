@@ -1357,6 +1357,7 @@ ZONES_UPDATE_PRETRAINING_CURRICULUM = Curriculum([
             ),
         ],
         probs=[0.3, 0.3, 0.4],
+        # probs=[0.5, 0.5],
         threshold=None,
         threshold_type=None
     ),

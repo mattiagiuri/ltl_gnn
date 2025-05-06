@@ -69,12 +69,16 @@ class SyntaxTreeStay:
 
         # @memory.cache
         def cheat_syntax_tree(assignment_set):
-            formula = Or(*[
-                self.read_proposition(var)
-                for var in assignment_set
-            ])
+            # formula = Or(*[
+            #     self.read_proposition(var)
+            #     for var in assignment_set
+            # ])
+            #
+            # formula = self.simplify_formula(formula)
 
-            formula = self.simplify_formula(formula)
+            formula = self.context_maker.make_formula(assignment_set)
+
+            print(assignment_set, formula)
 
             X, edge_index = self.syntax_tree_from_formula(formula)
 
@@ -191,7 +195,7 @@ class SyntaxTreeStay:
                 return self.in_mem_cache[reach_tup]
             except KeyError:
                 new_formula = self.build_syntax_tree(reach_tup)
-                print(reach_tup)
+                # print(reach_tup)
                 self.in_mem_cache[reach_tup] = new_formula
 
                 return new_formula

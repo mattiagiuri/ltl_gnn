@@ -179,10 +179,10 @@ def check_nontrivial(agent_quadrant, reach, depth):
 
 def agent_and_color_sample(agent_quadrant, color_quadrant):
     quadrant_to_keys = {
-        (Quadrant.TOP_LEFT, Quadrant.TOP_LEFT): ['bottom', 'right'],
-        (Quadrant.TOP_RIGHT, Quadrant.TOP_RIGHT): ['bottom', 'left'],
-        (Quadrant.BOTTOM_LEFT, Quadrant.BOTTOM_LEFT): ['top', 'right'],
-        (Quadrant.BOTTOM_RIGHT, Quadrant.BOTTOM_RIGHT): ['left', 'top'],
+        (Quadrant.TOP_LEFT, Quadrant.TOP_LEFT): [random.choice(['bottom', 'right'])],
+        (Quadrant.TOP_RIGHT, Quadrant.TOP_RIGHT): [random.choice(['bottom', 'left'])],
+        (Quadrant.BOTTOM_LEFT, Quadrant.BOTTOM_LEFT): [random.choice(['top', 'right'])],
+        (Quadrant.BOTTOM_RIGHT, Quadrant.BOTTOM_RIGHT): [random.choice(['left', 'top'])],
         (Quadrant.TOP_LEFT, Quadrant.TOP_RIGHT): ['bottom'],
         (Quadrant.TOP_LEFT, Quadrant.BOTTOM_LEFT): ['right'],
         (Quadrant.TOP_LEFT, Quadrant.BOTTOM_RIGHT): [random.choice(['right&top', 'bottom&left'])],
@@ -324,6 +324,7 @@ def zonenv_sample_reach_avoid(
                 avoid = frozenset.union(*[colors_only[avoid_key] for avoid_key in avoid_keys]).difference(reach)
             else:
                 ra_encoding.append(set([]))
+                avoid_keys = None
                 avoid = frozenset()
 
             # try:
@@ -349,6 +350,11 @@ def zonenv_sample_reach_avoid(
 
             else:
                 ra_encoding.append(None)
+
+            if len(avoid) > 10:
+                print("long avoid color")
+                print(avoid_keys)
+                print(reach_key)
 
             return reach, avoid, ra_encoding
 
@@ -513,6 +519,12 @@ def zonenv_sample_reach_avoid(
                 ra_encoding.append(set(avoid_keys))
 
             ra_encoding.append(None)
+
+            if len(avoid) > 10:
+                print('Long avoid area')
+                print(avoid_keys)
+                print(reach_key)
+
             return reach, avoid, ra_encoding
 
         d = random.randint(*depth) if isinstance(depth, tuple) else depth
@@ -542,46 +554,46 @@ def zonenv_sample_reach_avoid(
     return wrapper
 
 
-def zonenv_sample_difficult_ra_update(depth: int | tuple[int, int]) -> Callable:
-    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
-        d = random.randint(*depth) if isinstance(depth, tuple) else depth
-        reach = random.choice(all_reach_difficult)
-        avoid = complete_assignment.difference(reach)
-        task = [(reach, avoid)]
-        for _ in range(d - 1):
-            reach = random.choice([a for a in all_reach if not reach.issubset(a)])
-            task.append((reach, frozenset()))
-        return LDBASequence(task)
-
-    return wrapper
-
-
-def zonenv_sample_reach_stay_update(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
-    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
-        mode = random.choice([1, 2, 3, 4])
-        reach_minus = None
-
-        if mode == 4:
-            reach = random.choice(complete_var_assignments)
-            reach_minus = random.choice([a for a in complete_var_assignments if not reach.issubset(a)])
-        else:
-            reach = random.choice(all_ands + all_ors)
-        # while len(p.get_true_propositions()) > 1:
-        #     p = random.choice(assignments)
-
-        na = random.randint(*num_avoid)
-        available = [a for a in all_assignments if a != reach and not reach.issubset(a)]
-        avoid = random.sample([x for x in complete_var_assignments if not reach.issubset(x)], na)
-        avoid = frozenset.union(*avoid).difference(reach) if na > 0 else frozenset()
-        second_avoid = frozenset.union(*all_assignments).difference(reach).union({Assignment.zero_propositions(propositions).to_frozen()})
-
-        if reach_minus:
-            reach = reach - reach_minus
-
-        task = [(LDBASequence.EPSILON, avoid), (reach, second_avoid)]
-        return LDBASequence(task, repeat_last=num_stay)
-
-    return wrapper
+# def zonenv_sample_difficult_ra_update(depth: int | tuple[int, int]) -> Callable:
+#     def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
+#         d = random.randint(*depth) if isinstance(depth, tuple) else depth
+#         reach = random.choice(all_reach_difficult)
+#         avoid = complete_assignment.difference(reach)
+#         task = [(reach, avoid)]
+#         for _ in range(d - 1):
+#             reach = random.choice([a for a in all_reach if not reach.issubset(a)])
+#             task.append((reach, frozenset()))
+#         return LDBASequence(task)
+#
+#     return wrapper
+#
+#
+# def zonenv_sample_reach_stay_update(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
+#     def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
+#         mode = random.choice([1, 2, 3, 4])
+#         reach_minus = None
+#
+#         if mode == 4:
+#             reach = random.choice(complete_var_assignments)
+#             reach_minus = random.choice([a for a in complete_var_assignments if not reach.issubset(a)])
+#         else:
+#             reach = random.choice(all_ands + all_ors)
+#         # while len(p.get_true_propositions()) > 1:
+#         #     p = random.choice(assignments)
+#
+#         na = random.randint(*num_avoid)
+#         available = [a for a in all_assignments if a != reach and not reach.issubset(a)]
+#         avoid = random.sample([x for x in complete_var_assignments if not reach.issubset(x)], na)
+#         avoid = frozenset.union(*avoid).difference(reach) if na > 0 else frozenset()
+#         second_avoid = frozenset.union(*all_assignments).difference(reach).union({Assignment.zero_propositions(propositions).to_frozen()})
+#
+#         if reach_minus:
+#             reach = reach - reach_minus
+#
+#         task = [(LDBASequence.EPSILON, avoid), (reach, second_avoid)]
+#         return LDBASequence(task, repeat_last=num_stay)
+#
+#     return wrapper
 
 
 if __name__ == '__main__':
