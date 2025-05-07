@@ -504,7 +504,7 @@ def zonenv_sample_reach_avoid(
                 avoid_keys_areas = agent_and_color_sample(agent_quadrant, color_quadrant)
 
                 if na > 1 and '&' not in avoid_keys_areas[0]:
-                    avoid_keys_colors = random.sample(list(set(colors_only.keys()) - {reach_key}), na - 1)
+                    avoid_keys_colors = random.sample([x for x, a in colors_only.items() if not last_reach.issubset(a)], na - 1)
                 else:
                     avoid_keys_colors = []
 
