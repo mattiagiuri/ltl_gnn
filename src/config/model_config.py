@@ -649,7 +649,7 @@ zones_update = ModelConfig(
         activation=nn.ReLU
     ),
     gnn_mode=True,
-    num_gnn_layers=2,
+    num_gnn_layers=3,
     freeze_gnn=False,
     stay_mode=True
 )
