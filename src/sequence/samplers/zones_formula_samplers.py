@@ -378,6 +378,7 @@ def zonenv_sample_reach_avoid(
                 return reach, frozenset(), ra_encoding
 
             if not last_ra_encoding:
+                # print("Startin mate")
                 agent_quadrant = info_dict['agent']
 
                 reach_key = random.choice(list(colors_only.keys()))
@@ -400,6 +401,8 @@ def zonenv_sample_reach_avoid(
                 ra_encoding.append(set(avoid_keys))
 
             elif any(prop in opposites for prop in last_ra_encoding[0].split("&")):
+                # print("E")
+                # print(last_ra_encoding)
                 last_reach_props = last_ra_encoding[0].split("&")
 
                 possible_avoids = possible_avoids_from_location[tuple(sorted([x for x in last_reach_props if x in opposites]))]
@@ -525,6 +528,8 @@ def zonenv_sample_reach_avoid(
                 print(avoid_keys)
                 print(reach_key)
 
+            # print(ra_encoding, info_dict)
+
             return reach, avoid, ra_encoding
 
         d = random.randint(*depth) if isinstance(depth, tuple) else depth
@@ -549,6 +554,8 @@ def zonenv_sample_reach_avoid(
             seq.append((reach, avoid))
             last_reach = reach
             last_ra_encoding = ra_encoding
+        #     print(last_ra_encoding)
+        # print(info_dict)
         return LDBASequence(seq)
 
     return wrapper
