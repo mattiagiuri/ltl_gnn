@@ -34,6 +34,8 @@ model_configs = {
     'gnn_FlatWorld-v0': flatworld_gnn,
     'frozen_gnn_FlatWorld-v0': frozen_flatworld_gnn,
     'gnn_PointLtl2-v0': zones_update,
+    'pretraining_gnn_PointLtl2-v0': pretraining_zones_update,
+    'frozen_gnn_PointLtl2-v0': frozen_zones_update,
 }
 
 __all__ = ['ExperimentConfig', 'PPOConfig', 'ModelConfig', 'SetNetConfig', 'model_configs']

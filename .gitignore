@@ -27,6 +27,6 @@ zones.pkl
 notes/
 quick_fix.py
 worlds/
-state_dicts/
+#state_dicts/
 worlds1/
 worlds3/

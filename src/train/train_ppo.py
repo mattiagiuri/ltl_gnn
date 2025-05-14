@@ -73,10 +73,11 @@ class Trainer:
 
         if model_configs[self.args.model_config].freeze_gnn:
             cur_seed = self.args.experiment.seed
+            ltl_net_path_frozen = self.args.ltlnet_path
             # gnn_conf = torch.load(f"src/state_dicts/transformer_cloud/" + str(cur_seed) + "/ltl_net.pth")
             # gnn_conf = torch.load(f"src/state_dicts/chess8_formula_big_skip/" + str(cur_seed) + "/ltl_net.pth")
             # gnn_conf = torch.load(f"src/state_dicts/final_cloud_dir/" + str(cur_seed) + "/ltl_net.pth")
-            gnn_conf = torch.load(f"src/state_dicts/flatworld_gnn/" + str(cur_seed) + "/ltl_net.pth")
+            gnn_conf = torch.load(f"src/state_dicts/" + ltl_net_path_frozen + "/" + str(cur_seed) + "/ltl_net.pth")
             model.ltl_net.load_state_dict(gnn_conf)
             for param in model.ltl_net.parameters():
                 param.requires_grad = False
@@ -216,7 +217,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--log_wandb", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--save', action=argparse.BooleanOptionalAction, default=True)
     # important below, put default to false after fixing
-    parser.add_argument('--areas_mode', action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument('--areas_mode', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--ltlnet_path', type=str, default=None)
     args = parser.parse_args()
 
     if args.experiment.device == 'gpu':

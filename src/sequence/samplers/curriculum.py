@@ -21,6 +21,8 @@ from sequence.samplers.flatworld_formula_sequence_samplers import flatworld_samp
     flatworld_sample_complex_reach, flatworld_sample_formulae_reach_avoid, flatworld_sample_formula_reach_stay
 from sequence.samplers.flatworld_sequence_samplers import flatworld_all_reach_tasks, \
     flatworld_sample_reach_avoid, flatworld_sample_reach_stay, flatworld_sample_reach
+from sequence.samplers.pretraining_zones_formula_samplers import pretraining_zonenv_sample_reach_avoid, \
+    pretraining_zonenv_sample_reach
 from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_avoid_tasks, all_reach_tasks, \
     all_reach_stay_tasks, sample_reach_stay
 
@@ -1341,17 +1343,17 @@ ZONES_UPDATE_PRETRAINING_CURRICULUM = Curriculum([
     MultiRandomStage(  # 0
         stages=[
             RandomCurriculumStage(
-                sampler=zonenv_sample_reach_avoid((1, 2), 1, 1),
+                sampler=pretraining_zonenv_sample_reach_avoid((1, 2), 1, 1),
                 threshold=None,
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=zonenv_sample_reach((1, 2)),
+                sampler=pretraining_zonenv_sample_reach((1, 2)),
                 threshold=None,
                 threshold_type=None
             ),
             RandomCurriculumStage(
-                sampler=zonenv_sample_reach_avoid((1, 2), 1, (0, 2)),
+                sampler=pretraining_zonenv_sample_reach_avoid((1, 2), 1, (0, 2)),
                 threshold=None,
                 threshold_type=None
             ),

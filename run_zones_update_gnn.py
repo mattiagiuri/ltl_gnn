@@ -38,13 +38,14 @@ def main():
             '--save_interval', '1',
             '--epochs', '10',
             '--num_steps', '15_000_000',
-            '--model_config', 'gnn_PointLtl2-v0',
+            '--model_config', 'frozen_gnn_PointLtl2-v0',
             '--curriculum', 'update_PointLtl2-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
             '--num_procs', str(args.num_procs),
-            # '--areas_mode', 'true',
+            '--areas_mode',
+            '--ltlnet_path', 'zenv_gcn'
         ]
         if args.log_wandb:
             command.append('--log_wandb')
@@ -58,7 +59,7 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
-        sys.argv += '--num_procs 16 --device cpu --name test_gnn_10 --seed 1 --log_csv false --save true'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name test_gnn_18 --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:
