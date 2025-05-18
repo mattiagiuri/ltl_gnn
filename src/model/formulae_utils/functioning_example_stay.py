@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from model.formulae_utils.SyntaxTreeContext import SyntaxTreeContext
 from model.formulae_utils.SyntaxTreeStay import SyntaxTreeStay
-from visualize_trees import plot_graph
+from visualize_trees import plot_graph, plot_forest, plot_forest_two_batches
 
 var_names=[1]*5
 assignment_vocab=None
@@ -27,9 +27,12 @@ print(tree.embedding_dict)
 # lens = [3, 2, 2]
 
 
-sample_reach = torch.tensor([[[6, 7, 8], [13, 9, 0]]], dtype=torch.long)
-sample_avoid = torch.tensor([[[9, 0, 0], [4, 6, 0]]], dtype=torch.long)
+sample_reach = torch.tensor([[[6, 7, 8], [10, 12, 0], [13, 9, 0]]], dtype=torch.long)
+sample_avoid = torch.tensor([[[9, 0, 0], [2, 0, 0], [4, 6, 0]]], dtype=torch.long)
 lens = [2]
+
+titlesr = [str(sorted(set([sample_vocab[cur_r.item()] for cur_r in cur_set if cur_r.item() != 0]))) for cur_set in sample_reach[0]]
+titlesa = [str(sorted(set([sample_vocab[cur_r.item()] for cur_r in cur_set if cur_r.item() != 0]))) for cur_set in sample_avoid[0]]
 
 # print("Assignment mode")
 # Xs, edges, rootss = tree.process_reach_avoid(sample_reach, lens, sample_avoid)
@@ -47,12 +50,15 @@ Xsr, edgesr, rootsr = tree.process_sequence(sample_reach, lens)
 print("Avoid")
 Xsa, edgesa, rootsa = tree.process_sequence(sample_avoid, lens)
 
+# plot_forest(edgesr, Xsr, rootsr, label_dict=tree.embedding_dict)
+plot_forest_two_batches((edgesr, edgesa), (Xsr, Xsa), (rootsr, rootsa), (titlesr, titlesa), tree.embedding_dict, title="Sample Trees for a Reach-Avoid Sequence")
+
 # assignments = [(1, 0, 0, 1), (0, 1, 0, 1), (1, 1, 0, 1), (0, 0, 0, 1)]
 
 # TODO: add formula for avoiding sequences
 # print(tree.embedding_dict)
-plot_graph(edgesr, {i: tree.embedding_dict[x.item()] for i, x in enumerate(Xsr)})
-plot_graph(edgesa, {i: tree.embedding_dict[x.item()] for i, x in enumerate(Xsa)})
+# plot_graph(edgesr, {i: tree.embedding_dict[x.item()] for i, x in enumerate(Xsr)})
+# plot_graph(edgesa, {i: tree.embedding_dict[x.item()] for i, x in enumerate(Xsa)})
 
 # print(tree.minimal_formula(assignments))
 # print(tree.syntax_tree(assignments))

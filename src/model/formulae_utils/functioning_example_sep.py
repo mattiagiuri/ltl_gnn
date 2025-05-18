@@ -2,7 +2,7 @@ import torch
 from SyntaxTree import SyntaxTree
 import torch_geometric
 import torch.nn.functional as F
-from visualize_trees import plot_graph
+from visualize_trees import plot_forest
 
 var_names=[1]*5
 assignment_vocab=None
@@ -42,6 +42,7 @@ Xsa, edgesa, rootsa = tree.process_sequence(sample_avoid, lens)
 # TODO: add formula for avoiding sequences
 # print(tree.embedding_dict)
 # plot_graph(edgesr, {i: tree.embedding_dict[x] for i, x in enumerate(Xsr)})
+plot_forest(edgesr, Xsr, rootsr, label_dict=tree.embedding_dict)
 
 # print(tree.minimal_formula(assignments))
 # print(tree.syntax_tree(assignments))

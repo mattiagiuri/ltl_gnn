@@ -38,14 +38,14 @@ def main():
             '--save_interval', '1',
             '--epochs', '10',
             '--num_steps', '15_000_000',
-            '--model_config', 'frozen_gnn_PointLtl2-v0',
+            '--model_config', 'gnn_PointLtl2-v0',
             '--curriculum', 'update_PointLtl2-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
             '--num_procs', str(args.num_procs),
             '--areas_mode',
-            '--ltlnet_path', 'zenv_gcn'
+            '--ltlnet_path', 'NONE'
         ]
         if args.log_wandb:
             command.append('--log_wandb')
