@@ -16,7 +16,14 @@ def preprocess_obss(obss: list[dict[str, Any]], propositions: set[str], device=N
     seqs = []
     epsilon_mask = []
     for obs in obss:
-        features.append(obs["features"])
+
+        # print(obs)
+
+        if isinstance(obs['features'], dict):
+            features.append(obs['features']['features'])
+        else:
+            features.append(obs["features"])
+
         seqs.append(list(reversed(obs["goal"])))
     for seq, obs in zip(seqs, obss):
         epsilon_enabled = seq[-1][0] == LDBASequence.EPSILON
@@ -33,7 +40,13 @@ def preprocess_obss(obss: list[dict[str, Any]], propositions: set[str], device=N
 
 
 def preprocess_features(features, device=None) -> torch.tensor:
-    return torch.tensor(np.array(features), dtype=torch.float).to(device)
+    try:
+        # print("A")
+        # print(features)
+        return torch.tensor(np.array(features), dtype=torch.float).to(device)
+    except TypeError:
+        print(features)
+        raise TypeError
 
 
 def preprocess_sequence(seq: LDBASequence) -> list[ReachAvoidSet]:
