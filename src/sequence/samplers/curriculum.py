@@ -28,7 +28,8 @@ from sequence.samplers.sequence_samplers import sample_reach_avoid, all_reach_av
 
 from sequence.samplers.chessworld8_formula_samplers import chessworld8_sample_simple_reach, \
     chessworld8_sample_complex_reach, chessworld8_sample_formulae_reach_avoid, chessworld8_sample_formula_reach_stay
-from sequence.samplers.zones_formula_samplers import zonenv_sample_reach_avoid, zonenv_sample_reach
+from sequence.samplers.zones_formula_samplers import zonenv_sample_reach_avoid, zonenv_sample_reach, \
+    zonenv_sample_reach_stay
 
 
 @dataclass
@@ -1364,5 +1365,49 @@ ZONES_UPDATE_PRETRAINING_CURRICULUM = Curriculum([
         threshold_type=None
     ),
 
+    ]
+)
+
+
+ZONES_STAY_CURRICULUM = Curriculum([
+    # RandomCurriculumStage(
+    #     sampler=zonenv_sample_reach((1, 2)),
+    #     threshold=0.8,
+    #     threshold_type='mean'
+    # ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach_stay(5, (0, 0)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.2, 0.8],
+        threshold=0.8,
+        threshold_type='mean'
+    ),
+    MultiRandomStage(  # 0
+        stages=[
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach_stay(10, (0, 0)),
+                threshold=None,
+                threshold_type=None
+            ),
+            RandomCurriculumStage(
+                sampler=zonenv_sample_reach((1, 2)),
+                threshold=None,
+                threshold_type=None
+            ),
+        ],
+        probs=[0.2, 0.8],
+        threshold=0.8,
+        threshold_type='mean'
+    ),
     ]
 )

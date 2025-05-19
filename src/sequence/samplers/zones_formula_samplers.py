@@ -575,32 +575,21 @@ def zonenv_sample_reach_avoid(
 #     return wrapper
 #
 #
-# def zonenv_sample_reach_stay_update(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
-#     def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
-#         mode = random.choice([1, 2, 3, 4])
-#         reach_minus = None
-#
-#         if mode == 4:
-#             reach = random.choice(complete_var_assignments)
-#             reach_minus = random.choice([a for a in complete_var_assignments if not reach.issubset(a)])
-#         else:
-#             reach = random.choice(all_ands + all_ors)
-#         # while len(p.get_true_propositions()) > 1:
-#         #     p = random.choice(assignments)
-#
-#         na = random.randint(*num_avoid)
-#         available = [a for a in all_assignments if a != reach and not reach.issubset(a)]
-#         avoid = random.sample([x for x in complete_var_assignments if not reach.issubset(x)], na)
-#         avoid = frozenset.union(*avoid).difference(reach) if na > 0 else frozenset()
-#         second_avoid = frozenset.union(*all_assignments).difference(reach).union({Assignment.zero_propositions(propositions).to_frozen()})
-#
-#         if reach_minus:
-#             reach = reach - reach_minus
-#
-#         task = [(LDBASequence.EPSILON, avoid), (reach, second_avoid)]
-#         return LDBASequence(task, repeat_last=num_stay)
-#
-#     return wrapper
+def zonenv_sample_reach_stay(num_stay: int, num_avoid: tuple[int, int]) -> Callable[[list[str]], LDBASequence]:
+    def wrapper(propositions: list[str], info_dict: dict[str, list[Quadrant]]) -> LDBASequence:
+
+        reach = random.choice(all_reach)
+        agent_quadrant = info_dict['agent']
+
+        while not (check_feasible_reach(reach, info_dict) and check_nontrivial(agent_quadrant, reach, 0)):
+            reach = random.choice(all_reach)
+
+        second_avoid = frozenset.union(*all_assignments).difference(reach)
+
+        task = [(LDBASequence.EPSILON, frozenset()), (reach, second_avoid)]
+        return LDBASequence(task, repeat_last=num_stay)
+
+    return wrapper
 
 
 if __name__ == '__main__':
