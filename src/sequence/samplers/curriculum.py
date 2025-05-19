@@ -1406,8 +1406,8 @@ ZONES_STAY_CURRICULUM = Curriculum([
             ),
         ],
         probs=[0.2, 0.8],
-        threshold=0.8,
-        threshold_type='mean'
+        threshold=None,
+        threshold_type=None
     ),
     ]
 )
