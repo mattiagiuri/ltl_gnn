@@ -31,7 +31,7 @@ def main():
     for label in ax.xaxis.get_ticklabels()[::2]:
         label.set_visible(False)
 
-    plt.savefig('/home/matier/tmp/curves_ablation.pdf', bbox_inches='tight')
+    # plt.savefig('/home/matier/tmp/curves_ablation.pdf', bbox_inches='tight')
     plt.show()
 
 

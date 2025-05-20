@@ -264,7 +264,7 @@ if __name__ == "__main__":
     #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest')
 
-    for cur_seed in range(1, 6):
+    for cur_seed in range(5, 6):
         print(cur_seed)
         print("deepsets")
         # evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest',
@@ -281,10 +281,10 @@ if __name__ == "__main__":
         # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_update_2',
         #                                        seed=cur_seed)
 
-        evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_formula_update',
-                                      tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
-        evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_formula_update',
-                                               seed=cur_seed)
+        # evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_formula_update',
+        #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
+        # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_formula_update',
+        #                                        seed=cur_seed)
 
         print("gnn")
 
@@ -296,8 +296,8 @@ if __name__ == "__main__":
         #                          tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
         # evaluate_chessworld8_gnn_infinite('big_stay_ChessWorld-v1', True, 'gcn_nopre', seed=cur_seed)
 
-        evaluate_chessworld8_gnn('big_stay_ChessWorld-v1', True, 'gcn_formula_update',
-                                 tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
+        # evaluate_chessworld8_gnn('big_stay_ChessWorld-v1', True, 'gcn_formula_update',
+        #                          tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
         evaluate_chessworld8_gnn_infinite('big_stay_ChessWorld-v1', True, 'gcn_formula_update', seed=cur_seed)
 
         #
