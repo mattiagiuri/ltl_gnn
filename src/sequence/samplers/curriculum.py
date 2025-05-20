@@ -1124,7 +1124,7 @@ FLATWORLD_FORMULA_UPDATE = Curriculum([
 )
 
 
-CHESSWORLD8_FORMULA_UPDATE = Curriculum([
+CHESSWORLD8_FORMULA_UPDATE = Curriculum([  # C4 curriculum
     MultiRandomStage(  # 0
         stages=[
             RandomCurriculumStage(
