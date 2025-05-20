@@ -10,12 +10,12 @@ sns.set_theme(font_scale=2.9)
 
 def main():
     # env = 'PointLtl2-v0'
-    env = 'LetterEnv-v0'
+    env = 'ChessWorld-v1'
     # env = 'FlatWorld-v0'
     # experiments = ['noactivesampling', 'nocurriculum']
-    experiments = ['deepltl', 'nocurriculum']
+    experiments = ['gcn_formula_update', 'deepsets_formula_update']
     # experiments = ['deepset_complex', 'gcrl', 'ltl2action']
-    name_mapping = {'deepltl': 'Curriculum', 'gcrl': 'GCRL-LTL', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
+    name_mapping = {'gcn_formula_update': 'LTL-GNN', 'deepsets_formula_update': 'DeepLTL', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping)
     ci = True
 
@@ -35,7 +35,7 @@ def main():
     plt.show()
 
 
-def process_eval_results(env: str, experiments: list[str], name_mapping=None, smooth_radius=10):
+def process_eval_results(env: str, experiments: list[str], name_mapping=None, smooth_radius=5):
     dfs = []
     for experiment in experiments:
         path = f'eval_results/{env}/{experiment}'
