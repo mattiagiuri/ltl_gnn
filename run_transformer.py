@@ -18,7 +18,7 @@ class Args:
     log_csv: bool = True
     log_wandb: bool = False
     save: bool = True
-    curriculum: str = 'stay_ChessWorld-v1'
+    # curriculum: str = 'stay_ChessWorld-v1'
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
     env = os.environ.copy()
     env['PYTHONPATH'] = 'src/'
     seeds = args.seed if isinstance(args.seed, list) else [args.seed]
-    curriculum = args.curriculum
+    # curriculum = args.curriculum
     for seed in seeds:
         command = [
             'python', 'src/train/train_ppo.py',
@@ -40,8 +40,8 @@ def main():
             '--log_interval', '1',
             '--save_interval', '1',
             '--num_steps', '15_000_000',
-            '--model_config', 'frozen_transformer_ChessWorld-v1',
-            '--curriculum', curriculum,
+            '--model_config', 'big_transformer_ChessWorld-v1',
+            '--curriculum', 'update_ChessWorld-v1',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
@@ -60,7 +60,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) == 1:  # if no arguments are provided, use the following defaults
         # change --name tmp to --name whatever_i_want
-        sys.argv += '--num_procs 16 --device cpu --name pre_transformer_formula --seed 1 --log_csv false --save true --curriculum formula_ChessWorld-v1'.split(' ')
+        sys.argv += '--num_procs 16 --device cpu --name tmp_transformer --seed 1 --log_csv false --save true'.split(' ')
     try:
         main()
     except KeyboardInterrupt:

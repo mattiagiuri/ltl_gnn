@@ -197,5 +197,10 @@ if __name__ == "__main__":
 
     is_gcn = [False, True]
 
+    model_names = ['gcn_formula_update_quick']
+    keys_quick = ['GCN (quick update)']
+    cur_configs = ['big_stay_ChessWorld-v1']
+    is_gcn = [True]
+
     for seed in range(1, 6):
         chessworld8_many_ablation(keys_new, model_names, is_gcn, cur_configs, seed=seed)

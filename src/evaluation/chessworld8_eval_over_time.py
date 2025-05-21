@@ -44,11 +44,11 @@ def set_env():
 
 
 env_name = 'ChessWorld-v1'
-gcn_config = model_configs['big_ChessWorld-v1']
+gcn_config = model_configs['big_stay_ChessWorld-v1']
 deepsets_config = model_configs['big_sets_ChessWorld-v1']
 transformers_config = model_configs['big_transformer_ChessWorld-v1']
 
-exp_gnn = 'gcn_big_skip_6_finer'
+exp_gnn = 'gcn_formula_update_quick'
 exp_deepsets = 'deepsets_update_4_finest'
 exp_transformer = 'transformer_stay'
 
