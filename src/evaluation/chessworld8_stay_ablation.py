@@ -175,7 +175,7 @@ if __name__ == "__main__":
     #              'GCN (15M)',
     #             ]
 
-    keys_new = ["Deepsets (2M)", "GCN (2M)"]
+    # keys_new = ["Deepsets (2M)", "GCN (2M)"]
 
     # model_names = [
     #     'deepsets_trial_4',
@@ -188,19 +188,32 @@ if __name__ == "__main__":
     #     # 'gcn_formula_big_skip_6_finest'
     # ]
 
-    model_names = ["deepsets_race_update", "gcn_race_update"]
+    # model_names = ["deepsets_race_update", "gcn_race_update"]
 
     # cur_configs = ["big_sets_ChessWorld-v1"]*2 + ["big_ChessWorld-v1"]*1
 
-    cur_configs = ["big_sets_ChessWorld-v1"] + ["big_ChessWorld-v1"]
+    # cur_configs = ["big_sets_ChessWorld-v1"] + ["big_ChessWorld-v1"]
     # is_gcn = [False]*2 + [True]*1
 
-    is_gcn = [False, True]
+    # is_gcn = [False, True]
 
     model_names = ['gcn_formula_update_quick']
-    keys_quick = ['GCN (quick update)']
+    keys_quick = ['GCN (formula update 2)']
     cur_configs = ['big_stay_ChessWorld-v1']
     is_gcn = [True]
 
-    for seed in range(1, 6):
-        chessworld8_many_ablation(keys_new, model_names, is_gcn, cur_configs, seed=seed)
+    # model_names = ['transformer_formula_update']
+    # keys_quick = ['Transformer (formula update)']
+    # cur_configs = ['big_transformer_ChessWorld-v1']
+    # is_gcn = [False]
+
+    for seed in range(5, 6):
+        chessworld8_many_ablation(keys_quick, model_names, is_gcn, cur_configs, seed=seed)
+
+    model_names = ['gcn_formula_update']
+    keys_quick = ['GCN (formula update 2)']
+    cur_configs = ['big_stay_ChessWorld-v1']
+    is_gcn = [True]
+
+    for seed in range(1, 5):
+        chessworld8_many_ablation(keys_quick, model_names, is_gcn, cur_configs, seed=seed)

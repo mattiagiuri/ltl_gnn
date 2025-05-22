@@ -13,9 +13,10 @@ def main(update=False):
     env = 'ChessWorld-v1'
     # env = 'FlatWorld-v0'
     # experiments = ['noactivesampling', 'nocurriculum']
-    experiments = ['gcn_formula_update', 'deepsets_formula_update']
+    experiments = ['gcn_formula_update', 'deepsets_formula_update', 'transformer_formula_update']
     # experiments = ['deepset_complex', 'gcrl', 'ltl2action']
-    name_mapping = {'gcn_formula_update': 'LTL-GNN', 'deepsets_formula_update': 'DeepLTL', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
+    name_mapping = {'gcn_formula_update': 'LTL-GNN', 'deepsets_formula_update': 'DeepLTL', 'ltl2action': 'LTL2Action',
+                    'transformer_formula_update': 'LTL-ENC', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping, update=update)
     ci = True
 

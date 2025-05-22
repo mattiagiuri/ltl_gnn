@@ -297,7 +297,7 @@ class ContextMaker:
 
         # print("Nx_not_y", tot_added)
 
-    def or_x_and_not_ny(self, x=3, y=3, z=2):
+    def or_x_and_not_ny(self, x=4, y=3, z=2):
         tot_added = 0
         name = "or_x_and_not_ny"
         self.formula_kinds[name] = {"positive": {}, "negative": {}}
