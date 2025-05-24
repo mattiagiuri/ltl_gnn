@@ -39,7 +39,7 @@ def main():
             '--save_interval', '1',
             '--num_steps', '15_000_000',
             '--model_config', 'FlatWorld-v0',
-            '--curriculum', 'update_FlatWorld-v0',
+            '--curriculum', 'FlatWorld-v0',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,
