@@ -21,8 +21,10 @@ def main(update=False):
     ci = True
 
     fig, ax = plt.subplots(1, 1, figsize=(9,7))
-    ax.set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
+    ax.set(ylabel='Success Rate', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
+    # ax.set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
     errorbar = ('ci', 90) if ci else ('sd', 1)
+    sns.lineplot(df, x='num_steps', y='success_rate_smooth', errorbar=errorbar, hue='Method', ax=ax)
     sns.lineplot(df, x='num_steps', y='return_smooth', errorbar=errorbar, hue='Method', ax=ax)
     # sns.relplot(df, x='num_steps', y='return', kind='line', ci=ci, hue='seed', col='Method')
     # plt.savefig(os.path.expanduser('~/work/dphil/iclr-deepltl/figures/training_letter.pdf'))
@@ -32,7 +34,8 @@ def main(update=False):
     for label in ax.xaxis.get_ticklabels()[::2]:
         label.set_visible(False)
 
-    plt.savefig('curves_ablation.pdf', bbox_inches='tight')
+    plt.savefig('curves_ablation_sr.pdf', bbox_inches='tight')
+    # plt.savefig('curves_ablation.pdf', bbox_inches='tight')
     plt.show()
 
 
@@ -51,6 +54,7 @@ def process_eval_results(env: str, experiments: list[str], name_mapping=None, sm
             seed = int(file.split('.')[0])
             df['seed'] = seed
 
+            # Replacing old experiment with wrong curriculum on seed 5
             if seed == 5 and experiment == 'gcn_formula_update' and update:
                 df = pd.read_csv('eval_results/ChessWorld-v1/gcn_formula_update_quick/5.csv')
                 name = name_mapping.get(experiment, experiment)
