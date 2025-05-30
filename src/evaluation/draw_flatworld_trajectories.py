@@ -82,5 +82,5 @@ for i, traj in enumerate(trajectories):
     FlatWorld.render(traj, ax=ax)
 
 plt.tight_layout(pad=4)
-plt.savefig('/home/mathias/tmp/traj2.pdf', bbox_inches='tight')
+plt.savefig('traj2.pdf', bbox_inches='tight')
 plt.show()

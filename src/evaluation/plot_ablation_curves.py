@@ -16,7 +16,7 @@ def main(update=False):
     experiments = ['GCN (formula update 2)', 'Deepsets (formula update)', 'Transformer (formula update)']
     # experiments = ['deepset_complex', 'gcrl', 'ltl2action']
     name_mapping = {'GCN (formula update)': 'LTL-GNN', 'Deepsets (formula update)': 'DeepLTL', 'GCN (formula update 2)': 'LTL-GNN',
-                    'Transformer (formula update)': 'LTL-ENC', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
+                    'Transformer (formula update)': 'Transformer', 'ltl2action': 'LTL2Action', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping, update=update)
     # df_means = df.pivot_table(values='SR', index='pieces', columns='Method', aggfunc='mean').reset_index()
 
@@ -27,7 +27,11 @@ def main(update=False):
     ci = True
 
     fig, ax = plt.subplots(1, 1, figsize=(9,7))
-    ax.set(ylabel='Success Rate', yticks=np.arange(0, 1.01, 0.1), xlabel='Pieces to Avoid', xticks=[1, 2, 3, 4, 5])
+    ax.set(ylabel='Success rate', yticks=np.arange(0, 1.01, 0.1), xlabel='Pieces to Avoid', xticks=[1, 2, 3, 4, 5])
+    ax.set_xlabel('Pieces to avoid', fontsize='x-small')
+    ax.set_ylabel('Success rate', fontsize='x-small')
+    ax.tick_params(axis='both', labelsize='x-small')
+
     errorbar = ('ci', 90) if ci else ('sd', 1)
     sns.lineplot(df, x='pieces', y='SR', errorbar=errorbar, hue='Method', ax=ax, palette=method_colors)
     mean_df = df.groupby(['pieces', 'Method'], as_index=False)['SR'].mean()

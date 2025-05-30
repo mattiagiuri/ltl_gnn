@@ -37,9 +37,9 @@ def main():
             '--entropy_coef', '0.003',  # 0.003
             '--log_interval', '1',
             '--save_interval', '1',
-            '--num_steps', '2_000_000',
+            '--num_steps', '15_000_000',
             '--model_config', 'big_sets_ChessWorld-v1',
-            '--curriculum', 'racing_formula_update_ChessWorld-v1',
+            '--curriculum', 'update_ChessWorld-v1',
             '--name', args.name,
             '--seed', str(seed),
             '--device', args.device,

@@ -16,26 +16,31 @@ def main(update=False):
     experiments = ['gcn_formula_update', 'deepsets_formula_update', 'transformer_formula_update']
     # experiments = ['deepset_complex', 'gcrl', 'ltl2action']
     name_mapping = {'gcn_formula_update': 'LTL-GNN', 'deepsets_formula_update': 'DeepLTL', 'ltl2action': 'LTL2Action',
-                    'transformer_formula_update': 'LTL-ENC', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
+                    'transformer_formula_update': 'Transformer', 'deepset': 'DeepLTL', 'nocurriculum': 'No curriculum', 'deepset_complex': 'DeepLTL'}
     df = process_eval_results(env, experiments, name_mapping, update=update)
     ci = True
 
     fig, ax = plt.subplots(1, 1, figsize=(9,7))
-    ax.set(ylabel='Success Rate', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
-    # ax.set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
+    # ax.set(ylabel='Success rate', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
+
+    ax.set(ylabel='Discounted return', yticks=np.arange(0, 1.01, 0.1), xlabel='Number of steps', xticks=np.arange(0, 16, 2) * 1000000)
+    ax.set_xlabel('Number of steps', fontsize='x-small')
+    ax.set_ylabel('Discounted return', fontsize='x-small')
+    ax.tick_params(axis='both', labelsize='x-small')
+
     errorbar = ('ci', 90) if ci else ('sd', 1)
-    sns.lineplot(df, x='num_steps', y='success_rate_smooth', errorbar=errorbar, hue='Method', ax=ax)
+    # sns.lineplot(df, x='num_steps', y='success_rate_smooth', errorbar=errorbar, hue='Method', ax=ax)
     sns.lineplot(df, x='num_steps', y='return_smooth', errorbar=errorbar, hue='Method', ax=ax)
     # sns.relplot(df, x='num_steps', y='return', kind='line', ci=ci, hue='seed', col='Method')
     # plt.savefig(os.path.expanduser('~/work/dphil/iclr-deepltl/figures/training_letter.pdf'))
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles=handles, labels=labels)  # remove title='Method'
+    ax.legend(handles=handles, labels=labels, fontsize='x-small')  # remove title='Method'
 
     for label in ax.xaxis.get_ticklabels()[::2]:
         label.set_visible(False)
 
-    plt.savefig('curves_ablation_sr.pdf', bbox_inches='tight')
-    # plt.savefig('curves_ablation.pdf', bbox_inches='tight')
+    # plt.savefig('curves_ablation_sr.pdf', bbox_inches='tight')
+    plt.savefig('curves_ablation.pdf', bbox_inches='tight')
     plt.show()
 
 

@@ -111,7 +111,7 @@ def evaluate_chessworld(task, exp_thing, is_gnn, cur_config, seed=seed):
     return successes
 
 
-def chessworld8_many_ablation(models_keys, models_names, is_gnns, cur_configs, seed=1, size_range=range(1, 6)):
+def chessworld8_many_ablation(models_keys, models_names, is_gnns, cur_configs, seed=1, size_range=range(1, 6), save=True):
 
     # results_dict = {k: {"successes_mean": [], "successes_std": []}
     #                 for k in models_keys}
@@ -142,24 +142,32 @@ def chessworld8_many_ablation(models_keys, models_names, is_gnns, cur_configs, s
         df_list = [pd.DataFrame({metric: [val[-1]] for metric, val in cur_db.items()})
                    for _, cur_db in results_dict.items()]
         cur_df_save = pd.concat(df_list, axis=1, keys=models_keys)
+        print(f"Seed: {seed}, |avoid set|: {size}")
+        print(cur_df_save)
 
         cur_df_name = parent + "/results_" + str(size) + ".csv"
 
         old_df_save = pd.read_csv(cur_df_name, header=[0, 1], index_col=0)
 
         cur_df_save = pd.concat([old_df_save, cur_df_save], axis=1)
-        cur_df_save.to_csv(cur_df_name)
+
+        if save:
+            cur_df_save.to_csv(cur_df_name)
 
         print("Done " + str(size))
 
     final_dfs = [pd.DataFrame(res, index=df_index) for _, res in results_dict.items()]
     results_df = pd.concat(final_dfs, axis=1, keys=models_keys)
 
+    print(f"Final results for seed {seed}")
+    print(results_df)
+
     final_name = parent + "/results.csv"
     old_final_df = pd.read_csv(final_name, header=[0, 1], index_col=0)
 
     results_df = pd.concat([old_final_df, results_df], axis=1)
-    results_df.to_csv(final_name)
+    if save:
+        results_df.to_csv(final_name)
 
     return results_df
 
@@ -197,23 +205,23 @@ if __name__ == "__main__":
 
     # is_gcn = [False, True]
 
-    model_names = ['gcn_formula_update_quick']
-    keys_quick = ['GCN (formula update 2)']
-    cur_configs = ['big_stay_ChessWorld-v1']
-    is_gcn = [True]
+    # model_names = ['gcn_formula_update_quick']
+    # keys_quick = ['GCN (formula update 2)']
+    # cur_configs = ['big_stay_ChessWorld-v1']
+    # is_gcn = [True]
 
     # model_names = ['transformer_formula_update']
     # keys_quick = ['Transformer (formula update)']
     # cur_configs = ['big_transformer_ChessWorld-v1']
     # is_gcn = [False]
 
-    for seed in range(5, 6):
-        chessworld8_many_ablation(keys_quick, model_names, is_gcn, cur_configs, seed=seed)
+    # for seed in range(5, 6):
+    #     chessworld8_many_ablation(keys_quick, model_names, is_gcn, cur_configs, seed=seed)
 
-    model_names = ['gcn_formula_update']
-    keys_quick = ['GCN (formula update 2)']
-    cur_configs = ['big_stay_ChessWorld-v1']
-    is_gcn = [True]
+    model_names = ['gcn_formula_update', 'deepsets_formula_update', 'transformer_formula_update']
+    model_keys = ['GCN (formula update 2)', 'Deepsets (formula update)', 'Transformer (formula update)']
+    cur_configs = ['big_stay_ChessWorld-v1', 'big_sets_ChessWorld-v1', 'big_transformer_ChessWorld-v1']
+    is_gcn = [True, False, False]
 
-    for seed in range(1, 5):
-        chessworld8_many_ablation(keys_quick, model_names, is_gcn, cur_configs, seed=seed)
+    for seed in range(1, 6):
+        chessworld8_many_ablation(model_keys, model_names, is_gcn, cur_configs, seed=seed, save=False)
