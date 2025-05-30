@@ -77,18 +77,18 @@ def evaluate_chessworld8_gnn(cur_config, save=False, exp_gnn=exp_gnn, tasks=task
 def evaluate_chessworld8_gnn_infinite(cur_config, save=False, exp_gnn=exp_gnn, seed=seed):
     global init_voc
     task_list = read_tasks("eval_datasets/ChessWorld-v1/infinite_tasks.txt")
-    results = {"Task Set": [], "Task ID": [], "Accepting visits": []}
+    results = {"Task Set": [], "Task ID": [], "Success rate": []}
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
-            acc_visits = simulate(env, gamma, exp_gnn, seed, num_episodes, task, not finite,
-                                                 render, not deterministic, gnn_gnn, cur_config, init_voc)
+            sr = simulate(env, gamma, exp_gnn, seed, num_episodes, task, not finite,
+                                                 render, deterministic, gnn_gnn, cur_config, init_voc)
             if init_voc:
                 init_voc = False
 
             results["Task Set"].append(task_set)
             results["Task ID"].append(name)
-            results["Accepting visits"].append(acc_visits)
+            results["Success rate"].append(sr)
 
 
     df_results = pd.DataFrame(results)
@@ -132,16 +132,16 @@ def evaluate_chessworld8_deepsets(cur_config, save=False, exp_deepsets=exp_deeps
 
 def evaluate_chessworld8_deepsets_infinite(cur_config, save=False, exp_deepsets=exp_deepsets, seed=seed):
     task_list = read_tasks("eval_datasets/ChessWorld-v1/infinite_tasks.txt")
-    results = {"Task Set": [], "Task ID": [], "Accepting visits": []}
+    results = {"Task Set": [], "Task ID": [], "Success rate": []}
 
     for task_set, tasks in task_list.items():
         for name, task in tasks:
             acc_visits = simulate(env, gamma, exp_deepsets, seed, num_episodes, task, not finite,
-                                                 render, not deterministic, gnn_deepsets, cur_config)
+                                                 render, deterministic, gnn_deepsets, cur_config)
 
             results["Task Set"].append(task_set)
             results["Task ID"].append(name)
-            results["Accepting visits"].append(acc_visits)
+            results["Success rate"].append(acc_visits)
 
     df_results = pd.DataFrame(results)
     df_results.set_index(["Task Set", "Task ID"], inplace=True)
@@ -264,9 +264,9 @@ if __name__ == "__main__":
     #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt')
     # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest')
 
-    for cur_seed in [1, 5]:
+    for cur_seed in range(1, 6):
         print(cur_seed)
-        print("deepsets")
+        # print("deepsets")
         # evaluate_chessworld8_deepsets('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest',
         #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
         # evaluate_chessworld8_deepsets_infinite('big_sets_ChessWorld-v1', True, 'deepsets_stay_update_4_finest', seed=cur_seed)
@@ -288,9 +288,9 @@ if __name__ == "__main__":
 
         print("gnn")
 
-        # evaluate_chessworld8_gnn('big_stay_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer',
+        # evaluate_chessworld8_gnn('big_stay_ChessWorld-v1', True, 'gcn_formula_update',
         #                          tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
-        # evaluate_chessworld8_gnn_infinite('big_stay_ChessWorld-v1', True, 'gcn_formula_big_skip_6_finer', seed=cur_seed)
+        # evaluate_chessworld8_gnn_infinite('big_stay_ChessWorld-v1', True, 'gcn_formula_update', seed=cur_seed)
 
         # evaluate_chessworld8_gnn('big_stay_ChessWorld-v1', True, 'gcn_nopre',
         #                          tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
@@ -301,9 +301,9 @@ if __name__ == "__main__":
         # evaluate_chessworld8_gnn_infinite('big_stay_ChessWorld-v1', True, 'gcn_formula_update_quick', seed=cur_seed)
 
         #
-        print("transformer")
-        evaluate_chessworld8_deepsets('big_transformer_ChessWorld-v1', True, 'transformer_formula_update',
-                                      tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
+        # print("transformer")
+        # evaluate_chessworld8_deepsets('big_transformer_ChessWorld-v1', True, 'transformer_formula_update',
+        #                               tasks='eval_datasets/ChessWorld-v1/finite_tasks.txt', seed=cur_seed)
         evaluate_chessworld8_deepsets_infinite('big_transformer_ChessWorld-v1', True, 'transformer_formula_update',
                                                seed=cur_seed)
 

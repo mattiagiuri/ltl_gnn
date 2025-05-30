@@ -20,11 +20,11 @@ import os
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0', 'ChessWorld-v0'], default='ChessWorld-v0')
-    parser.add_argument('--exp', type=str, default='gcn')
+    parser.add_argument('--env', type=str, choices=['PointLtl2-v0', 'LetterEnv-v0', 'FlatWorld-v0', 'ChessWorld-v1'], default='ChessWorld-v1')
+    parser.add_argument('--exp', type=str, default='gcn_formula_update')
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--num_episodes', type=int, default=6)
-    parser.add_argument('--formula', type=str, default='(F (queen & !rook))')  # (!(knight | pawn) U queen)
+    parser.add_argument('--formula', type=str, default='(F (pawn & F (rook)))')  # (!(knight | pawn) U queen)
     parser.add_argument('--finite', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--render', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--deterministic', action=argparse.BooleanOptionalAction, default=True)
@@ -32,7 +32,6 @@ def main():
     # parser.add_argument('--from_seq', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
     gamma = 0.94 if args.env == 'LetterEnv-v0' else 0.998 if args.env == 'PointLtl2-v0' else 0.98
-    seq = [(15, ), (12, 13)]
 
     return simulate(args.env, gamma, args.exp, args.seed, args.num_episodes, args.formula, args.finite, args.render, args.deterministic, args.gnn, init_voc=True)
 
@@ -229,6 +228,8 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
     # return
     agent = Agent(model, search=search, propositions=props, verbose=render)
 
+    check_accepting_cycle = deterministic and not finite
+
     num_successes = 0
     num_violations = 0
     num_accepting_visits = 0
@@ -246,6 +247,10 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
         else:
             obs, info = env.reset(), {}
 
+        state_to_step = dict()
+        accepting_times = set()
+        t = 0
+        state_to_step[(tuple(obs['features']), obs['ldba_state'])] = t
         if render:
             print(obs['goal'])
         agent.reset()
@@ -257,6 +262,17 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
             if action.shape == (1,):
                 action = action[0]
             obs, reward, done, info = env.step(action)
+            if info['accepting']:
+                accepting_times.add(t)
+            t += 1
+            if check_accepting_cycle:
+                if (tuple(obs['features']), obs['ldba_state']) in state_to_step:  # loop
+                    state_time = state_to_step[(tuple(obs['features']), obs['ldba_state'])]
+                    if any(accepting_time >= state_time for accepting_time in accepting_times):
+                        num_successes += 1
+                    break
+
+            state_to_step[(tuple(obs['features']), obs['ldba_state'])] = t
             num_steps += 1
             if done:
                 # print(num_steps)
@@ -292,9 +308,10 @@ def simulate(env, gamma, exp, seed, num_episodes, formula, finite, render, deter
         # print(f'{seed}: {success_rate:.3f},{violation_rate:.3f},{adr:.3f},{average_steps:.3f}')
         return num_successes, average_steps, adr
     else:
-        average_visits = num_accepting_visits / num_episodes
-        print(f'{seed}: {average_visits:.3f}')
-        return average_visits
+        # average_visits = num_accepting_visits / num_episodes
+        # print(f'{seed}: {average_visits:.3f}')
+        # return average_visits
+        return num_successes / num_episodes
 
 
 def simulate_faster(env, gamma, exp, seed, num_episodes, formula, finite, render, deterministic, model, init_voc=False):
