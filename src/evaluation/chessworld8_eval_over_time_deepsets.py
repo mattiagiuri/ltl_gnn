@@ -67,7 +67,7 @@ config = None
 
 def aux(status):
     global env
-    model = build_model(env.envs[0], status, gcn_config)
+    model = build_model(env.envs[0], status, deepsets_config)
     s, v, num_steps, adr = eval_model(model, env, num_eval_episodes, deterministic, gamma)
     return status['num_steps'], s, v, num_steps, adr
 
@@ -113,7 +113,8 @@ def main():
     print(f'Total time: {time.time() - start_time:.2f}s')
     result = {r[0]: (r[1], r[2], r[3], r[4]) for r in results}
 
-    df = pd.DataFrame.from_dict(result, orient='index', columns=['success_rate', 'violation_rate', 'average_steps', 'return'])
+    df = pd.DataFrame.from_dict(result, orient='index',
+                                columns=['success_rate', 'violation_rate', 'average_steps', 'return'])
     df.sort_index(inplace=True)
     out_path = f'eval_results/{env_name}/{exp}'
     if not os.path.exists(out_path):
@@ -161,7 +162,8 @@ def eval_model(model, env, num_eval_episodes, deterministic, gamma):
 
     assert len(env.active_envs) == 0
 
-    return num_successes / finished_episodes, num_violations / finished_episodes, np.mean(steps) if steps else -1, np.mean(returns) if returns else -1
+    return num_successes / finished_episodes, num_violations / finished_episodes, np.mean(
+        steps) if steps else -1, np.mean(returns) if returns else -1
 
 
 if __name__ == '__main__':

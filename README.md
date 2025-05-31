@@ -51,4 +51,12 @@ To produce the graph for the latter evaluation suite, run `plot_ablation_curves.
 jupyter notebook visualize_paper_results_chessworld.ipynb
 ```
 
-Finally, we provide the script `chessworld8_eval_over_time.py` which evaluates the performance of a model over training on a fixed dataset of specifications from the _reach/avoid_ task space. To plot the resulting training curves, run `plot_training_curves.py`.
+Finally, we provide scripts which evaluate the performance of a model over training on a fixed dataset of specifications from the _reach/avoid_ task space. For LTL-GNN, DeepLTL, Transformer run respectively
+
+```bash
+python src/evaluation/chessworld8_eval_over_time.py --model_config big_stay_ChessWorld-v1 --exp tmp_gnn --seed 1
+python src/evaluation/chessworld8_eval_over_time_deepsets.py --model_config big_sets_ChessWorld-v1 --exp tmp_deepsets --seed 1
+python src/evaluation/chessworld8_eval_over_time_transformer.py --model_config big_transformer_ChessWorld-v1 --exp tmp_transformer --seed 1
+```
+
+where "--exp" should be the same as one of the "--name" arguments from the training scripts. To plot the resulting training curves, run `plot_training_curves.py`.

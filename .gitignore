@@ -14,7 +14,6 @@ ldba_graph.pdf
 ldba_graph.png
 trajectories.pdf
 cache
-/eval_results/
 multiple_results/
 *.fish
 paper_utils
