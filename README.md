@@ -1,6 +1,6 @@
 # Zero-Shot Instruction Following in RL via Structured LTL Representations
 
-This repository contains the code for the paper "Zero-Shot Instruction Following in RL via Structured LTL Representations" submitted to the ICML workshop "Programmatic Representations for Agent Learning" in 2025.
+This repository contains the code for the paper "Zero-Shot Instruction Following in RL via Structured LTL Representations" submitted to the ICML workshop "Programmatic Representations for Agent Learning" in 2025. Paper accepted and presented in a poster session at aforementioned workshop. Link: https://openreview.net/forum?id=XDMRtSRnaO.
 
 ## Installation
 The code requires Python 3.10 with a working installation of PyTorch (tested with version 2.2.2). Use the following command to install the internal packages (from the main directory):
